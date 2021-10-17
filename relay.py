@@ -2,10 +2,11 @@
 
 from flask import Flask
 from flask import jsonify
+import hashlib 
 
 app = Flask(__name__)
 import os 
-base_path = './files'
+base_path = 'files'
 
 def scanner(path,data):
     sc = os.scandir(path)
@@ -16,7 +17,11 @@ def scanner(path,data):
         else:
             # chop of the base
             pos = i.path.find('/')
-            data[i.path[pos:]] = 'sha'
+            # get the sha sums
+            h = hashlib.sha256()
+            h.update(open(i.path,'rb').read())
+            r = h.hexdigest()
+            data[i.path[pos:]] = r 
     return data
 
 @app.route('/files/<path:path>')

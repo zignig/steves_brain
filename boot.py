@@ -9,6 +9,7 @@ import json
 
 gc.collect()
 
+# Data registry class
 class Registry:
     def __init__(self):
         # create the registry 
@@ -22,8 +23,14 @@ class Registry:
     def list(self):
         for i in self._db.items():print(i)
             
+    def exists(self,val):
+        val = self._db.get(val)
+        if val is not  None:
+            return True
+        else:
+            return False
+
     def set(self,item,data):
-        print(self,item,data)
         self._db[item] = json.dumps(data)
         self._db.flush()
 
@@ -38,6 +45,7 @@ class Registry:
                 data = val.decode()
         return data 
 
+# Open the registry
 r = Registry()
 r.list()
 
@@ -54,17 +62,24 @@ def do_connect():
     wlan.active(True)
     info = r.wifi
     if info is None:
-        print(wlan.scan())
+        nets = wlan.scan()
+	for i in nets:
+		print(i[0].decode())
         ssid = input('ssid>')
         password = input('password>')
-        r._db.put('wifi',json.dumps([ssid,password]))
-        r._db.flush()
+        r.set('wifi',[ssid,password])
+        #r._db.put('wifi',json.dumps([ssid,password]))
+        #r._db.flush()
     if not wlan.isconnected():
         print("connecting to network...")
         wlan.connect(info[0],info[1])
+        count = 0
         while not wlan.isconnected():
-            pass
-    print("network config:", wlan.ifconfig())
+            #print(wlan.ifconfig())
+            count += 1 
+            if (count % 10000) == 0:
+                print(wlan.ifconfig()) 
+    r.set('network',wlan.ifconfig())
     return wlan
 
 
@@ -72,10 +87,10 @@ wlan = do_connect()
 
 import socket
 
-def fetch(url):
+def fetch(url,data_type="json"):
     _, _, host, path = url.split('/', 3)
     split_port = host.split(':')
-    print(host,split_port,path)
+    #print(host,split_port,path)
     if len(split_port) > 1:
         port = int(split_port[1])
         host = split_port[0]
@@ -89,59 +104,34 @@ def fetch(url):
     s.connect(addr)
     # Send GET request
     s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-    full = b'' 
     # status
     d = s.readline()
-    print(d)
+    #print(d)
     resp = d.split()
-    print(resp)
-    print("HEADERS")
+    #print(resp)
+    #print("HEADERS")
     while True:
       # Receive data
       line= s.readline()
       if line == b'\r\n':
         break 
       val = line.decode().strip().split(':')
-      print(val)
-      #if data:
-      #  print(str(data), end='')
-      #  full += data
-      #else:
-      #  break
+    #  print(val)
+      if val[0] == "Content-Length":
+        length = int(val[1].strip())    
+    #print("END HEADERS")
+    data = s.recv(length)
+    if data_type == "json":
+        data = json.loads(data)
+    #print(data)
     # Close the socket    
-    print("END HEADERS")
-    data = s.recv(1024)
-    print(data)
     s.close()
-    #return str(full)
+    return data
 
-fetch('http://noid.erf:5001/status')
-
-import picoweb
-
-app = picoweb.WebApp(__name__)
-
-@app.route("/")
-def index(req,resp):
-    yield from picoweb.start_response(resp)
-    htmlFile = open('static/index.html','r')
-    for line in htmlFile:
-        yield from resp.awrite(line)
-
-def go():
-    print("running web service")
-    app.run(host='0.0.0.0',port=80,debug=True)
+try:
+    files = fetch(r.status)
+    print(files)
+except OSError as e:
+    print(e)
 
 
-import os
-def show(directory='/'):
-    li = os.listdir(directory)
-    for i in li:
-        try:
-            print(directory,i)
-            b = os.listdir(i)
-            show(i+'/'+b)
-        except:
-            print('file ',i)
-
-go()
