@@ -34,6 +34,10 @@ class Registry:
         self._db[item] = json.dumps(data)
         self._db.flush()
 
+    def scan(self,prefix):
+        for i in self._db.items(prefix+chr(0),prefix+chr(255)):
+            print(i)
+
     def __getattr__(self,item):
         val = self._db.get(item)
         if val is None:
@@ -46,9 +50,59 @@ class Registry:
         return data 
 
 # Open the registry
-r = Registry()
-r.list()
+reg = Registry()
+#reg.list()
 
+import os
+class scanner:
+    def __init__(self,path=''):
+        self._file_list = []
+        self.scan(path)
+    
+    def scan(self,path):
+        for i in os.ilistdir(path):
+            file_name = path+'/'+i[0]
+            if i[3] != 0:
+                print('as file:',file_name)
+                self._file_list.append(file_name)
+            else:
+                print('as folder:',file_name)
+                self.scan(file_name)
+        
+    def __repr__(self):
+        st = ''
+        for i in self._file_list:
+            st = str(i) + '\n'
+        return st
+        
+
+def file_sha(path):
+    BLOCK_SIZE = 16
+    import os
+    import hashlib
+    import binascii
+    data = bytearray(BLOCK_SIZE)
+    stat = os.stat(path)
+    file_size = stat[6]
+    block_count = file_size // BLOCK_SIZE
+    residual = file_size - (block_count * BLOCK_SIZE)
+    print('blocks ',block_count,' | residual ',residual)
+    f = open(path,'rb')
+    h = hashlib.sha256()
+    for i in range(block_count):
+        f.readinto(data)
+        h.update(data)
+    # last partial chunk
+    data = f.read(residual)
+    h.update(data)
+    dig = h.digest()
+    print(dig)
+    sha_hex = binascii.hexlify(dig)
+    print(sha_hex)
+
+        
+
+         
 # connect to the network
 def do_connect():
     import network
@@ -60,16 +114,14 @@ def do_connect():
 
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    info = r.wifi
+    info = reg.wifi
     if info is None:
         nets = wlan.scan()
 	for i in nets:
 		print(i[0].decode())
         ssid = input('ssid>')
         password = input('password>')
-        r.set('wifi',[ssid,password])
-        #r._db.put('wifi',json.dumps([ssid,password]))
-        #r._db.flush()
+        reg.set('wifi',[ssid,password])
     if not wlan.isconnected():
         print("connecting to network...")
         wlan.connect(info[0],info[1])
@@ -79,7 +131,7 @@ def do_connect():
             count += 1 
             if (count % 10000) == 0:
                 print(wlan.ifconfig()) 
-    r.set('network',wlan.ifconfig())
+    reg.set('network',wlan.ifconfig())
     return wlan
 
 
@@ -87,7 +139,7 @@ wlan = do_connect()
 
 import socket
 
-def fetch(url,data_type="json"):
+def fetch(url,data_type="json",debug=False):
     _, _, host, path = url.split('/', 3)
     split_port = host.split(':')
     #print(host,split_port,path)
@@ -109,29 +161,51 @@ def fetch(url,data_type="json"):
     #print(d)
     resp = d.split()
     #print(resp)
-    #print("HEADERS")
+    if debug:
+        print("HEADERS")
     while True:
       # Receive data
       line= s.readline()
       if line == b'\r\n':
         break 
       val = line.decode().strip().split(':')
-    #  print(val)
+      if debug:
+        print(val)
       if val[0] == "Content-Length":
         length = int(val[1].strip())    
-    #print("END HEADERS")
-    data = s.recv(length)
+    if debug:
+        print(length)
+        print("END HEADERS")
+    data = bytearray() 
+    while True:
+        more = s.recv(length)
+        if more == b'':
+            break
+        if debug:
+            print(more)
+            print(len(more))
+        data.extend(more)
+    
     if data_type == "json":
-        data = json.loads(data)
+        try:
+            data = json.loads(data)
+        except Exception as E:
+            print(data)
+            print(E)
     #print(data)
     # Close the socket    
     s.close()
     return data
 
 try:
-    files = fetch(r.status)
+    if reg.status is None:
+        print("enter status url")
+        val = input('status>')
+        reg.set('status',val)
+    files = fetch(reg.status)
     print(files)
 except OSError as e:
     print(e)
 
-
+def update():
+    print(fetch(r.status))

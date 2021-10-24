@@ -8,6 +8,8 @@ app = Flask(__name__)
 import os 
 base_path = 'files'
 
+key = "xkDoOyC05K6DeKIr/37beQg8YeA0KnYlF98PYG2W6CQ=\\n"
+
 def scanner(path,data):
     sc = os.scandir(path)
     for i in sc:
@@ -42,5 +44,8 @@ def status():
     data = scanner(base_path,{})
     return jsonify(data)
 
+@app.route('/uplink')
+def uplink():
+    return 'hello'
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001) 

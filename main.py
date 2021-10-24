@@ -12,7 +12,7 @@ def index(req,resp):
 
 def go():
     print("running web service")
-    app.run(host='0.0.0.0',port=80,debug=True)
+    app.run(host='0.0.0.0',port=8081,debug=True)
 
 
 import os
