@@ -34,11 +34,7 @@ class Registry:
         self._db[item] = json.dumps(data)
         self._db.flush()
 
-    def scan(self,prefix):
-        for i in self._db.items(prefix+chr(0),prefix+chr(255)):
-            print(i)
-
-    def __getattr__(self,item):
+    def get(self,item):
         val = self._db.get(item)
         if val is None:
             data = None
@@ -49,12 +45,48 @@ class Registry:
                 data = val.decode()
         return data 
 
+    def scan(self,prefix):
+        for i in self._db.items(prefix+chr(0),prefix+chr(255)):
+            print(i)
+
+    def __getattr__(self,item):
+        return self.get(item)
+
 # Open the registry
 reg = Registry()
 #reg.list()
 
+# file checkers 
 import os
+
+def file_sha(path):
+    BLOCK_SIZE = 16
+    import os
+    import hashlib
+    import binascii
+    data = bytearray(BLOCK_SIZE)
+    stat = os.stat(path)
+    file_size = stat[6]
+    block_count = file_size // BLOCK_SIZE
+    residual = file_size - (block_count * BLOCK_SIZE)
+    #print('blocks ',block_count,' | residual ',residual)
+    f = open(path,'rb')
+    h = hashlib.sha256()
+    for i in range(block_count):
+        f.readinto(data)
+        h.update(data)
+    # last partial chunk
+    data = f.read(residual)
+    h.update(data)
+    dig = h.digest()
+    #print(dig)
+    sha_hex = binascii.hexlify(dig)
+    print(path,sha_hex)
+    reg.set('f_'+path,sha_hex)
+    return sha_hex
+
 class scanner:
+    FILE_PREFIX = "f_"
     def __init__(self,path=''):
         self._file_list = []
         self.scan(path)
@@ -69,6 +101,14 @@ class scanner:
                 print('as folder:',file_name)
                 self.scan(file_name)
         
+    def update(self):
+        for i in self._file_list:
+            data = reg.get(scanner.FILE_PREFIX+i)
+            if data is None:
+                print('file ',i,' missing') 
+            hash = file_sha(i)
+            reg.set(scanner.FILE_PREFIX+i,hash)
+
     def __repr__(self):
         st = ''
         for i in self._file_list:
@@ -76,29 +116,6 @@ class scanner:
         return st
         
 
-def file_sha(path):
-    BLOCK_SIZE = 16
-    import os
-    import hashlib
-    import binascii
-    data = bytearray(BLOCK_SIZE)
-    stat = os.stat(path)
-    file_size = stat[6]
-    block_count = file_size // BLOCK_SIZE
-    residual = file_size - (block_count * BLOCK_SIZE)
-    print('blocks ',block_count,' | residual ',residual)
-    f = open(path,'rb')
-    h = hashlib.sha256()
-    for i in range(block_count):
-        f.readinto(data)
-        h.update(data)
-    # last partial chunk
-    data = f.read(residual)
-    h.update(data)
-    dig = h.digest()
-    print(dig)
-    sha_hex = binascii.hexlify(dig)
-    print(sha_hex)
 
         
 
@@ -198,14 +215,32 @@ def fetch(url,data_type="json",debug=False):
     return data
 
 try:
-    if reg.status is None:
+    if reg.uplink is None:
         print("enter status url")
         val = input('status>')
-        reg.set('status',val)
-    files = fetch(reg.status)
-    print(files)
+        reg.set('uplink',val)
 except OSError as e:
     print(e)
 
 def update():
-    print(fetch(r.status))
+    import upip,json
+    data = json.load(upip.url_open(reg.uplink+'/status'))
+    for i in data:
+        local = reg.get('f_'+i)
+        remote = data[i]
+        print(i)
+        if local != remote:
+            if local is None:
+                print("local file",i," missing")
+            else:
+                print("hash is different")
+            print("Fetch file ",i)
+            upip._makedirs(i) 
+            upip.save_file(i,upip.url_open(reg.uplink+'/files'+i))
+            print("Update registry")
+            reg.set('f_'+i,data[i])
+
+
+print("Running Update")
+update()
+gc.collect()

@@ -33,7 +33,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #F00;
+        background-color: #A00;
       }
   
       input:checked + .slider {
@@ -43,7 +43,7 @@
       </style>
       </head>
       <body onload="start()">
-       <div class="voltage" id="vbat_min_div" style="display: none">VMin: <input id="vbat_min" type="number" min="0.1" max="20.0" step="0.1" value="6.3" style="width: 50px"/>
+       <div class="voltage" id="vbat_min_div" >VMin: <input id="vbat_min" type="number" min="0.1" max="20.0" step="0.1" value="6.3" style="width: 50px"/>
        </div>
       <br>
       <label class="switch">
@@ -79,7 +79,7 @@
         Invert Y Axis<input type="checkbox" id="invert2">
       </div>
   
-      <div id="trimdiv" style="display:none;">
+      <div id="trimdiv" style="">
         <input type="range" min="-100" max="100" value="0" class="slider" id="trim1x" style="position: absolute; left: 5%; top: 95%; width: 38%;">
         <input type="range" min="-100" max="100" value="0" class="slider" id="trim2x" style="position: absolute; left: 55%; top: 95%; width: 38%;">
         <input type="range" min="-100" max="100" value="0" class="slider" id="trim2y" orient="vertical" style="position: absolute; left: 98%; top: 10%; height: 78%;-webkit-appearance: slider-vertical;">
@@ -115,9 +115,7 @@
        var alarm;
       var alarmfreq=0;
 
-  //var connection = new WebSocket('ws://' + window.location.host + ':81',"dumb-increment-protocol"); n"
       var connection = new WebSocket('ws://' + window.location.host + ':81', ['arduino']);
-//      var connection = new WebSocket('ws://192.168.4.1:81', ['arduino']);
   
       connection.onopen = function () {         //open
         console.log("Websocket Open");
@@ -135,11 +133,6 @@
         draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
         draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
         clearInterval(getInterval);
-          gainNode.disconnect(audioCtx.destination);
-          if(alarmfreq!=0){
-            clearInterval(alarm);
-            alarmfreq=0;
-        }
       };
   
       connection.onmessage = function (e) {     //Daten empfangen
@@ -153,11 +146,6 @@
                   document.getElementById("vbat").style.display="none";
                   document.getElementById("vbat_min_div").style.display="none";
                   visible=0;
-                      gainNode.disconnect(audioCtx.destination);
-                      if(alarmfreq!=0){
-                        clearInterval(alarm);
-                        alarmfreq=0;
-                    }
                   }
                 }
               else{
@@ -170,17 +158,6 @@
                 var vbat=indata.vbat/10;
                 document.getElementById("vbat").innerHTML = vbat + " V";
                 if(vbat<document.getElementById("vbat_min").value){
-                   if(alarmfreq==0){
-                      gainNode.connect(audioCtx.destination);
-                      alarm=setInterval(function(){
-                      navigator.vibrate(500); // vibrate for 200ms
-                         if(alarmfreq==1000)
-                          alarmfreq=2000;
-                        else
-                          alarmfreq=1000;
-                        oscillator.frequency.value=alarmfreq;
-                      }, 1000);
-                    }                    
                 }
                 else{
                     gainNode.disconnect(audioCtx.destination);
@@ -204,25 +181,7 @@
   
       function start()
       {
-        try {
-            // Fix up for prefixing
-            window.AudioContext = window.AudioContext||window.webkitAudioContext;
-            context = new AudioContext();
-        }
-        catch(e) {
-            alert('Web Audio API is not supported in this browser -> no audio\n Try Google Chrome or Firefox instead.');
-          }
 
-           audioCtx=new(window.AudioContext || window.webkitAudioContext)();
-          oscillator=audioCtx.createOscillator();
-          gainNode=audioCtx.createGain();
-          gainNode.gain.value = 0.5;
-      
-          oscillator.connect(gainNode);
-          oscillator.type='sine';
-          oscillator.frequency.value=1000;
-          oscillator.start(0);
-  
         
         var c_left = document.getElementById("Canvas_left");
         ctx_left = c_left.getContext("2d");
@@ -376,7 +335,7 @@
       function draw_background(ctx)
       {
                ctx.beginPath();
-               for(var i=0;i<ctx.canvas.width/2;i+=ctx.canvas.width/20)
+               for(var i=0;i<ctx.canvas.width/2;i+=ctx.canvas.width/10)
                {
                        ctx.moveTo(ctx.canvas.width/2+i,ctx.canvas.height/2);
                        ctx.arc(ctx.canvas.width/2,ctx.canvas.height/2,i,0,2*Math.PI);

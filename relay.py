@@ -18,12 +18,13 @@ def scanner(path,data):
             scanner(i.path,data)
         else:
             # chop of the base
-            pos = i.path.find('/')
-            # get the sha sums
-            h = hashlib.sha256()
-            h.update(open(i.path,'rb').read())
-            r = h.hexdigest()
-            data[i.path[pos:]] = r 
+            if not path.endswith('.swp'):
+                pos = i.path.find('/')
+                # get the sha sums
+                h = hashlib.sha256()
+                h.update(open(i.path,'rb').read())
+                r = h.hexdigest()
+                data[i.path[pos:]] = r 
     return data
 
 @app.route('/files/<path:path>')
