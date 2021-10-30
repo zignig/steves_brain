@@ -6,6 +6,7 @@ import uos, machine
 # uos.dupterm(None, 1) # disable REPL on UART(0)
 import gc
 import json
+import upip
 
 gc.collect()
 
@@ -122,33 +123,36 @@ class scanner:
          
 # connect to the network
 def do_connect():
-    import network
+    try:
+        import network
 
-    # disable ap network
-    #    ap = network.WLAN(network.STA_AP)
-    #    ap.active(False)
-    #    ap.disconnect()
+        # disable ap network
+        #    ap = network.WLAN(network.STA_AP)
+        #    ap.active(False)
+        #    ap.disconnect()
 
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    info = reg.wifi
-    if info is None:
-        nets = wlan.scan()
-	for i in nets:
-		print(i[0].decode())
-        ssid = input('ssid>')
-        password = input('password>')
-        reg.set('wifi',[ssid,password])
-    if not wlan.isconnected():
-        print("connecting to network...")
-        wlan.connect(info[0],info[1])
-        count = 0
-        while not wlan.isconnected():
-            #print(wlan.ifconfig())
-            count += 1 
-            if (count % 10000) == 0:
-                print(wlan.ifconfig()) 
-    reg.set('network',wlan.ifconfig())
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        info = reg.wifi
+        if info is None:
+            nets = wlan.scan()
+            for i in nets:
+                    print(i[0].decode())
+            ssid = input('ssid>')
+            password = input('password>')
+            reg.set('wifi',[ssid,password])
+        if not wlan.isconnected():
+            print("connecting to network...")
+            wlan.connect(info[0],info[1])
+            count = 0
+            while not wlan.isconnected():
+                #print(wlan.ifconfig())
+                count += 1 
+                if (count % 10000) == 0:
+                    print(wlan.ifconfig()) 
+        reg.set('network',wlan.ifconfig())
+    except:
+        wlan = None
     return wlan
 
 
@@ -222,8 +226,8 @@ try:
 except OSError as e:
     print(e)
 
+
 def update():
-    import upip,json
     data = json.load(upip.url_open(reg.uplink+'/status'))
     for i in data:
         local = reg.get('f_'+i)

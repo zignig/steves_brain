@@ -2,7 +2,8 @@
       <head>
       <meta charset="utf-8"> <title>Steve's Fake Controller</title>
       <meta name="viewport" content="width=device-width, user-scalable=no">
-  
+     <link rel="stylesheet" media="all" href="/css/button.css" />
+
       <style>
   
       .switch, .voltage {
@@ -136,7 +137,7 @@
   
       connection.onclose = function (e)
       {
-          console.log("Websocket close");
+        console.log("Websocket close");
         wsconnect=0;
         draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
         draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
@@ -157,13 +158,16 @@
         var c_stickr = document.getElementById("Canvas_stickr");
         ctx_stickr = c_stickr.getContext("2d");
   
-        update();
         resize();
+        update();
   
         draw_background(ctx_left);
         draw_background(ctx_right);
         draw_stick(ctx_stickl,c_stickl.width/2,c_stickl.height/2,0,1);
         draw_stick(ctx_stickr,c_stickr.width/2,c_stickr.height/2,2,3);
+
+        resize();
+        update();
   
         window.addEventListener("optimizedResize", function() {
           resize();

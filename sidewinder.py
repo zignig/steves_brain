@@ -10,14 +10,22 @@ from flask import Flask, render_template
 from diff import DiffDrive
 import json
 
-app = Flask('aioflask')
+app = Flask('steve_controller')
 app.config['DEBUG'] = True
 app.jinja_loader.searchpath.insert(0, '.')
 
 dd =DiffDrive()
+
+
 @app.route('/')
 def index():
+    print('index')
     return render_template('index.html')
+
+@app.route('/static/<path:path>')
+def serve_static(path):
+    return str(path)
+    return app.send_static_file(path)
 
 commands = {
         0 : 'status',
