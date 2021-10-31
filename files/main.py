@@ -33,4 +33,8 @@ def show(directory='/'):
         except:
             print('file ',i)
 
-go()
+import minibrain 
+
+d = minibrain.diff_drive()
+d.forward()
+#go()

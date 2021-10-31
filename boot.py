@@ -118,11 +118,10 @@ class scanner:
         
 
 
-        
-
          
 # connect to the network
 def do_connect():
+    # TODO better fallback
     try:
         import network
 
