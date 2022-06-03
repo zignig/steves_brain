@@ -12,7 +12,7 @@ esptool --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp
 
 import os
 import flashbdev
-os.VfsFat.mkfs(flashbdev.bdev)
+os.VfsLfs2.mkfs(flashbdev.bdev)
 
 ## COOL BUTTON
 

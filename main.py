@@ -26,4 +26,4 @@ def show(directory='/'):
         except:
             print('file ',i)
 
-go()
+#go()

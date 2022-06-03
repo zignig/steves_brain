@@ -50,6 +50,12 @@ class Registry:
         for i in self._db.items(prefix+chr(0),prefix+chr(255)):
             print(i)
 
+    def __repr__(self):
+        val = ''
+        for i in self._db.items():
+            val += i[0].decode() + ':' +  i[1].decode() + '\n'
+        return val
+    
     def __getattr__(self,item):
         return self.get(item)
 

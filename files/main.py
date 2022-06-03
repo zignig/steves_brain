@@ -36,5 +36,27 @@ def show(directory='/'):
 import minibrain 
 
 d = minibrain.diff_drive()
-d.forward()
-#go()
+
+def loopback_test(size=8,sleep=500):
+    import mpyaes
+    import time
+    # empty the buffer
+    print(d.port.read())
+    print(d.port.read())
+    print(d.port.read())
+    for i in range(size):
+        data = mpyaes.generate_key(16)
+        length = d.port.write(data)
+        time.sleep_ms(sleep)
+        recv = d.port.read(length)
+        if recv != None:
+            recv = bytearray(recv)
+        if data == recv:
+            print(i,'ok')
+        else:
+            print(i,'fail :',data,recv)       
+import _thread
+
+_thread.start_new_thread(go,())
+import utelnetserver
+utelnetserver.start()

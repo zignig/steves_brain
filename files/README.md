@@ -10,3 +10,5 @@ Yay!
 
 # Update systes are working
 
+need to rewrite the arduino brain
+

@@ -13,3 +13,14 @@ class diff_drive:
     def backward(self):
         self.port.write('s')
 
+    def left(self):
+        self.port.write('a')
+
+    def right(self):
+        self.port.write('d')
+
+    def read(self):
+        while True:
+            val = self.port.read()
+            if val is not None:
+                print(val) 
