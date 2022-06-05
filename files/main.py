@@ -37,7 +37,7 @@ import minibrain
 
 d = minibrain.diff_drive()
 
-def loopback_test(size=8,sleep=500):
+def loopback_test(size=8,sleep=40):
     import mpyaes
     import time
     # empty the buffer
@@ -54,9 +54,16 @@ def loopback_test(size=8,sleep=500):
         if data == recv:
             print(i,'ok')
         else:
-            print(i,'fail :',data,recv)       
-import _thread
+            print(i,'fail :',data,recv)
 
-_thread.start_new_thread(go,())
-import utelnetserver
-utelnetserver.start()
+
+import _thread
+if reg.web:
+    _thread.start_new_thread(go,())
+if reg.telnet:
+    
+    import utelnetserver
+    utelnetserver.start()
+if reg.ws:
+    import ws
+    _thread.start_new_thread(ws.go,())

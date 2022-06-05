@@ -103,16 +103,16 @@
       var alarm;
       var alarmfreq=0;
 
-      var connection = new WebSocket('ws://' + window.location.host + '/socket');
+      var connection = new WebSocket('ws://' + window.location.host + ':7777/socket');
   
       connection.onopen = function () {         //open
         console.log("Websocket Open");
         wsconnect=1;
         window.requestAnimationFrame(update);
-        //draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
-        //draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
-        //aliveInterval=setInterval(sendalive,3000);
-l
+        draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
+        draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
+        aliveInterval=setInterval(sendalive,3000);
+
         //getInterval=setInterval(getVBat, 5000);
       };
   
@@ -127,7 +127,8 @@ l
       connection.onmessage = function (e) {     //Daten empfangen
          console.log("indata: " + e.data);
          if(e.data!="Connected"){
-            var indata=JSON.parse(e.data);
+           console.log(e.data);
+            //var indata=JSON.parse(e.data);
          }
       }
   
@@ -155,7 +156,7 @@ l
         ctx_stickr = c_stickr.getContext("2d");
   
         update();
-  
+
         draw_background(ctx_left);
         draw_background(ctx_right);
         draw_stick(ctx_stickl,c_stickl.width/2,c_stickl.height/2,0,1);
@@ -204,6 +205,9 @@ l
   
       function Button1Change(checkbox)
       {
+        elem = document.documentElement;
+        elem.requestFullscreen();
+        window.setTimeout(resize, 300)
         if(checkbox.checked==true)
           ppm[4]=256;
         else

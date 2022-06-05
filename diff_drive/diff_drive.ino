@@ -13,19 +13,7 @@ int inByte = 0 ;
 int led = 1;
 int counter  = 0;
 
-void setup()
-{
-  // Declare motor control pins to be in output
 
-  disable();
-  Serial.begin(9600);
-  Serial.write("STEVE-0.1");
-  enable();
-  moveBot(true,15,900);
-  stopMotors();
-  disable();
-  pinMode(LED_BUILTIN,OUTPUT);
-}
 
 void enable()
 {
@@ -97,16 +85,28 @@ void stopMotors() {
   digitalWrite(in4, LOW);
 }
 
+void setup()
+{
+  // Declare motor control pins to be in output
+
+  disable();
+  Serial.begin(9600);
+  Serial.write("STEVE-0.1");
+  enable();
+  moveBot(true,15,900);
+  stopMotors();
+  disable();
+  pinMode(LED_BUILTIN,OUTPUT);
+}
+
 void loop()
 {
   // Move forward for 2s @ speed 200
   //moveBot(true, sp, 1000);
   counter = counter + 1;
-  if ((counter % 10000) == 0) {
+  if((counter % 3000000) == 0) {
     digitalWrite(LED_BUILTIN,led);
     led = !led;
-
- 
   }
   //stopMotors();
   // Rotate bot for 1s clockwise @ speed 150

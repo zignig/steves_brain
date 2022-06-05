@@ -7,11 +7,13 @@ import uos, machine
 import gc
 import json
 import upip
+import time
 
 gc.collect()
 
 # Data registry class
 class Registry:
+    " Wrapper around the btree construct"
     def __init__(self):
         # create the registry 
         import btree
@@ -163,71 +165,12 @@ def do_connect():
 
 wlan = do_connect()
 
-import socket
-
-def fetch(url,data_type="json",debug=False):
-    _, _, host, path = url.split('/', 3)
-    split_port = host.split(':')
-    #print(host,split_port,path)
-    if len(split_port) > 1:
-        port = int(split_port[1])
-        host = split_port[0]
-    else:
-        port = 80
-    addr = socket.getaddrinfo(host,port)[0][-1]
-     
-    # Create a socket
-    s = socket.socket()
-    # Connect to IP address
-    s.connect(addr)
-    # Send GET request
-    s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-    # status
-    d = s.readline()
-    #print(d)
-    resp = d.split()
-    #print(resp)
-    if debug:
-        print("HEADERS")
-    while True:
-      # Receive data
-      line= s.readline()
-      if line == b'\r\n':
-        break 
-      val = line.decode().strip().split(':')
-      if debug:
-        print(val)
-      if val[0] == "Content-Length":
-        length = int(val[1].strip())    
-    if debug:
-        print(length)
-        print("END HEADERS")
-    data = bytearray() 
-    while True:
-        more = s.recv(length)
-        if more == b'':
-            break
-        if debug:
-            print(more)
-            print(len(more))
-        data.extend(more)
-    
-    if data_type == "json":
-        try:
-            data = json.loads(data)
-        except Exception as E:
-            print(data)
-            print(E)
-    #print(data)
-    # Close the socket    
-    s.close()
-    return data
-
 try:
     if reg.uplink is None:
         print("enter status url")
         val = input('status>')
         reg.set('uplink',val)
+        reg.set('telnet',True)
 except OSError as e:
     print(e)
 
@@ -248,6 +191,8 @@ def update():
             upip.save_file(i,upip.url_open(reg.uplink+'/files'+i))
             print("Update registry")
             reg.set('f_'+i,data[i])
+            # wait for the flash to catch up
+            time.sleep(2)
 
 
 print("Running Update")

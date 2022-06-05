@@ -108,11 +108,11 @@
       var alarm;
       var alarmfreq=0;
 
-      var connection = new WebSocket('ws://' + window.location.host + '/socket');
+      var connection = new WebSocket('ws://' + window.location.host + ':7777/socket');
   
       connection.onopen = function () {         //open
         console.log("Websocket Open");
-        wsconnect=1;
+        wsconnect = 1;
         window.requestAnimationFrame(update);
         //draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
         //draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
