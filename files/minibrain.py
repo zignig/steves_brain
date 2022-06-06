@@ -1,26 +1,21 @@
 # This is the interface to ardiuno minibrain
 # this drive the wheels and the 5V sensors
-from machine import UART
-
+from machine import Pin,SPI
 class diff_drive:
-    def __init__(self,uart=2,speed=9600):
-        self.port = UART(uart,speed)
-        
-    
+    def __init__(self,speed=10000):
+        self.port = SPI(1,speed) 
+        self.ss = Pin(27,Pin.OUT)
+        self.ss.off()
+ 
     def forward(self):
-        self.port.write('w')
+        self.port.write('w\n')
 
     def backward(self):
-        self.port.write('s')
+        self.port.write('s\n')
 
     def left(self):
-        self.port.write('a')
+        self.port.write('a\n')
 
     def right(self):
-        self.port.write('d')
+        self.port.write('d\n')
 
-    def read(self):
-        while True:
-            val = self.port.read()
-            if val is not None:
-                print(val) 

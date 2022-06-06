@@ -282,8 +282,8 @@
               context.strokeStyle = '#003300';
               context.stroke();
   
-        ppm[ppm0] = parseInt(256-((256/context.canvas.width)*x))
-        ppm[ppm1] = parseInt(256-((256/context.canvas.height)*y))
+        ppm[ppm0] = parseInt(128-((256/context.canvas.width)*x));
+        ppm[ppm1] = parseInt(128-((256/context.canvas.height)*y));
       }
   
   
@@ -336,10 +336,10 @@
           if(ppm[i]!=oldppm[i])
           {
             oldppm[i]=ppm[i];
-            var sendframe=new Uint8Array(3);
+            var sendframe=new Uint8Array(2);
             sendframe[0]=i;
-            sendframe[1]=ppm[i]>>8;
-            sendframe[2]=ppm[i];
+            //sendframe[1]=ppm[i]>>8;
+            sendframe[1]=ppm[i];
             if(wsconnect)
               connection.send(sendframe);
           }
@@ -382,11 +382,11 @@
       }
 
       function sendalive(){
-        var sendframe=new Uint8Array(3);
+        var sendframe=new Uint8Array(2);
 
         sendframe[0]=0;
-        sendframe[1]=ppm[0]>>8;
-        sendframe[2]=ppm[0];
+        //sendframe[1]=ppm[0]>>8;
+        sendframe[1]=ppm[0];
         if(wsconnect)
           connection.send(sendframe);
 

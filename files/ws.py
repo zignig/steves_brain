@@ -19,7 +19,7 @@ async def add_client(ws, path):
 
     try:
         async for msg in ws:
-            data = struct.unpack('bbb',msg)
+            data = struct.unpack('bb',msg)
             print(data)
             #await ws.send(msg)
     finally:
