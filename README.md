@@ -31,3 +31,9 @@ modified.
 so ... after getting spi working on two usb feeds.
 
 when it gets moved to (battery) only 
+
+## 20220612 upadte 
+
+-  replaced with fixed level shifters, spi working 
+-  power brownout with heavy motor usage, need to rework regulation
+
