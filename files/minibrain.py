@@ -1,21 +1,48 @@
 # This is the interface to ardiuno minibrain
 # this drive the wheels and the 5V sensors
+
+# connection
+# green , pin 12 , MISO
+# yellow , pin 13 , MOSI
+# white , pin 14 , CLK
+# blue , pin 27 , SS
+
 from machine import Pin,SPI
+import time
+
 class diff_drive:
     def __init__(self,speed=10000):
-        self.port = SPI(1,speed) 
         self.ss = Pin(27,Pin.OUT)
-        self.ss.off()
+        self.ss.on()
+        self.port = SPI(1,speed) 
  
+    def _send(self,s):
+        self.ss.off()
+        self.port.write(s+'\n')
+        self.ss.on()
+
+    def _loop(self,s):
+        z = bytearray(len(s)+1)
+        self.ss.off()
+        self.port.write_readinto(s+'\n',z)
+        self.ss.on()
+        return z
+
     def forward(self):
-        self.port.write('w\n')
+        self._send('w')
 
     def backward(self):
-        self.port.write('s\n')
+        self._send('s')
 
     def left(self):
-        self.port.write('a\n')
+        self._send('a')
 
     def right(self):
-        self.port.write('d\n')
+        self._send('d')
+
+    def faster(self):
+        self._send(']')
+
+    def slower(self):
+        self._send('[')
 

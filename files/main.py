@@ -35,14 +35,8 @@ def show(directory='/'):
 
 import minibrain 
 
-d = minibrain.diff_drive(10000)
+d = minibrain.diff_drive()
 
-# TODO , convert to spi
-# connection
-# green , pin 12 , MISO
-# yellow , pin 13 , MOSI
-# white , pin 14 , CLK
-# blue , pin 27 , SS
 
 def loopback_test(size=8,sleep=40):
     import mpyaes

@@ -24,3 +24,10 @@ https://www.instructables.com/Wifi-PPM-no-App-Needed/
 
 modified.
 
+# SPI trouble
+
+## BROKEN CLOCK
+
+so ... after getting spi working on two usb feeds.
+
+when it gets moved to (battery) only 

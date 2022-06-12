@@ -1,3 +1,7 @@
+// STEVE's minibrain interface
+// 
+// SPI comms from the ESP32
+
 // Left Motor (A)
 int enA = 3;
 int in1 = 9;
@@ -6,11 +10,10 @@ int in2 = 8;
 int enB = 5;
 int in3 = 7;
 int in4 = 6;
-int sp = 100;
+int sp = 200;
 int len = 500;
-int inByte = 0 ;
 
-int led = 1;
+int inByte = 0 ;
 int counter  = 0;
 
 
@@ -25,6 +28,7 @@ void enable()
   pinMode(in4, OUTPUT);
  
 }
+
 void disable()
 {
   pinMode(enA, INPUT);
@@ -35,12 +39,6 @@ void disable()
   pinMode(in4, INPUT);
  
 }
-/*  Move forward function
-    Dir (Boolean) { true: Forward,
-          false: Backward }
-    Spd (Int) { 0 <-> 255 }
-    Dur (Int) { Duration (in ms) }
-*/
 
 void moveBot(bool dir, int spd, int dur) {
   // Motor A
@@ -55,13 +53,6 @@ void moveBot(bool dir, int spd, int dur) {
   //Motion Duration
   delay(dur);
 }
-
-/*  Rotate function
-    Dir (Boolean) { true: Clockwise,
-          false: Anti-clockwise }
-    Spd (Int) { 0 <-> 255 }
-    Dur (Int) { Duration (in ms) }
-*/
 
 void rotateBot(bool dir, int spd, int dur) {
   // Motor A
@@ -84,74 +75,100 @@ void stopMotors() {
   digitalWrite(in3, LOW);
   digitalWrite(in4, LOW);
 }
+// spi boot stolen from
+// Written by Nick Gammon
+// February 2011
+// taken from https://gammon.com.au/spi
 
-void setup()
+
+#include <SPI.h>
+
+char buf [64];
+volatile char comm ; 
+volatile byte pos;
+volatile boolean process_it;
+
+void setup (void)
 {
-  // Declare motor control pins to be in output
-
-  disable();
-  Serial.begin(9600);
-  Serial.write("STEVE-0.1");
+  Serial.begin (115200);   // debugging
+  // turn on SPI in slave mode
+  SPCR |= bit (SPE);
+  // have to send on master in, *slave out*
+  pinMode(MISO, OUTPUT);
+  pinMode(SCK, INPUT_PULLUP);
+  pinMode(MOSI, INPUT);
+  pinMode(SS,INPUT_PULLUP);
+  // get ready for an interrupt 
+  pos = 0;   // buffer empty
+  process_it = false;
+  // now turn on interrupts
+  SPI.attachInterrupt();
+  buf [pos] = 0;  
+  Serial.println("minibrain 0.1");
   enable();
   moveBot(true,15,900);
-  stopMotors();
   disable();
-  pinMode(LED_BUILTIN,OUTPUT);
-}
+}  // end of setup
 
-void loop()
+
+// SPI interrupt routine
+ISR (SPI_STC_vect)
 {
-  // Move forward for 2s @ speed 200
-  //moveBot(true, sp, 1000);
-  counter = counter + 1;
-  if((counter % 3000000) == 0) {
-    digitalWrite(LED_BUILTIN,led);
-    led = !led;
-  }
-  //stopMotors();
-  // Rotate bot for 1s clockwise @ speed 150
-  //rotateBot(true, sp, 1000);
-  // Move backward for 2s @ speed 200
-  //moveBot(false, sp, 1000);
-  // Rotate bot for 1s anti-clockwise @ speed 150
-  //rotateBot(false, sp, 1000);
-  // Stop motors for 1s @ speed 200
-  //moveBot(false, sp, 1000);
-  //stopMotors();
-  if (Serial.available() > 0) {
-    enable();
-    // get incoming byte:
-    inByte = Serial.read();
-    switch (inByte){
-      case ']':
-        sp = sp + 10;
-        break;
-      case '[':
-        sp = sp - 10;
-        break;
-      case '}':
-        len = len + 50;
-        break;
-      case '{':
-        len = len - 50;
-        break;
-      case 'w':
-        moveBot(true,sp,len);
-        stopMotors();
-        break;
-      case 's':
-        moveBot(false,sp,len);
-        stopMotors();
-        break;
-      case 'a':
-        rotateBot(false,sp,len);
-        stopMotors();
-        break;
-      case 'd':
-        rotateBot(true,sp,len);
-        stopMotors();
-        break;
+  byte c = SPDR;  // grab byte from SPI Data Register
+  // add to buffer if room
+  if (pos < (sizeof (buf) - 1))
+    buf [pos++] = c;
+  // example: newline means time to process buffer
+  if ( c == '\n')
+    process_it = true;
+  //comm = SPDR;
+  //process_it = true;
+}  // end of interrupt routine SPI_STC_vect
 
-    }
-  }
-}
+// main loop - wait for flag set in interrupt routine
+void loop (void)
+{
+  if (process_it)
+    {
+        buf[pos] = 0;
+        Serial.println("");
+        Serial.print(buf);
+        comm = buf[0];
+        //Serial.print(int(comm),HEX);
+        // Serial.print(int(comm),BIN);
+        pos = 0;
+        process_it = false;
+        enable();
+        switch (comm){
+          case ']':
+            sp = sp + 10;
+            break;
+          case '[':
+            sp = sp - 10;
+            break;
+        //  case '}':
+        //    len = len + 50;
+        //    break;
+        //////  case '{':
+        //    len = len - 50;
+        //    break;
+          case 'w':
+            moveBot(false,sp,len);
+            stopMotors();
+            break;
+          case 's':
+            moveBot(true,sp,len);
+            stopMotors();
+            break;
+          case 'a':
+            rotateBot(true,sp,len);
+            stopMotors();
+            break;
+          case 'd':
+            rotateBot(false,sp,len);
+            stopMotors();
+            break;
+        }
+        disable();
+    }  
+}  // end of loop
