@@ -1,6 +1,11 @@
 // STEVE's minibrain interface
 // 
 // SPI comms from the ESP32
+// communications protocol 
+
+#include "comms.h"
+#include "settings.h"
+#include "drive.h"
 
 // Left Motor (A)
 int enA = 3;
@@ -10,7 +15,8 @@ int in2 = 8;
 int enB = 5;
 int in3 = 7;
 int in4 = 6;
-int sp = 200;
+// speed and time length
+int sp = 150;
 int len = 500;
 
 int inByte = 0 ;
@@ -42,11 +48,11 @@ void disable()
 
 void moveBot(bool dir, int spd, int dur) {
   // Motor A
-  digitalWrite(in1, dir);
-  digitalWrite(in2, !dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
+  digitalWrite(in1, !dir);
+  digitalWrite(in2, dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
   // Motor B
-  digitalWrite(in3, dir);
-  digitalWrite(in4, !dir);
+  digitalWrite(in3, !dir);
+  digitalWrite(in4, dir);
   // Set motor speed to spd
   analogWrite(enA, spd);
   analogWrite(enB, spd);
@@ -106,7 +112,7 @@ void setup (void)
   buf [pos] = 0;  
   Serial.println("minibrain 0.1");
   enable();
-  moveBot(true,15,900);
+  moveBot(true,15,50);
   disable();
 }  // end of setup
 
@@ -153,11 +159,11 @@ void loop (void)
         //    len = len - 50;
         //    break;
           case 'w':
-            moveBot(false,sp,len);
+            moveBot(true,sp,len);
             stopMotors();
             break;
           case 's':
-            moveBot(true,sp,len);
+            moveBot(false,sp,len);
             stopMotors();
             break;
           case 'a':

@@ -148,6 +148,7 @@ def do_connect():
             ssid = input('ssid>')
             password = input('password>')
             reg.set('wifi',[ssid,password])
+        outer = 0
         if not wlan.isconnected():
             print("connecting to network...")
             wlan.connect(info[0],info[1])
@@ -155,11 +156,17 @@ def do_connect():
             while not wlan.isconnected():
                 #print(wlan.ifconfig())
                 count += 1 
-                if (count % 10000) == 0:
+                if (count % 100000) == 0:
                     print(wlan.ifconfig()) 
+                    outer += 1 
+                    if outer == 60:
+                        break
         reg.set('network',wlan.ifconfig())
+        print(reg.network)
     except:
         wlan = None
+        print("Network fail")
+
     return wlan
 
 

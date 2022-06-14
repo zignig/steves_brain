@@ -10,6 +10,12 @@
 from machine import Pin,SPI
 import time
 
+# 20220614 - drive rework
+# Convert mini_brain to a frame based comm
+# sync , sync , command , d1,d2,d3,d4 check
+# rewrite the Arduino software first
+
+
 class diff_drive:
     def __init__(self,speed=10000):
         self.ss = Pin(27,Pin.OUT)
