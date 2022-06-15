@@ -8,13 +8,13 @@
 #include "drive.h"
 
 // Left Motor (A)
-int enA = 3;
-int in1 = 9;
-int in2 = 8;
+int Lenable = 3;
+int L1 = 9;
+int L2 = 8;
 // Right Motor (B)
-int enB = 5;
-int in3 = 7;
-int in4 = 6;
+int Renable = 5;
+int R1 = 7;
+int R2 = 6;
 // speed and time length
 int sp = 150;
 int len = 500;
@@ -26,60 +26,62 @@ int counter  = 0;
 
 void enable()
 {
-  pinMode(enA, OUTPUT);
-  pinMode(enB, OUTPUT);
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  pinMode(in3, OUTPUT);
-  pinMode(in4, OUTPUT);
+  pinMode Lenable, OUTPUT);
+  pinMode(Renable, OUTPUT);
+  pinMode(L1, OUTPUT);
+  pinMode(L2, OUTPUT);
+  pinMode(R1, OUTPUT);
+  pinMode(R2, OUTPUT);
  
 }
 
 void disable()
 {
-  pinMode(enA, INPUT);
-  pinMode(enB, INPUT);
-  pinMode(in1, INPUT);
-  pinMode(in2, INPUT);
-  pinMode(in3, INPUT);
-  pinMode(in4, INPUT);
+  pinMode Lenable, INPUT);
+  pinMode(Renable, INPUT);
+  pinMode(L1, INPUT);
+  pinMode(L2, INPUT);
+  pinMode(R1, INPUT);
+  pinMode(R2, INPUT);
  
 }
 
 void moveBot(bool dir, int spd, int dur) {
   // Motor A
-  digitalWrite(in1, !dir);
-  digitalWrite(in2, dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
+  digitalWrite(L1, !dir);
+  digitalWrite(L2, dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
   // Motor B
-  digitalWrite(in3, !dir);
-  digitalWrite(in4, dir);
+  digitalWrite(R1, !dir);
+  digitalWrite(R2, dir);
   // Set motor speed to spd
-  analogWrite(enA, spd);
-  analogWrite(enB, spd);
+  analogWrite(Lenable, spd);
+  analogWrite(Renable, spd);
   //Motion Duration
   delay(dur);
 }
 
 void rotateBot(bool dir, int spd, int dur) {
   // Motor A
-  digitalWrite(in1, dir);
-  digitalWrite(in2, !dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
+  digitalWrite(L1, dir);
+  digitalWrite(L2, !dir); 
   // Motor B
-  digitalWrite(in3, !dir);
-  digitalWrite(in4, dir);
+  digitalWrite(R1, !dir);
+  digitalWrite(R2, dir);
   // Set motor speed to spd
-  analogWrite(enA, spd);
-  analogWrite(enB, spd);
+  analogWrite(Lenable, spd);
+  analogWrite(Renable, spd);
   //Rotation Duration
   delay(dur);
 }
 
 //Turn off both motors
 void stopMotors() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, LOW);
+  digitalWrite(L1, LOW);
+  digitalWrite(L2, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(R2, LOW);
+  analogWrite(Lenable, 0);
+  analogWrite(Renable, 0);
 }
 // spi boot stolen from
 // Written by Nick Gammon
