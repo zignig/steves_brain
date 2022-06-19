@@ -7,7 +7,7 @@
 # white , pin 14 , CLK
 # blue , pin 27 , SS
 
-from machine import Pin,SPI
+from machine import Pin, SPI
 import time
 
 # 20220614 - drive rework
@@ -16,39 +16,92 @@ import time
 # rewrite the Arduino software first
 
 
+class Frame:
+    "simple dataframe for arduino comms"
+    sync1 = 0xF
+    sync2 = 0xE
+
+    def __init__(self):
+        self.action = 0
+        self.checksum = 0
+        self.data1 = 0
+        self.data2 = 0
+        self.data3 = 0
+        self.data4 = 0
+
+    def get(self):
+        return bytearray(
+            [
+                self.sync1,
+                self.sync2,
+                self.action,
+                self.cs(),
+                self.data1,
+                self.data2,
+                self.data3,
+                self.data4,
+            ]
+        )
+
+
+    def set(self,action,data1=None,data2=None,data3=None,data4=None):
+        self.action = action
+        if data1 is not None:
+            self.data1 = data1
+        if data2 is not None:
+            self.data2 = data2
+        if data3 is not None:
+            self.data3 = data3
+        if data4 is not None:
+            self.data4 = data4
+
+    def cs(self):
+        val = (self.data1 + self.data2 + self.data3 + self.data4) % 256
+        print(val)
+        return val
+
 class diff_drive:
-    def __init__(self,speed=10000):
-        self.ss = Pin(27,Pin.OUT)
+    def __init__(self, speed=10000):
+        self.ss = Pin(27, Pin.OUT)
         self.ss.on()
-        self.port = SPI(1,speed) 
- 
-    def _send(self,s):
+        self.port = SPI(1, speed)
+        self.frame = Frame()
+
+    def _send(self, s):
         self.ss.off()
-        self.port.write(s+'\n')
+        self.port.write(s + "\n")
         self.ss.on()
 
-    def _loop(self,s):
-        z = bytearray(len(s)+1)
+    def _char(self,c):
         self.ss.off()
-        self.port.write_readinto(s+'\n',z)
+        self.port.write(c)
+        self.ss.on()
+
+    def _loop(self, s):
+        z = bytearray(len(s) + 1)
+        self.ss.off()
+        self.port.write_readinto(s + "\n", z)
         self.ss.on()
         return z
 
+    def go(self,action):
+        self.frame.set(action)
+        self._char(self.frame.get())
+
     def forward(self):
-        self._send('w')
+        self._send("w")
 
     def backward(self):
-        self._send('s')
+        self._send("s")
 
     def left(self):
-        self._send('a')
+        self._send("a")
 
     def right(self):
-        self._send('d')
+        self._send("d")
 
     def faster(self):
-        self._send(']')
+        self._send("]")
 
     def slower(self):
-        self._send('[')
-
+        self._send("[")
