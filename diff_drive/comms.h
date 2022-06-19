@@ -1,6 +1,9 @@
 // frame based comms protocol
 // sync1 , sync2 , action , checksum , data1,data2,data3,data4
 // all bytes 
+#ifndef INC_COMMS_H_
+#define INC_COMMS_H_
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -36,4 +39,6 @@ void comms_input_packet(uint8_t* packet);
 bool comms_get_packet(comms_packet_t* packet);
 void comms_build_packet(comms_packet_t* packet, comms_type_e type, uint8_t* data);
 bool comms_packet_ready();
+void comms_packet_ack();
 
+#endif

@@ -1,7 +1,8 @@
 // Command protocol
 // lifted from https://medium.com/embedism/the-definitive-guide-on-writing-a-spi-communications-protocol-for-stm32-73594add4c09
-#include <stdlib.h>
 #include "comms.h"
+#include <stdlib.h>
+#include <string.h>
 
 packet_builder_t _packet_builder;
 uint8_t _pos;
@@ -16,7 +17,6 @@ uint8_t checksum(uint8_t* data)
     sum += data[1];
     sum += data[2];
     sum += data[3];
-
     return sum;
 }
 
@@ -80,7 +80,7 @@ bool comms_input_byte(uint8_t byte)
 bool comms_packet_valid(comms_packet_t* packet)
 {
     uint8_t sum = checksum(&packet->data1);
-
+    packet->checksum = sum;
     if(sum == packet->checksum)
         return true;
     else
@@ -128,3 +128,7 @@ bool comms_packet_ready()
     return _packet_ready;
 }
 
+void comms_packet_ack()
+{
+    _packet_ready = false;
+}

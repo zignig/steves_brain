@@ -3,10 +3,12 @@
 // SPI comms from the ESP32
 // communications protocol 
 
-#include "comms.h"
+#include <stdint.h>
 #include "settings.h"
 #include "drive.h"
-#include <stdint.h>
+
+#include "comms.h"
+#include <SPI.h>
 
 // Left Motor (A)
 int Lenable = 3;
@@ -90,12 +92,14 @@ void stopMotors() {
 // taken from https://gammon.com.au/spi
 
 
-#include <SPI.h>
 
 char buf [64];
-volatile char comm ; 
+volatile uint8_t comm ; 
 volatile byte pos;
 volatile boolean process_it;
+volatile boolean _boop;
+
+_comms_packet_t the_packet;
 
 void setup (void)
 {
@@ -123,23 +127,36 @@ void setup (void)
 // SPI interrupt routine
 ISR (SPI_STC_vect)
 {
-  byte c = SPDR;  // grab byte from SPI Data Register
-  uint8_t b = 0;
-  // add to buffer if room
-  if (pos < (sizeof (buf) - 1))
-    buf [pos++] = c;
-  // example: newline means time to process buffer
-  if ( c == '\n')
-    process_it = true;
-  //comm = SPDR;
-  comms_input_byte(b);
-  //process_it = true;
+  uint8_t c = SPDR;  // grab byte from SPI Data Register
+  comms_input_byte(c);
+  _boop = true;
+  comm = SPDR;
 }  // end of interrupt routine SPI_STC_vect
 
 // main loop - wait for flag set in interrupt routine
 void loop (void)
 {
-  if (process_it)
+  if(_boop){
+    Serial.println(comm);
+    _boop = false;
+  }
+
+  if(comms_packet_ready()){
+    comms_get_packet(&the_packet);
+    //Serial.println(comms_packet_ready());
+    Serial.println("START FRAME");
+    Serial.println(the_packet.type);
+    Serial.println(the_packet.checksum);
+    Serial.println(the_packet.data1);
+    Serial.println(the_packet.data2);
+    Serial.println(the_packet.data3);
+    Serial.println(the_packet.data4);
+    Serial.println("END FRAME");
+    comms_packet_ack();
+  }
+
+  //if (process_it)
+  if (false)
     {
         buf[pos] = 0;
         Serial.println("");
