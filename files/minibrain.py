@@ -88,20 +88,39 @@ class diff_drive:
         self.frame.set(action)
         self._char(self.frame.get())
 
+    def hello(self):
+        self.frame.set(0)
+        self._char(self.frame.get())
+
+    def move(self,m1,m2):
+        if ( m1 > 255 ) or (m1 < -255):
+            raise Exception("motor 1 out of range")
+        if ( m2 > 255 ) or (m2 < -255):
+            raise Exception("motor 2 out of range")
+        # default to forward
+        dir1 = 0
+        dir2 = 0
+        if m1 < 0:
+            m1 = abs(m1)
+            dir1 = 1
+        if m2 < 0:
+            m2 = abs(m2)
+            dir2 = 1
+        self.frame.set(2,m1,m2,dir1,dir2)
+        self._char(self.frame.get())
+
+    def stop(self):
+        self.frame.set(2,0,0,0,0)
+        self._char(self.frame.get())
+
     def forward(self):
-        self._send("w")
+        self.move(255,255)
 
     def backward(self):
-        self._send("s")
+        self.move(-255,-255)
 
     def left(self):
-        self._send("a")
+        self.move(-255,255)
 
     def right(self):
-        self._send("d")
-
-    def faster(self):
-        self._send("]")
-
-    def slower(self):
-        self._send("[")
+        self.move(255,-255)

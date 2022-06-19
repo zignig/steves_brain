@@ -10,14 +10,19 @@
 #include "comms.h"
 #include <SPI.h>
 
+// MOTOR STUFF
+#include "L298NMotorService.h"
+using namespace Stevebot;
+
+
 // Left Motor (A)
 int Lenable = 3;
 int L1 = 9;
 int L2 = 8;
 // Right Motor (B)
 int Renable = 5;
-int R1 = 7;
-int R2 = 6;
+int R2 = 7;
+int R1 = 6;
 // speed and time length
 int sp = 100;
 int len = 500;
@@ -26,6 +31,8 @@ int inByte = 0 ;
 int counter  = 0;
 
 
+L298NMotorService leftMotor(true,true,Lenable,L1,L2);
+L298NMotorService rightMotor(true,true,Renable,R1,R2);
 
 void enable()
 {
@@ -40,10 +47,10 @@ void enable()
 
 void disable()
 {
-  pinMode(Lenable, INPUT);
+//  pinMode(Lenable, INPUT);
   pinMode(Renable, INPUT);
-  pinMode(L1, INPUT);
-  pinMode(L2, INPUT);
+//  pinMode(L1, INPUT);
+//  pinMode(L2, INPUT);
   pinMode(R1, INPUT);
   pinMode(R2, INPUT);
  
@@ -118,9 +125,12 @@ void setup (void)
   SPI.attachInterrupt();
   buf [pos] = 0;  
   Serial.println("minibrain 0.1");
-  enable();
-  moveBot(false,50,15);
-  disable();
+  leftMotor.Setup();
+  rightMotor.Setup();
+  //enable();
+  //moveBot(false,50,15);
+  //disable();
+  //leftMotor.SetSpeed(100);
 }  // end of setup
 
 
@@ -129,18 +139,17 @@ ISR (SPI_STC_vect)
 {
   uint8_t c = SPDR;  // grab byte from SPI Data Register
   comms_input_byte(c);
-  _boop = true;
-  comm = SPDR;
+  //_boop = true;
+  //comm = SPDR;
 }  // end of interrupt routine SPI_STC_vect
 
 // main loop - wait for flag set in interrupt routine
 void loop (void)
 {
-  if(_boop){
-    Serial.println(comm);
-    _boop = false;
-  }
-
+  //if(_boop){
+  //  Serial.println(comm);
+  //  _boop = false;
+ // }
   if(comms_packet_ready()){
     comms_get_packet(&the_packet);
     //Serial.println(comms_packet_ready());
@@ -153,50 +162,34 @@ void loop (void)
     Serial.println(the_packet.data4);
     Serial.println("END FRAME");
     comms_packet_ack();
+    switch(the_packet.type){
+        case COMMS_TYPE_HELLO:
+            Serial.println("hello");
+            break;
+        case COMMS_TYPE_STOP:
+            Serial.println("stop");
+            break;
+        case COMMS_TYPE_RUN:
+            Serial.println("run");
+            int lspeed = 0;
+            int rspeed = 0;
+            // Deal with directions
+            if(the_packet.data3 == 1){
+                lspeed = -the_packet.data1;
+            }else{
+                lspeed = the_packet.data1;
+            }
+            if(the_packet.data4 == 1){
+                rspeed = -the_packet.data2;
+            }else{
+                rspeed = the_packet.data2;
+            }
+            // Set the motor speed
+            leftMotor.SetSpeed(lspeed); 
+            rightMotor.SetSpeed(rspeed); 
+            break;
+    }
   }
-
-  //if (process_it)
-  if (false)
-    {
-        buf[pos] = 0;
-        Serial.println("");
-        Serial.print(buf);
-        comm = buf[0];
-        //Serial.print(int(comm),HEX);
-        // Serial.print(int(comm),BIN);
-        pos = 0;
-        process_it = false;
-        enable();
-        switch (comm){
-          case ']':
-            sp = sp + 10;
-            break;
-          case '[':
-            sp = sp - 10;
-            break;
-        //  case '}':
-        //    len = len + 50;
-        //    break;
-        //////  case '{':
-        //    len = len - 50;
-        //    break;
-          case 'w':
-            moveBot(true,sp,len);
-            stopMotors();
-            break;
-          case 's':
-            moveBot(false,sp,len);
-            stopMotors();
-            break;
-          case 'a':
-            rotateBot(true,sp,len);
-            stopMotors();
-            break;
-          case 'd':
-            rotateBot(false,sp,len);
-            stopMotors();
-            break;
-        }
-        disable();
-    }  
+  leftMotor.Update();
+  rightMotor.Update();
 }  // end of loop

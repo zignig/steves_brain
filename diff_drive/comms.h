@@ -22,9 +22,11 @@ typedef struct _comms_packet_t {
 } comms_packet_t;
 
 typedef enum _comms_type_e {
-    COMMS_TYPE_SET = 0,
-    COMMS_TYPE_GET,
-    COMMS_TYPE_ACK,
+    COMMS_TYPE_HELLO = 0,
+    COMMS_TYPE_STOP,
+    COMMS_TYPE_RUN,
+    COMMS_TYPE_SENSOR,
+    COMMS_TYPE_CONFIG,
     COMMS_TYPE_COUNT
 } comms_type_e;
 
