@@ -57,7 +57,6 @@ class Frame:
 
     def cs(self):
         val = (self.data1 + self.data2 + self.data3 + self.data4) % 256
-        print(val)
         return val
 
 class diff_drive:
@@ -66,6 +65,7 @@ class diff_drive:
         self.ss.on()
         self.port = SPI(1, speed)
         self.frame = Frame()
+        self.rate = 255
 
     def _char(self,c):
         self.ss.off()
@@ -98,13 +98,13 @@ class diff_drive:
         self._char(self.frame.get())
 
     def forward(self):
-        self.move(255,255)
+        self.move(self.rate,self.rate)
 
     def backward(self):
-        self.move(-255,-255)
+        self.move(-self.rate,-self.rate)
 
     def left(self):
-        self.move(-255,255)
+        self.move(-self.rate,self.rate)
 
     def right(self):
-        self.move(255,-255)
+        self.move(self.rate,-self.rate)

@@ -19,8 +19,10 @@ void L298NMotorService::SetTarget(int speed)
 	if (IsVerbose())
 	{
 		//If we are logging, print the speed we are giving to the motor
-		Serial.print(F("L298NMotor: speed="));
-		Serial.println(speed);
+                if(_currentSpeed != 0){
+                    Serial.print(F("L298NMotor: speed="));
+                    Serial.println(speed);
+                }
 	}
 
 	// Only activate the motors if the driver is enabled
@@ -81,14 +83,14 @@ void L298NMotorService::Update()
         int diff = _targetSpeed - _currentSpeed;
         if( diff < 0){
             if( abs(diff) < _step){
-                _currentSpeed -= _step - diff;
+                _currentSpeed -= abs(diff) ;
             } else {
                 _currentSpeed -= _step;    
             }
         }
         if( diff > 0){
             if( abs(diff) < _step){
-                _currentSpeed +=  _step - diff;
+                _currentSpeed +=  abs(diff) ;
             } else {
                 _currentSpeed += _step;    
             }            

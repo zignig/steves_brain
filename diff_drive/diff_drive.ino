@@ -23,12 +23,6 @@ int L2 = 8;
 int Renable = 5;
 int R2 = 7;
 int R1 = 6;
-// speed and time length
-int sp = 100;
-int len = 500;
-
-int inByte = 0 ;
-int counter  = 0;
 
 
 L298NMotorService leftMotor(true,true,Lenable,L1,L2);

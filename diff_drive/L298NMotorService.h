@@ -24,10 +24,10 @@ namespace Stevebot
 		unsigned int _pinIn1;
 		unsigned int _pinIn2;
 
-                int _step = 20;
+                int _step = 5;
                 unsigned long _lastUpdate = 0;
                 unsigned long _timeout = 1000;
-                unsigned long _rampInterval = 50;
+                unsigned long _rampInterval = 15;
                 unsigned long _lastRamp = 0;
                 
                 int _targetSpeed = 0;
