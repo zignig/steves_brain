@@ -67,26 +67,10 @@ class diff_drive:
         self.port = SPI(1, speed)
         self.frame = Frame()
 
-    def _send(self, s):
-        self.ss.off()
-        self.port.write(s + "\n")
-        self.ss.on()
-
     def _char(self,c):
         self.ss.off()
         self.port.write(c)
         self.ss.on()
-
-    def _loop(self, s):
-        z = bytearray(len(s) + 1)
-        self.ss.off()
-        self.port.write_readinto(s + "\n", z)
-        self.ss.on()
-        return z
-
-    def go(self,action):
-        self.frame.set(action)
-        self._char(self.frame.get())
 
     def hello(self):
         self.frame.set(0)

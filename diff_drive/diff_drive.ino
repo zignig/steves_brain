@@ -34,76 +34,13 @@ int counter  = 0;
 L298NMotorService leftMotor(true,true,Lenable,L1,L2);
 L298NMotorService rightMotor(true,true,Renable,R1,R2);
 
-void enable()
-{
-  pinMode(Lenable, OUTPUT);
-  pinMode(Renable, OUTPUT);
-  pinMode(L1, OUTPUT);
-  pinMode(L2, OUTPUT);
-  pinMode(R1, OUTPUT);
-  pinMode(R2, OUTPUT);
- 
-}
-
-void disable()
-{
-//  pinMode(Lenable, INPUT);
-  pinMode(Renable, INPUT);
-//  pinMode(L1, INPUT);
-//  pinMode(L2, INPUT);
-  pinMode(R1, INPUT);
-  pinMode(R2, INPUT);
- 
-}
-
-void moveBot(bool dir, int spd, int dur) {
-  // Motor A
-  digitalWrite(L1, dir);
-  digitalWrite(L2, !dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
-  // Motor B
-  digitalWrite(R1, !dir);
-  digitalWrite(R2, dir);
-  // Set motor speed to spd
-  analogWrite(Lenable, spd);
-  analogWrite(Renable, spd);
-  //Motion Duration
-  delay(dur);
-}
-
-void rotateBot(bool dir, int spd, int dur) {
-  // Motor A
-  digitalWrite(L1, !dir);
-  digitalWrite(L2, dir); 
-  // Motor B
-  digitalWrite(R1, !dir);
-  digitalWrite(R2, dir);
-  // Set motor speed to spd
-  analogWrite(Lenable, spd);
-  analogWrite(Renable, spd);
-  //Rotation Duration
-  delay(dur);
-}
-
-//Turn off both motors
-void stopMotors() {
-  digitalWrite(L1, LOW);
-  digitalWrite(L2, LOW);
-  digitalWrite(R1, LOW);
-  digitalWrite(R2, LOW);
-  analogWrite(Lenable, 0);
-  analogWrite(Renable, 0);
-}
 // spi boot stolen from
 // Written by Nick Gammon
 // February 2011
 // taken from https://gammon.com.au/spi
 
 
-
-char buf [64];
 volatile uint8_t comm ; 
-volatile byte pos;
-volatile boolean process_it;
 volatile boolean _boop;
 
 _comms_packet_t the_packet;
@@ -119,18 +56,11 @@ void setup (void)
   pinMode(MOSI, INPUT);
   pinMode(SS,INPUT_PULLUP);
   // get ready for an interrupt 
-  pos = 0;   // buffer empty
-  process_it = false;
   // now turn on interrupts
   SPI.attachInterrupt();
-  buf [pos] = 0;  
   Serial.println("minibrain 0.1");
   leftMotor.Setup();
   rightMotor.Setup();
-  //enable();
-  //moveBot(false,50,15);
-  //disable();
-  //leftMotor.SetSpeed(100);
 }  // end of setup
 
 
@@ -149,7 +79,7 @@ void loop (void)
   //if(_boop){
   //  Serial.println(comm);
   //  _boop = false;
- // }
+  // }
   if(comms_packet_ready()){
     comms_get_packet(&the_packet);
     //Serial.println(comms_packet_ready());
