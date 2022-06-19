@@ -6,6 +6,7 @@
 #include "comms.h"
 #include "settings.h"
 #include "drive.h"
+#include <stdint.h>
 
 // Left Motor (A)
 int Lenable = 3;
@@ -16,7 +17,7 @@ int Renable = 5;
 int R1 = 7;
 int R2 = 6;
 // speed and time length
-int sp = 150;
+int sp = 100;
 int len = 500;
 
 int inByte = 0 ;
@@ -26,7 +27,7 @@ int counter  = 0;
 
 void enable()
 {
-  pinMode Lenable, OUTPUT);
+  pinMode(Lenable, OUTPUT);
   pinMode(Renable, OUTPUT);
   pinMode(L1, OUTPUT);
   pinMode(L2, OUTPUT);
@@ -37,7 +38,7 @@ void enable()
 
 void disable()
 {
-  pinMode Lenable, INPUT);
+  pinMode(Lenable, INPUT);
   pinMode(Renable, INPUT);
   pinMode(L1, INPUT);
   pinMode(L2, INPUT);
@@ -48,8 +49,8 @@ void disable()
 
 void moveBot(bool dir, int spd, int dur) {
   // Motor A
-  digitalWrite(L1, !dir);
-  digitalWrite(L2, dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
+  digitalWrite(L1, dir);
+  digitalWrite(L2, !dir);  //The '!' symbol inverts the boolean value. So for example, if dir is true, !dir is false.
   // Motor B
   digitalWrite(R1, !dir);
   digitalWrite(R2, dir);
@@ -62,8 +63,8 @@ void moveBot(bool dir, int spd, int dur) {
 
 void rotateBot(bool dir, int spd, int dur) {
   // Motor A
-  digitalWrite(L1, dir);
-  digitalWrite(L2, !dir); 
+  digitalWrite(L1, !dir);
+  digitalWrite(L2, dir); 
   // Motor B
   digitalWrite(R1, !dir);
   digitalWrite(R2, dir);
@@ -114,7 +115,7 @@ void setup (void)
   buf [pos] = 0;  
   Serial.println("minibrain 0.1");
   enable();
-  moveBot(true,15,50);
+  moveBot(false,50,15);
   disable();
 }  // end of setup
 
@@ -123,6 +124,7 @@ void setup (void)
 ISR (SPI_STC_vect)
 {
   byte c = SPDR;  // grab byte from SPI Data Register
+  uint8_t b = 0;
   // add to buffer if room
   if (pos < (sizeof (buf) - 1))
     buf [pos++] = c;
@@ -130,6 +132,7 @@ ISR (SPI_STC_vect)
   if ( c == '\n')
     process_it = true;
   //comm = SPDR;
+  comms_input_byte(b);
   //process_it = true;
 }  // end of interrupt routine SPI_STC_vect
 
