@@ -4,16 +4,16 @@
 // communications protocol 
 
 #include <stdint.h>
-#include "settings.h"
-#include "drive.h"
 
 #include "comms.h"
 #include <SPI.h>
 
 // MOTOR STUFF
-#include "L298NMotorService.h"
-using namespace Stevebot;
+//#include "L298NMotorService.h"
+#include "Robot.h"
+using namespace Taibot;
 
+Robot robot;
 
 // Left Motor (A)
 int Lenable = 3;
@@ -25,8 +25,8 @@ int R2 = 7;
 int R1 = 6;
 
 
-L298NMotorService leftMotor(true,true,Lenable,L1,L2);
-L298NMotorService rightMotor(true,true,Renable,R1,R2);
+//L298NMotorService leftMotor(true,true,Lenable,L1,L2);
+//L298NMotorService rightMotor(true,true,Renable,R1,R2);
 
 // spi boot stolen from
 // Written by Nick Gammon
@@ -39,8 +39,10 @@ volatile boolean _boop;
 
 _comms_packet_t the_packet;
 
+
 void setup (void)
 {
+  Robot();
   Serial.begin (115200);   // debugging
   // turn on SPI in slave mode
   SPCR |= bit (SPE);
@@ -53,8 +55,8 @@ void setup (void)
   // now turn on interrupts
   SPI.attachInterrupt();
   Serial.println("minibrain 0.1");
-  leftMotor.Setup();
-  rightMotor.Setup();
+  //leftMotor.Setup();
+  //rightMotor.Setup();
 }  // end of setup
 
 
@@ -109,11 +111,13 @@ void loop (void)
                 rspeed = the_packet.data2;
             }
             // Set the motor speed
-            leftMotor.SetSpeed(lspeed); 
-            rightMotor.SetSpeed(rspeed); 
+            //leftMotor.SetSpeed(lspeed); 
+            //rightMotor.SetSpeed(rspeed); 
+            robot.SetSpeed(lspeed,rspeed);
             break;
     }
   }
-  leftMotor.Update();
-  rightMotor.Update();
+  robot.Update();
+  //leftMotor.Update();
+  //rightMotor.Update();
 }  // end of loop
