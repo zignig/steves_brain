@@ -15,7 +15,7 @@ namespace Taibot
 
 		// Implements the method inherited from the base MotorDriver class
 		int GetSpeed() const;
-
+                void Update();
 	private:
 		unsigned int _pinEnable;
 		unsigned int _pinInput1;
@@ -23,5 +23,7 @@ namespace Taibot
 
 		// Keeps track of the current speed of the Motor driver
 		int _currentSpeed = 0;
+		int _targetSpeed = 0;
+                long _lastUpdate = 0;
 	};
 };

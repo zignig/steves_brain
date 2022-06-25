@@ -22,5 +22,6 @@ namespace Taibot
 		// Returns the current speed of the motor
 		// Method that must be implemented in every MotorService specific implementation inheriting from the MotorService class
 		virtual int GetSpeed() const = 0;
+                virtual void Update();
 	};
 };

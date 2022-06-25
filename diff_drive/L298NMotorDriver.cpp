@@ -16,6 +16,10 @@ L298NMotorDriver::L298NMotorDriver(bool isEnabled, bool isVerbose, unsigned int 
 
 }
 
+void L298NMotorDriver::Update()
+{
+}
+
 void L298NMotorDriver::SetSpeed(int speed)
 {
 	// Save the current speed...

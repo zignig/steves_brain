@@ -11,61 +11,30 @@ DifferentialDriveController::DifferentialDriveController(bool isEnabled, bool is
 
 void DifferentialDriveController::Update()
 {
-        if ( _lastUpdate + _timeout < millis()){
-            _targetSpeed= 0;
-        }
-	if (_currentspeed != _targetSpeed) //Only update the _currentspeed if its different from _targetSpeed
-	{
-		// If its time to update the _currentspeed
-		if ((_lastSpeedUpdate + SPEED_UPDATE_FREQ) < millis())
-		{
-			_lastSpeedUpdate = millis();
-
-			if (_currentspeed < _targetSpeed) // We have to accelerate...
-			{
-				_currentspeed += _acceleration;
-
-				// In case we accelerated too much
-				if (_currentspeed > _targetSpeed)
-				{
-					_currentspeed = _targetSpeed;
-				}
-			}
-			else if (_currentspeed > _targetSpeed) // We have to deaccelerate...
-			{
-				_currentspeed -= _acceleration;
-
-				// In case we deaccelerated too much
-				if (_currentspeed < _targetSpeed)
-				{
-					_currentspeed = _targetSpeed;
-				}
-			}
-
-			UpdateMotorsSpeed();
-		}
+	if ( _lastUpdate + _timeout < millis()){
+		_leftSpeed = 0;
+		_rightSpeed= 0;
+                UpdateMotorsSpeed();
+                _lastUpdate = millis();
 	}
+        _leftMotor->Update();
+        _rightMotor->Update();
 }
 
 void DifferentialDriveController::UpdateMotorsSpeed()
 {
-	DifferentialVector driveVector = CalculateDifferentialDrive(_currentspeed, _direction);
-
 	if (IsVerbose())
 	{
-		Serial.print(F("DiffDrive: current="));
-		Serial.print(_currentspeed);
-		Serial.print(F(" dir="));
-		Serial.print(_direction);
+		Serial.print(F("DiffDrive: x="));
 		Serial.print(F(" R="));
-		Serial.print(driveVector.Right);
+		Serial.print(_leftSpeed);
 		Serial.print(F(" L="));
-		Serial.println(driveVector.Left);
+		Serial.println(_rightSpeed);
 	}
 
 
-	_rightMotor->SetSpeed(driveVector.Right);
-        _leftMotor->SetSpeed(driveVector.Left);
+        _rightMotor->SetSpeed(_leftSpeed);
+        _leftMotor->SetSpeed(_rightSpeed);
 }
 
 void DifferentialDriveController::SetAcceleration(int acceleration)
@@ -78,38 +47,44 @@ int DifferentialDriveController::GetAcceleration()
 	return _acceleration;
 }
 
-void DifferentialDriveController::SetSpeed(int speed, int direction)
+void DifferentialDriveController::SetSpeed(int x, int y)
 {
-        _lastUpdate = millis();
-	_targetSpeed = speed;
-	_direction = direction;
+    _lastUpdate = millis();
+    _leftSpeed = x;
+    _rightSpeed = y;
+    UpdateMotorsSpeed();
 }
 
 int DifferentialDriveController::GetSpeed()
 {
-	return _currentspeed;
+	return 0;
 }
 
 int DifferentialDriveController::GetDirection()
 {
-	return _direction;
+	return 0;
 }
 
-DifferentialVector DifferentialDriveController::CalculateDifferentialDrive(int x, int y)
+void DifferentialDriveController::SetDiff(int x, int y)
 {
-	DifferentialVector result;
+    _leftSpeed = x;
+    _rightSpeed = y;
+}
+
+void DifferentialDriveController::SetJoyStick(int x, int y)
+{
 
 	float rawLeft;
 	float rawRight;
-        float magnitude;
-        float angle;
+	float magnitude;
+	float angle;
 
-        magnitude = sqrt(x * x + y * y);
-        angle = acos(abs(x)/magnitude);
-        
-        if(isnan(angle)){
-            angle = 0;
-        }        
+	magnitude = sqrt(x * x + y * y);
+	angle = acos(abs(x)/magnitude);
+	
+	if(isnan(angle)){
+		angle = 0;
+	}        
 
 	float tcoeff = -1 + (angle / 90) * 2;
 	float turn = tcoeff * abs(abs(y) - abs(x));
@@ -133,9 +108,6 @@ DifferentialVector DifferentialDriveController::CalculateDifferentialDrive(int x
 		rawLeft = 0 - rawLeft;
 		rawRight = 0 - rawRight;
 	}
-
-	result.Right = rawLeft;
-	result.Left = rawRight;
-
-	return result;
+        _leftSpeed = rawLeft;
+        _rightSpeed = rawRight;
 }

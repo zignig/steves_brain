@@ -26,6 +26,9 @@ namespace Taibot
 		// speed: valid range between 0 and 255
 		// direction: between 0 and 360 degrees
 		void SetSpeed(int speed, int direction);
+		void SetJoyStick(int x, int y);
+		void SetDiff(int x, int y);
+
 		int GetSpeed();
 		int GetDirection();
 
@@ -42,10 +45,8 @@ namespace Taibot
 		unsigned int _acceleration = 20;
 
 		// The last speed set to the motors
-                DifferentialVector _current;
-		//int _currentspeed;
-		//int _direction;
-		//int _targetSpeed;
+                int _leftSpeed;
+		int _rightSpeed;
 		// The speed we want to achieve, (we will get to this _targetSpeed ant _acceleration increments per second) 
 
 		unsigned long _lastSpeedUpdate = 0;
@@ -53,9 +54,10 @@ namespace Taibot
 		//calculates the speed each motor should have according with the calculated _currentspeed and updates them
 		void UpdateMotorsSpeed();
 
-		DifferentialVector CalculateDifferentialDrive(int x, int y);
-                unsigned long _lastUpdate;
-                unsigned long _timeout = 1000;
+		
+		// timeout for drive commands
+		unsigned long _lastUpdate;
+		unsigned long _timeout = 1000;
                 
 	};
 };

@@ -7,8 +7,8 @@
 #define PIN_L298N_ENA 3
 #define PIN_L298N_IN1 9
 #define PIN_L298N_IN2 8
-#define PIN_L298N_IN3 7
-#define PIN_L298N_IN4 6
+#define PIN_L298N_IN3 6
+#define PIN_L298N_IN4 7
 #define PIN_L298N_ENB 5
 
 

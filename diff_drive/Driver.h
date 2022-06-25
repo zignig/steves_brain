@@ -20,7 +20,9 @@ namespace Taibot
 
 		// Enables/Disables the logging
 		void SetVerbose(bool isVerbose);
-
+                
+                // Run the Update 
+                void Update();
 	private:
 		// Enable/Disable the service  
 		bool _isEnabled = false;
