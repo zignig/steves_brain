@@ -23,6 +23,6 @@ namespace Taibot
 		// Method that must be implemented in every MotorService specific implementation inheriting from the MotorService class
 		virtual int GetSpeed() const = 0;
                 virtual void Update();
-                void SetAcceleration(int acceleration);
+                virtual void SetAcceleration(int acceleration);
 	};
 };

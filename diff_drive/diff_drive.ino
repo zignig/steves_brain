@@ -88,6 +88,8 @@ void loop (void)
     Serial.println(the_packet.data4);
     Serial.println("END FRAME");
     comms_packet_ack();
+    int lspeed = 0;
+    int rspeed = 0;
     switch(the_packet.type){
         case COMMS_TYPE_HELLO:
             Serial.println("hello");
@@ -97,8 +99,6 @@ void loop (void)
             break;
         case COMMS_TYPE_RUN:
             Serial.println("run");
-            int lspeed = 0;
-            int rspeed = 0;
             // Deal with directions
             if(the_packet.data3 == 1){
                 lspeed = -the_packet.data1;
@@ -116,7 +116,9 @@ void loop (void)
             robot.SetDiff(lspeed,rspeed);
             break;
         case COMMS_TYPE_SETACC:
-            robot.SetAcceleration(the_packet.data1);
+            Serial.println("acc");
+            int acc = the_packet.data1;
+            robot.SetAcceleration(acc);
             break;
     }
   }
