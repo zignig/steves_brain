@@ -18,13 +18,44 @@ L298NMotorDriver::L298NMotorDriver(bool isEnabled, bool isVerbose, unsigned int 
 
 void L298NMotorDriver::Update()
 {
+    unsigned long now = millis();
+    if(( _lastUpdate + _stepTick )< now )
+    {
+        if(_currentSpeed < _targetSpeed)
+        {
+            _currentSpeed += _acceleration; 
+            // too far
+            if(_currentSpeed > _targetSpeed){
+                _currentSpeed = _targetSpeed;
+            }
+            SetTarget(_currentSpeed);
+        }
+        if(_currentSpeed > _targetSpeed)
+        {
+            _currentSpeed -= _acceleration; 
+            // too far
+            if(_currentSpeed < _targetSpeed){
+                _currentSpeed = _targetSpeed;
+            }
+            SetTarget(_currentSpeed);
+        }
+        _lastUpdate = now;
+    }     
 }
 
 void L298NMotorDriver::SetSpeed(int speed)
 {
-	// Save the current speed...
-	_currentSpeed = speed;
+    _lastUpdate = millis();
+    _targetSpeed = speed;
+}
 
+void L298NMotorDriver::SetAcceleration(int acceleration)
+{
+    _acceleration = acceleration;
+}
+
+void L298NMotorDriver::SetTarget(int speed)
+{
 	if (IsVerbose())
 	{
 		//If we are logging, print the speed we are giving to the motor

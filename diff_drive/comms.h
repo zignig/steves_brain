@@ -25,6 +25,7 @@ typedef enum _comms_type_e {
     COMMS_TYPE_HELLO = 0,
     COMMS_TYPE_STOP,
     COMMS_TYPE_RUN,
+    COMMS_TYPE_SETACC,
     COMMS_TYPE_SENSOR,
     COMMS_TYPE_CONFIG,
     COMMS_TYPE_COUNT

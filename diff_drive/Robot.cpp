@@ -15,6 +15,15 @@ void Taibot::Robot::SetSpeed(int speed, int direction)
         difDrive.SetSpeed(speed,direction);
 }
 
+void Taibot::Robot::SetAcceleration(int acceleration)
+{
+        difDrive.SetAcceleration(acceleration);
+}
+void Taibot::Robot::SetDiff(int left, int right)
+{
+        difDrive.SetDiff(left,right);
+}
+
 void Taibot::Robot::Update()
 {
 	difDrive.Update();

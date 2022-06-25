@@ -113,7 +113,10 @@ void loop (void)
             // Set the motor speed
             //leftMotor.SetSpeed(lspeed); 
             //rightMotor.SetSpeed(rspeed); 
-            robot.SetSpeed(lspeed,rspeed);
+            robot.SetDiff(lspeed,rspeed);
+            break;
+        case COMMS_TYPE_SETACC:
+            robot.SetAcceleration(the_packet.data1);
             break;
     }
   }

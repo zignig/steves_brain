@@ -76,6 +76,12 @@ class diff_drive:
         self.frame.set(0)
         self._char(self.frame.get())
 
+    def accel(self,acc):
+        if ( acc > 255 ) or (acc<= 0):
+            raise Exception("accleration out of range")
+        self.frame.set(3,acc)
+        self._char(self.frame.get())
+
     def move(self,m1,m2):
         if ( m1 > 255 ) or (m1 < -255):
             raise Exception("motor 1 out of range")
