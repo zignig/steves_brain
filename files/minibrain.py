@@ -66,6 +66,8 @@ class diff_drive:
         self.port = SPI(1, speed)
         self.frame = Frame()
         self.rate = 255
+        self.accel(200)
+        self.interval = 100000
 
     def _char(self,c):
         self.ss.off()
@@ -85,9 +87,11 @@ class diff_drive:
 
     def joy(self,m1,m2):
         if ( m1 > 255 ) or (m1 < -255):
-            raise Exception("motor 1 out of range")
+            print("motor 1 out of range")
+            return
         if ( m2 > 255 ) or (m2 < -255):
-            raise Exception("motor 2 out of range")
+            print("motor 2 out of range")
+            return
         # default to forward
         dir1 = 0
         dir2 = 0
@@ -97,6 +101,7 @@ class diff_drive:
         if m2 < 0:
             m2 = abs(m2)
             dir2 = 1
+        
         self.frame.set(4,m1,m2,dir1,dir2)
         self._char(self.frame.get())
 

@@ -67,4 +67,4 @@ if reg.telnet:
     utelnetserver.start()
 if reg.ws:
     import ws
-    _thread.start_new_thread(ws.go,())
+    _thread.start_new_thread(ws.go,(d,))

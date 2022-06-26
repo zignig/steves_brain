@@ -28,7 +28,7 @@ namespace Taibot
                 int _acceleration = 20;
 
                 unsigned long _lastUpdate = 0;
-                unsigned long _stepTick = 100;
+                unsigned long _stepTick = 10;
             
                 void SetTarget(int speed);
 	};

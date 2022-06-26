@@ -57,7 +57,7 @@ namespace Taibot
 		
 		// timeout for drive commands
 		unsigned long _lastUpdate;
-		unsigned long _timeout = 1000;
+		unsigned long _timeout = 500;
                 
 	};
 };

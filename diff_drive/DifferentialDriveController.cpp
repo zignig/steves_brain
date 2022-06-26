@@ -13,7 +13,7 @@ void DifferentialDriveController::Update()
 {
 	if ( _lastUpdate + _timeout < millis()){
 		_leftSpeed = 0;
-		_rightSpeed= 0;
+	        _rightSpeed= 0;
                 UpdateMotorsSpeed();
                 _lastUpdate = millis();
 	}

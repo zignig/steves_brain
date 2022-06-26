@@ -119,7 +119,7 @@ void loop (void)
         case COMMS_TYPE_SETACC:
             robot.SetAcceleration(acc);
             break;
-        case 4:
+        case COMMS_TYPE_SETJOY:
             robot.SetJoy(lspeed,rspeed);
             break;
     }
