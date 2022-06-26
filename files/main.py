@@ -62,7 +62,6 @@ import _thread
 if reg.web:
     _thread.start_new_thread(go,())
 if reg.telnet:
-    
     import utelnetserver
     utelnetserver.start()
 if reg.ws:
