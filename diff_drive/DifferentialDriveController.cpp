@@ -78,25 +78,26 @@ void DifferentialDriveController::SetJoy(int x, int y)
 	float rawLeft;
 	float rawRight;
 	float magnitude;
-	float angle;
         float rad;
+        float fx = (float)x;
+        float fy = (float)y;
 
-	magnitude = sqrt(x * x + y * y);
-	rad = acos(abs(x)/magnitude);
+	magnitude = sqrt(fx * fx + fy * fy);
+	rad = acos(abs(fx)/magnitude);
 	
 	if(isnan(rad)){
 		rad= 0;
 	}        
-        angle = rad * 180 / PI;
+        float angle = rad * 180 / PI;
 	float tcoeff = -1 + (angle / 90) * 2;
-	float turn = tcoeff * abs(abs(y) - abs(x));
+	float turn = tcoeff * abs(abs(fy) - abs(fx));
 	turn = round(turn * 100) / 100;
 
 	// And max of y or x is the movement
-	float mov = max(abs(y), abs(x));
+	float mov = max(abs(fy), abs(fx));
 
 	// First and third quadrant
-	if ((x >= 0 && y >= 0) || (x < 0 && y < 0))
+	if ((fx >= 0 && fy >= 0) || (fx < 0 && fy < 0))
 	{
 		rawLeft = mov; rawRight = turn;
 	}
@@ -106,12 +107,12 @@ void DifferentialDriveController::SetJoy(int x, int y)
 	}
 
 	// Reverse polarity
-	if (y < 0) {
+	if (fy < 0) {
 		rawLeft = 0 - rawLeft;
 		rawRight = 0 - rawRight;
 	}
-        Serial.println(angle);
-        Serial.println(turn);
+        Serial.println(magnitude);
+        Serial.println(tcoeff);
         Serial.println(rawLeft);
         Serial.println(rawRight);
         SetSpeed(rawLeft,rawRight);
