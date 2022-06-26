@@ -20,6 +20,7 @@ namespace Taibot
 		void Update();
 		void SetSpeed(int speed, int direction);
                 void SetDiff(int left,int right);
+                void SetJoy(int x,int y);
                 void SetAcceleration(int acceleration);
 	private:
 		//We will use this variables to change the robot speed on after some seconds (without using delays)

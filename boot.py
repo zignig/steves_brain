@@ -200,6 +200,7 @@ def update():
             print("Update registry")
             reg.set('f_'+i,data[i])
             # wait for the flash to catch up
+            gc.collect()
             time.sleep(2)
 
 

@@ -24,6 +24,12 @@ void Taibot::Robot::SetDiff(int left, int right)
         difDrive.SetDiff(left,right);
 }
 
+void Taibot::Robot::SetJoy(int x, int y)
+{
+        Serial.println("JOY ROBOT");
+        difDrive.SetJoy(x,y);
+}
+
 void Taibot::Robot::Update()
 {
 	difDrive.Update();

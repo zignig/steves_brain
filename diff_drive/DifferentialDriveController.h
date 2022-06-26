@@ -26,7 +26,7 @@ namespace Taibot
 		// speed: valid range between 0 and 255
 		// direction: between 0 and 360 degrees
 		void SetSpeed(int speed, int direction);
-		void SetJoyStick(int x, int y);
+		void SetJoy(int x, int y);
 		void SetDiff(int x, int y);
 
 		int GetSpeed();

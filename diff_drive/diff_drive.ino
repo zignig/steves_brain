@@ -90,6 +90,18 @@ void loop (void)
     comms_packet_ack();
     int lspeed = 0;
     int rspeed = 0;
+    // convert to coords 
+    if(the_packet.data3 == 1){
+        lspeed = -the_packet.data1;
+    }else{
+        lspeed = the_packet.data1;
+    }
+    if(the_packet.data4 == 1){
+        rspeed = -the_packet.data2;
+    }else{
+        rspeed = the_packet.data2;
+    }
+    int acc = the_packet.data1;
     switch(the_packet.type){
         case COMMS_TYPE_HELLO:
             Serial.println("hello");
@@ -99,26 +111,16 @@ void loop (void)
             break;
         case COMMS_TYPE_RUN:
             Serial.println("run");
-            // Deal with directions
-            if(the_packet.data3 == 1){
-                lspeed = -the_packet.data1;
-            }else{
-                lspeed = the_packet.data1;
-            }
-            if(the_packet.data4 == 1){
-                rspeed = -the_packet.data2;
-            }else{
-                rspeed = the_packet.data2;
-            }
             // Set the motor speed
             //leftMotor.SetSpeed(lspeed); 
             //rightMotor.SetSpeed(rspeed); 
             robot.SetDiff(lspeed,rspeed);
             break;
         case COMMS_TYPE_SETACC:
-            Serial.println("acc");
-            int acc = the_packet.data1;
             robot.SetAcceleration(acc);
+            break;
+        case 4:
+            robot.SetJoy(lspeed,rspeed);
             break;
     }
   }

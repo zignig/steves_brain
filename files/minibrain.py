@@ -82,6 +82,24 @@ class diff_drive:
         self.frame.set(3,acc)
         self._char(self.frame.get())
 
+
+    def joy(self,m1,m2):
+        if ( m1 > 255 ) or (m1 < -255):
+            raise Exception("motor 1 out of range")
+        if ( m2 > 255 ) or (m2 < -255):
+            raise Exception("motor 2 out of range")
+        # default to forward
+        dir1 = 0
+        dir2 = 0
+        if m1 < 0:
+            m1 = abs(m1)
+            dir1 = 1
+        if m2 < 0:
+            m2 = abs(m2)
+            dir2 = 1
+        self.frame.set(4,m1,m2,dir1,dir2)
+        self._char(self.frame.get())
+
     def move(self,m1,m2):
         if ( m1 > 255 ) or (m1 < -255):
             raise Exception("motor 1 out of range")

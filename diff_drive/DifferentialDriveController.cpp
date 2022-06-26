@@ -64,7 +64,6 @@ int DifferentialDriveController::GetDirection()
 void DifferentialDriveController::SetDiff(int x, int y)
 {
     SetSpeed(x,y);
-    Serial.println("set diff");
 }
 
 void DifferentialDriveController::SetAcceleration(int acceleration)
@@ -73,7 +72,7 @@ void DifferentialDriveController::SetAcceleration(int acceleration)
         _leftMotor->SetAcceleration(acceleration);
 }
 
-void DifferentialDriveController::SetJoyStick(int x, int y)
+void DifferentialDriveController::SetJoy(int x, int y)
 {
 
 	float rawLeft;
@@ -110,5 +109,7 @@ void DifferentialDriveController::SetJoyStick(int x, int y)
 		rawLeft = 0 - rawLeft;
 		rawRight = 0 - rawRight;
 	}
+        Serial.println(rawLeft);
+        Serial.println(rawRight);
         SetSpeed(rawLeft,rawRight);
 }
