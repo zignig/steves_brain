@@ -11,7 +11,7 @@
 // MOTOR STUFF
 //#include "L298NMotorService.h"
 #include "Robot.h"
-using namespace Taibot;
+using namespace SteveBot;
 
 Robot robot;
 
@@ -103,23 +103,23 @@ void loop (void)
     }
     int acc = the_packet.data1;
     switch(the_packet.type){
-        case COMMS_TYPE_HELLO:
+        case FRAME_HELLO:
             Serial.println("hello");
             break;
-        case COMMS_TYPE_STOP:
+        case FRAME_STOP:
             Serial.println("stop");
             break;
-        case COMMS_TYPE_RUN:
+        case FRAME_RUN:
             Serial.println("run");
             // Set the motor speed
             //leftMotor.SetSpeed(lspeed); 
             //rightMotor.SetSpeed(rspeed); 
             robot.SetDiff(lspeed,rspeed);
             break;
-        case COMMS_TYPE_SETACC:
+        case FRAME_SETACC:
             robot.SetAcceleration(acc);
             break;
-        case COMMS_TYPE_SETJOY:
+        case FRAME_SETJOY:
             robot.SetJoy(lspeed,rspeed);
             break;
     }

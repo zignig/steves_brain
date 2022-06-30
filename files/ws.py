@@ -23,10 +23,11 @@ class WS_SERVER:
         print("Connection on {}".format(path))
         x = 0
         y = 0
+
         try:
             async for msg in ws:
                 data = struct.unpack('bb',msg)
-                print("data: ",data)
+                #print("data: ",data)
                 if data[0] == 2:
                     x = -data[1]
                 if data[0] == 3:

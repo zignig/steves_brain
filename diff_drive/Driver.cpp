@@ -1,6 +1,6 @@
 #include "Driver.h"
 
-using namespace Taibot;
+using namespace SteveBot;
 
 Driver::Driver(bool isEnabled, bool isVerbose)
 {

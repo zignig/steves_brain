@@ -1,6 +1,6 @@
 #include "Robot.h"
 
-using namespace Taibot;
+using namespace SteveBot;
 
 Robot::Robot() :
 	rightMotor(true, false, PIN_L298N_ENA, PIN_L298N_IN1, PIN_L298N_IN2),
@@ -10,27 +10,27 @@ Robot::Robot() :
 }
 
 
-void Taibot::Robot::SetSpeed(int speed, int direction)
+void SteveBot::Robot::SetSpeed(int speed, int direction)
 {
         difDrive.SetSpeed(speed,direction);
 }
 
-void Taibot::Robot::SetAcceleration(int acceleration)
+void SteveBot::Robot::SetAcceleration(int acceleration)
 {
         difDrive.SetAcceleration(acceleration);
 }
-void Taibot::Robot::SetDiff(int left, int right)
+void SteveBot::Robot::SetDiff(int left, int right)
 {
         difDrive.SetDiff(left,right);
 }
 
-void Taibot::Robot::SetJoy(int x, int y)
+void SteveBot::Robot::SetJoy(int x, int y)
 {
         Serial.println("JOY ROBOT");
         difDrive.SetJoy(x,y);
 }
 
-void Taibot::Robot::Update()
+void SteveBot::Robot::Update()
 {
 	difDrive.Update();
 	//sonar.Update();

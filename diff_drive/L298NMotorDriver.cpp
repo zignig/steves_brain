@@ -1,6 +1,6 @@
 #include "L298NMotorDriver.h"
 
-using namespace Taibot;
+using namespace SteveBot;
 
 L298NMotorDriver::L298NMotorDriver(bool isEnabled, bool isVerbose, unsigned int pinEnable, unsigned int pinInput1, unsigned int pinInput2) 
 	: MotorDriver(isEnabled, isVerbose)

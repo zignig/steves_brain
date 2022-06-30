@@ -4,7 +4,7 @@
 
 #define SPEED_UPDATE_FREQ 100
 
-namespace Taibot
+namespace SteveBot
 {
 	struct DifferentialVector
 	{

@@ -34,7 +34,7 @@ bool comms_input_byte(uint8_t byte)
             break;
 
         case 2:
-            if(byte < COMMS_TYPE_COUNT)
+            if(byte < FRAME_COUNT)
                 goto valid;
             break;
 
