@@ -27,6 +27,7 @@ typedef enum _comms_type_e {
     FRAME_RUN,
     FRAME_SETACC,
     FRAME_SETJOY,
+    FRAME_SETTIMEOUT,
     FRAME_SENSOR,
     FRAME_CONFIG,
     FRAME_COUNT

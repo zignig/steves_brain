@@ -36,6 +36,7 @@ int R1 = 6;
 
 volatile uint8_t comm ; 
 volatile boolean _boop;
+boolean debug = false; 
 
 _comms_packet_t the_packet;
 
@@ -79,14 +80,16 @@ void loop (void)
   if(comms_packet_ready()){
     comms_get_packet(&the_packet);
     //Serial.println(comms_packet_ready());
-    Serial.println("START FRAME");
-    Serial.println(the_packet.type);
-    Serial.println(the_packet.checksum);
-    Serial.println(the_packet.data1);
-    Serial.println(the_packet.data2);
-    Serial.println(the_packet.data3);
-    Serial.println(the_packet.data4);
-    Serial.println("END FRAME");
+    if(debug==true){
+        Serial.println("START FRAME");
+        Serial.println(the_packet.type);
+        Serial.println(the_packet.checksum);
+        Serial.println(the_packet.data1);
+        Serial.println(the_packet.data2);
+        Serial.println(the_packet.data3);
+        Serial.println(the_packet.data4);
+        Serial.println("END FRAME");
+    }
     comms_packet_ack();
     int lspeed = 0;
     int rspeed = 0;

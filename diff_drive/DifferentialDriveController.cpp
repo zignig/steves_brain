@@ -13,12 +13,12 @@ void DifferentialDriveController::Update()
 {
 	if ( _lastUpdate + _timeout < millis()){
 		_leftSpeed = 0;
-	        _rightSpeed= 0;
-                UpdateMotorsSpeed();
-                _lastUpdate = millis();
+		_rightSpeed= 0;
+		UpdateMotorsSpeed();
+		_lastUpdate = millis();
 	}
-        _leftMotor->Update();
-        _rightMotor->Update();
+    _leftMotor->Update();
+    _rightMotor->Update();
 }
 
 void DifferentialDriveController::UpdateMotorsSpeed()
@@ -31,10 +31,8 @@ void DifferentialDriveController::UpdateMotorsSpeed()
 		Serial.print(F(" L="));
 		Serial.println(_rightSpeed);
 	}
-
-
-        _rightMotor->SetSpeed(_leftSpeed);
-        _leftMotor->SetSpeed(_rightSpeed);
+    _rightMotor->SetSpeed(_leftSpeed);
+    _leftMotor->SetSpeed(_rightSpeed);
 }
 
 
@@ -68,8 +66,8 @@ void DifferentialDriveController::SetDiff(int x, int y)
 
 void DifferentialDriveController::SetAcceleration(int acceleration)
 {
-        _rightMotor->SetAcceleration(acceleration);
-        _leftMotor->SetAcceleration(acceleration);
+	_rightMotor->SetAcceleration(acceleration);
+	_leftMotor->SetAcceleration(acceleration);
 }
 
 void DifferentialDriveController::SetJoy(int x, int y)
@@ -78,9 +76,9 @@ void DifferentialDriveController::SetJoy(int x, int y)
 	float rawLeft;
 	float rawRight;
 	float magnitude;
-        float rad;
-        float fx = (float)x;
-        float fy = (float)y;
+    float rad;
+    float fx = (float)x;
+    float fy = (float)y;
 
 	magnitude = sqrt(fx * fx + fy * fy);
 	rad = acos(abs(fx)/magnitude);
@@ -111,9 +109,9 @@ void DifferentialDriveController::SetJoy(int x, int y)
 		rawLeft = 0 - rawLeft;
 		rawRight = 0 - rawRight;
 	}
-        Serial.println(magnitude);
-        Serial.println(tcoeff);
-        Serial.println(rawLeft);
-        Serial.println(rawRight);
+//        Serial.println(magnitude);
+//        Serial.println(tcoeff);
+//        Serial.println(rawLeft);
+//        Serial.println(rawRight);
         SetSpeed(rawLeft,rawRight);
 }
