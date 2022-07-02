@@ -1,16 +1,21 @@
 #include "HMC6352Compass.h"
-
+#include "hmc6352.h"
 using namespace SteveBot;
 
-HMC6352Compass::HMC6352Compass(bool isEnabled, bool isVerbose, unsigned int maxDistance, unsigned int pinTrigger, unsigned int pinEcho)
-	: CompassDriver(isEnabled, isVerbose, offet),
-	average(maxDistance) // Start the average readings at the maxDistance value
+HMC6352Compass::HMC6352Compass(bool isEnabled, bool isVerbose, int offset)
+	: CompassDriver(isEnabled, isVerbose, offset),
+	average(0) // Start the average readings for the bearing 
 {
-	// Set the latest distance to the maximum, so the sensor does not start with a fake super close reading
-	_latestDistance = maxDistance;
+        // create the compass
+        
 }
 
-unsigned int HMC6352Compass::GetBearing()
+void HMC6352Compass::Update()
+{
+    GetBearing();
+}
+
+int HMC6352Compass::GetBearing()
 {
 	if (IsEnabled())
 	{
@@ -19,37 +24,31 @@ unsigned int HMC6352Compass::GetBearing()
 		if (_lastReadingTime + MAX_READING_FREQUENCY <= millis())
 		{
 			// As enough time have passed, we can update the reading
-			_latestDistance = sensor.ping_cm();
+			//_latestBearing= sensor.ping_cm();
 
-			// The NewPing library returns 0 when it does not detect an object.
-			// We want this service to return the MaxDistance, so we dont get confuse this with a super close object
-			if (_latestDistance == 0)
-			{
-				_latestDistance = GetMaxDistance();
-			}
-
-			average.Add(_latestDistance);
+			average.Add(_latestBearing);
 
 			if (IsVerbose())
 			{
 				// We will only print the distance when we got a real update
-				Serial.print(F("HCSR04: d="));
-				Serial.print(_latestDistance);
-				Serial.println(F(" cm"));
+				Serial.print(F("HMC6426: bearing="));
+				Serial.print(_latestBearing);
+				Serial.println(F(" deg"));
 			}
+                        _lastReadingTime = millis();
 		}
 
-		return _latestDistance;
+		return _latestBearing;
 	}
 }
 
-unsigned int HMC6352Compass::GetAverageBearing()
+int HMC6352Compass::GetAverageBearing()
 {
 	// Make the ping only if we shold
 	GetBearing();
 
 	// Now get the latest average
-	unsigned int latestAverage = average.Get();
+	int latestAverage = average.Get();
 
 	if (IsVerbose())
 	{

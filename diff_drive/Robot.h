@@ -9,7 +9,8 @@
 #include "Configuration.h"
 #include "L298NMotorDriver.h"
 #include "DifferentialDriveController.h"
-//#include "UltrasonicSensorArrayDriver.h"
+//#include "Ultraunsigned sonicSensorArrayDriver.h"
+#include "HMC6352Compass.h"
 
 namespace SteveBot
 {
@@ -30,6 +31,8 @@ namespace SteveBot
 		L298NMotorDriver rightMotor;
 		L298NMotorDriver leftMotor;
 		DifferentialDriveController difDrive;
-		//UltrasonicSensorArrayDriver sonar; //The rest of the sonar configuration is placed in Configuration.h
+
+                HMC6352Compass compass;
+
 	};
 };

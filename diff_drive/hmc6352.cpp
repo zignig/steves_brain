@@ -15,7 +15,7 @@
 //  0.3.0   2021-06-07  add multi-Wire interface + refactor
 //  0.3.1   2021-12-19  update library.json, license, minor edits
 
-
+#include <Wire.h>
 #include "hmc6352.h"
 
 
@@ -103,7 +103,6 @@ int hmc6352::askHeading()
 {
   int rv = cmd(HMC_GET_DATA);
   if (rv != 0) return -rv;   // problem with handshake
-  yield();
   delay(6); // see datasheet, p8
   return rv;
 }
@@ -124,7 +123,6 @@ int hmc6352::readHeading()
 int hmc6352::wakeUp()
 {
   int rv =  cmd(HMC_WAKE);
-  yield();
   delayMicroseconds(100);
   return rv;
 }
@@ -134,7 +132,6 @@ int hmc6352::wakeUp()
 int hmc6352::sleep()
 {
   int rv = cmd(HMC_SLEEP);
-  yield();
   delayMicroseconds(10);
   return rv;
 }
@@ -154,7 +151,6 @@ int hmc6352::factoryReset()
   writeCmd(HMC_WRITE_EEPROM, 7, 6);
   writeCmd(HMC_WRITE_EEPROM, 8, 0x50);
   cmd(HMC_SAVE_OP_MODE);
-  yield();
   delayMicroseconds(125);
   return HMC6532_OK;
 }
@@ -235,7 +231,6 @@ int hmc6352::getOutputModus()
 int hmc6352::callibrationOn()
 {
   int rv = cmd(HMC_CALLIBRATE_ON);
-  yield();
   delayMicroseconds(10);
   return rv;
 }
@@ -245,7 +240,6 @@ int hmc6352::callibrationOn()
 int hmc6352::callibrationOff()
 {
   int rv = cmd(HMC_CALLIBRATE_OFF);
-  yield();
   delay(15);
   return rv;
 }
@@ -311,7 +305,6 @@ int hmc6352::saveOpMode(byte OpMode)
 {
   writeCmd(HMC_WRITE_RAM, 0x74, OpMode);
   int rv = cmd(HMC_SAVE_OP_MODE);
-  yield();
   delayMicroseconds(125);
   return rv;
 }
@@ -323,7 +316,6 @@ int hmc6352::saveOpMode(byte OpMode)
 int hmc6352::updateOffsets()
 {
   int rv = cmd(HMC_UPDATE_OFFSETS);
-  yield();
   delay(6);
   return rv;
 }
@@ -369,7 +361,6 @@ int hmc6352::cmd(uint8_t c)
   _wire->beginTransmission(_address);
   _wire->write(c);
   int rv = _wire->endTransmission();
-  yield();
   delay(10);
   return rv;
 }
@@ -382,7 +373,6 @@ int hmc6352::readCmd(uint8_t c, uint8_t address)
   _wire->write(address);
   int rv = _wire->endTransmission();
   if (rv != 0) return -rv;
-  yield();
   delayMicroseconds(70);
 
   rv = _wire->requestFrom(_address, (uint8_t)1);
@@ -399,7 +389,6 @@ int hmc6352::writeCmd(uint8_t c, uint8_t address, uint8_t data)
   _wire->write(address);
   _wire->write(data);
   int rv = _wire->endTransmission();
-  yield();
   delayMicroseconds(70);
   return rv;
 }

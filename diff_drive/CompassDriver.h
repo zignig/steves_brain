@@ -14,9 +14,9 @@ namespace SteveBot
 		}
 
 
-		virtual unsigned int GetBearing() = 0;
+		virtual int GetBearing() = 0;
 
-		virtual unsigned int GetAverageBearing() = 0;
+		virtual int GetAverageBearing() = 0;
 
 	private:
 		int _offset;

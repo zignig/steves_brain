@@ -5,7 +5,8 @@ using namespace SteveBot;
 Robot::Robot() :
 	rightMotor(true, false, PIN_L298N_ENA, PIN_L298N_IN1, PIN_L298N_IN2),
 	leftMotor(true, false, PIN_L298N_ENB, PIN_L298N_IN3, PIN_L298N_IN4),
-	difDrive(true, false, &rightMotor, &leftMotor)
+	difDrive(true, false, &rightMotor, &leftMotor),
+        compass(true,true,0)
 {
 }
 
@@ -34,4 +35,5 @@ void SteveBot::Robot::Update()
 {
 	difDrive.Update();
 	//sonar.Update();
+        compass.Update();
 }

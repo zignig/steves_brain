@@ -3,8 +3,9 @@
 #include <Arduino.h>
 #include "CompassDriver.h"
 #include "MovingAverage.h"
+#include "hmc6352.h"
 
-#define MAX_READING_FREQUENCY 30 //The maximum frequency the HC-SR04 can be queried at
+#define MAX_READING_FREQUENCY 500 
 
 namespace SteveBot
 {
@@ -13,18 +14,18 @@ namespace SteveBot
 	{
 
 	public:
-		HMC6352Compass(bool isEnabled, bool isVerbose, unsigned int maxDistance, unsigned int pinTrigger, unsigned int pinEcho);
-
-		unsigned int GetBearing();
-
-		unsigned int GetAverageBearing();
+		HMC6352Compass(bool isEnabled, bool isVerbose, int offset );
+                
+                void Update();
+		int GetBearing();
+		int GetAverageBearing();
 
 	private:
 		// The last time we made a reading
 		unsigned long _lastReadingTime = 0;
 
 		// The last reading we made
-		unsigned int _latestBearing;
+		int _latestBearing;
 
 		// We will be averaging the last 3 reading of the sensor, to get a more reallistic reading
 		MovingAverage<unsigned int, 3> average;
