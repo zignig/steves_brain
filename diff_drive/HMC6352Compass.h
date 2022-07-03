@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Wire.h>
 #include "CompassDriver.h"
 #include "MovingAverage.h"
-#include "hmc6352.h"
 
-#define MAX_READING_FREQUENCY 500 
+#define MAX_READING_FREQUENCY 100 
 
 namespace SteveBot
 {
@@ -21,13 +21,15 @@ namespace SteveBot
 		int GetAverageBearing();
 
 	private:
+                //hmc6352 Compass;
 		// The last time we made a reading
 		unsigned long _lastReadingTime = 0;
+                int SlaveAddress = 0x42;
+                int ReadAddress = 0x41;
 
 		// The last reading we made
 		int _latestBearing;
 
-		// We will be averaging the last 3 reading of the sensor, to get a more reallistic reading
 		MovingAverage<unsigned int, 3> average;
 	};
 };

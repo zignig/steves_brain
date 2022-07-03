@@ -1,5 +1,5 @@
 #include "HMC6352Compass.h"
-#include "hmc6352.h"
+#include <Wire.h>
 using namespace SteveBot;
 
 HMC6352Compass::HMC6352Compass(bool isEnabled, bool isVerbose, int offset)
@@ -7,7 +7,8 @@ HMC6352Compass::HMC6352Compass(bool isEnabled, bool isVerbose, int offset)
 	average(0) // Start the average readings for the bearing 
 {
         // create the compass
-        
+        SlaveAddress = SlaveAddress >> 1;
+        Wire.begin();
 }
 
 void HMC6352Compass::Update()
@@ -23,8 +24,19 @@ int HMC6352Compass::GetBearing()
 		// the rest of the calls to GetDistance will return the latest reading without pingig the sensor again  
 		if (_lastReadingTime + MAX_READING_FREQUENCY <= millis())
 		{
+                        
 			// As enough time have passed, we can update the reading
 			//_latestBearing= sensor.ping_cm();
+                        Wire.beginTransmission(SlaveAddress);
+                        Wire.write(ReadAddress);
+                        Wire.endTransmission();
+                        delay(6);
+                        Wire.requestFrom(SlaveAddress,2);
+                        
+                        byte MSB = Wire.read();
+                        byte LSB = Wire.read();
+                        float headingSum = (MSB << 8) + LSB;
+                        _latestBearing = headingSum / 10;
 
 			average.Add(_latestBearing);
 

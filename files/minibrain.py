@@ -122,6 +122,23 @@ class diff_drive:
         self.frame.set(2,m1,m2,dir1,dir2)
         self._char(self.frame.get())
 
+    @property
+    def w(self):
+        self.forward()
+
+    @property
+    def s(self):
+        self.backward()
+
+    @property
+    def a(self):
+        self.left()
+
+    @property
+    def d(self):
+        self.right()
+
+
     def stop(self):
         self.frame.set(2,0,0,0,0)
         self._char(self.frame.get())
