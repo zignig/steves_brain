@@ -11,6 +11,7 @@
 #include "DifferentialDriveController.h"
 //#include "Ultraunsigned sonicSensorArrayDriver.h"
 #include "HMC6352Compass.h"
+#include "ACS712Current.h"
 
 namespace SteveBot
 {
@@ -33,6 +34,7 @@ namespace SteveBot
 		DifferentialDriveController difDrive;
 
                 HMC6352Compass compass;
+                ACS712Current currentSensor;
 
 	};
 };

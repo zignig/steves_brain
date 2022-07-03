@@ -1,7 +1,7 @@
 # Stuff to do
 
-- get the compass connected
-- add the current sensor
+[x] get the compass connected
+[x] add the current sensor
 - add the distance sensor 
 - have spi comms return data to the esp32
     - status
