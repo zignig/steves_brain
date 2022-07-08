@@ -17,6 +17,7 @@ def index(req,resp):
         if not l:
             break
         yield from resp.awrite(buf, 0, l)
+    htmlFile.close() 
 
 @app.route('/status')
 def status(req,resp):
