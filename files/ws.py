@@ -45,9 +45,7 @@ class WS_SERVER:
         finally:
             print("Disconnected")
 
-def go(control):   
+def get(control):   
     wss = WS_SERVER(control)
     ws_server = serve(wss.add_client, "0.0.0.0", 7777)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(ws_server)
-    loop.run_forever()
+    return ws_server

@@ -63,13 +63,27 @@ def loopback_test(size=8,sleep=40):
         else:
             print(i,'fail :',data,recv)
 
+import uasyncio
+
+def main_runner(reg,app,ws,mb):
+    loop = uasyncio.get_event_loop()
+    if reg.ws:
+        ws_app = ws.get(mb)
+        loop.create_task(ws_app)
+    if reg.web:
+        app.debug = 0
+        import ulogging
+        log = ulogging.getLogger("picoweb")
+        app.log = log
+        app.init()
+        loop.create_task(uasyncio.start_server(app._handle,'0.0.0.0',80))
+    loop.run_forever()
+
+    
 
 import _thread
-if reg.web:
-    _thread.start_new_thread(go,())
+import ws
+_thread.start_new_thread(main_runner,(reg,app,ws,d,))
 if reg.telnet:
-    import utelnetserver
-    utelnetserver.start()
-if reg.ws:
-    import ws
-    _thread.start_new_thread(ws.go,(d,))
+     import utelnetserver
+     utelnetserver.start()
