@@ -13,73 +13,79 @@ gc.collect()
 
 # Data registry class
 class Registry:
-    " Wrapper around the btree construct"
+    "Wrapper around the btree construct"
+
     def __init__(self):
-        # create the registry 
+        # create the registry
         import btree
+
         try:
-            f = open('registry','r+b')
+            f = open("registry", "r+b")
         except:
-            f = open('registry','w+b')
+            f = open("registry", "w+b")
         self._db = btree.open(f)
 
     def list(self):
-        for i in self._db.items():print(i)
-            
-    def exists(self,val):
+        for i in self._db.items():
+            print(i)
+
+    def exists(self, val):
         val = self._db.get(val)
-        if val is not  None:
+        if val is not None:
             return True
         else:
             return False
 
-    def set(self,item,data):
+    def set(self, item, data):
         self._db[item] = json.dumps(data)
         self._db.flush()
 
-    def get(self,item):
+    def get(self, item):
         val = self._db.get(item)
         if val is None:
             data = None
         else:
             try:
-                data = json.loads(val) 
+                data = json.loads(val)
             except:
                 data = val.decode()
-        return data 
+        return data
 
-    def scan(self,prefix):
-        for i in self._db.items(prefix+chr(0),prefix+chr(255)):
+    def scan(self, prefix):
+        for i in self._db.items(prefix + chr(0), prefix + chr(255)):
             print(i)
 
     def __repr__(self):
-        val = ''
+        val = ""
         for i in self._db.items():
-            val += i[0].decode() + ':' +  i[1].decode() + '\n'
+            val += i[0].decode() + ":" + i[1].decode() + "\n"
         return val
-    
-    def __getattr__(self,item):
+
+    def __getattr__(self, item):
         return self.get(item)
+
 
 # Open the registry
 reg = Registry()
-#reg.list()
+# reg.list()
 
-# file checkers 
+# file checkers
 import os
+
 
 def file_sha(path):
     BLOCK_SIZE = 16
     import os
     import hashlib
     import binascii
+
     data = bytearray(BLOCK_SIZE)
     stat = os.stat(path)
     file_size = stat[6]
     block_count = file_size // BLOCK_SIZE
     residual = file_size - (block_count * BLOCK_SIZE)
-    #print('blocks ',block_count,' | residual ',residual)
-    f = open(path,'rb')
+    # print('blocks ',block_count,' | residual ',residual)
+    f = open(path, "rb")
     h = hashlib.sha256()
     for i in range(block_count):
         f.readinto(data)
@@ -88,45 +94,45 @@ def file_sha(path):
     data = f.read(residual)
     h.update(data)
     dig = h.digest()
-    #print(dig)
+    # print(dig)
     sha_hex = binascii.hexlify(dig)
-    print(path,sha_hex)
-    reg.set('f_'+path,sha_hex)
+    print(path, sha_hex)
+    reg.set("f_" + path, sha_hex)
     return sha_hex
+
 
 class scanner:
     FILE_PREFIX = "f_"
-    def __init__(self,path=''):
+
+    def __init__(self, path=""):
         self._file_list = []
         self.scan(path)
-    
-    def scan(self,path):
+
+    def scan(self, path):
         for i in os.ilistdir(path):
-            file_name = path+'/'+i[0]
+            file_name = path + "/" + i[0]
             if i[3] != 0:
-                print('as file:',file_name)
+                print("as file:", file_name)
                 self._file_list.append(file_name)
             else:
-                print('as folder:',file_name)
+                print("as folder:", file_name)
                 self.scan(file_name)
-        
+
     def update(self):
         for i in self._file_list:
-            data = reg.get(scanner.FILE_PREFIX+i)
+            data = reg.get(scanner.FILE_PREFIX + i)
             if data is None:
-                print('file ',i,' missing') 
+                print("file ", i, " missing")
             hash = file_sha(i)
-            reg.set(scanner.FILE_PREFIX+i,hash)
+            reg.set(scanner.FILE_PREFIX + i, hash)
 
     def __repr__(self):
-        st = ''
+        st = ""
         for i in self._file_list:
-            st = str(i) + '\n'
+            st = str(i) + "\n"
         return st
-        
 
 
-         
 # connect to the network
 def do_connect():
     # TODO better fallback
@@ -144,24 +150,24 @@ def do_connect():
         if info is None:
             nets = wlan.scan()
             for i in nets:
-                    print(i[0].decode())
-            ssid = input('ssid>')
-            password = input('password>')
-            reg.set('wifi',[ssid,password])
+                print(i[0].decode())
+            ssid = input("ssid>")
+            password = input("password>")
+            reg.set("wifi", [ssid, password])
         outer = 0
         if not wlan.isconnected():
             print("connecting to network...")
-            wlan.connect(info[0],info[1])
+            wlan.connect(info[0], info[1])
             count = 0
             while not wlan.isconnected():
-                #print(wlan.ifconfig())
-                count += 1 
+                # print(wlan.ifconfig())
+                count += 1
                 if (count % 100000) == 0:
-                    print(wlan.ifconfig()) 
-                    outer += 1 
+                    print(wlan.ifconfig())
+                    outer += 1
                     if outer == 60:
                         break
-        reg.set('network',wlan.ifconfig())
+        reg.set("network", wlan.ifconfig())
         print(reg.network)
     except:
         wlan = None
@@ -175,33 +181,58 @@ wlan = do_connect()
 try:
     if reg.uplink is None:
         print("enter status url")
-        val = input('status>')
-        reg.set('uplink',val)
-        reg.set('telnet',True)
+        val = input("status>")
+        reg.set("uplink", val)
+        reg.set("telnet", True)
 except OSError as e:
     print(e)
 
 
 def update():
-    " Get the updates"
-    data = json.load(upip.url_open(reg.uplink+'/status'))
+    "Get the updates"
+    data = json.load(upip.url_open(reg.uplink + "/status"))
     for i in data:
-        local = reg.get('f_'+i)
+        local = reg.get("f_" + i)
         remote = data[i]
         print(i)
         if local != remote:
             if local is None:
-                print("local file",i," missing")
+                print("local file", i, " missing")
             else:
                 print("hash is different")
-            print("Fetch file ",i)
-            upip._makedirs(i) 
-            upip.save_file(i,upip.url_open(reg.uplink+'/files'+i))
+            print("Fetch file ", i)
+            upip._makedirs(i)
+            upip.save_file(i, upip.url_open(reg.uplink + "/files" + i))
             print("Update registry")
-            reg.set('f_'+i,data[i])
+            reg.set("f_" + i, data[i])
             # wait for the flash to catch up
             gc.collect()
             time.sleep(2)
+
+def format_drive():
+    global reg
+    # low level drive format
+    b = open('boot.py').read()
+    v = ['wifi','uplink','ws','web','telnet']
+    d = {}
+    for i in v:
+        d[i] = reg.get(i) 
+    # format the drive
+    reg._db.close()
+    del reg
+    import os
+    import flashbdev
+    os.VfsLfs2.mkfs(flashbdev.bdev)
+    # write the boot back down
+    f = open('boot.py','w')
+    f.write(b)
+    f.close()
+    rnew = Registry()
+    for i in d:
+        rnew.set(i,d[i])
+    rnew._db.flush()
+    rnew._db.close()
+    machine.reset()
 
 
 print("Running Update")

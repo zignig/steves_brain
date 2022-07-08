@@ -128,6 +128,4 @@ void loop (void)
     }
   }
   robot.Update();
-  //leftMotor.Update();
-  //rightMotor.Update();
 }  // end of loop
