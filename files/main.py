@@ -9,8 +9,14 @@ app = picoweb.WebApp(__name__)
 def index(req,resp):
     yield from picoweb.start_response(resp)
     htmlFile = open('static/index.html','r')
-    for line in htmlFile:
-        yield from resp.awrite(line)
+    #for line in htmlFile:
+    #    yield from resp.awrite(line)
+    buf = bytearray(32)
+    while True:
+        l = htmlFile.readinto(buf)
+        if not l:
+            break
+        yield from resp.awrite(buf, 0, l)
 
 @app.route('/status')
 def status(req,resp):
