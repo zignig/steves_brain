@@ -17,8 +17,11 @@ def index():
 
 @app.route('/time')
 def get_time():
-    t = tuple(time.gmtime())[:-1]
-    return jsonify(t)
+    # esp32 rtc has a weird format
+    # weekday in the middle
+    t = time.localtime()
+    val = (t[0],t[1],t[2],0,t[3],t[4],t[5],0)
+    return jsonify(val)
     
 # scan the files and get the sha sums of the files   
 def scanner(path,data):

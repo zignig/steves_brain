@@ -243,12 +243,12 @@ def format_drive():
 
 
 def set_time():
-    print(time.gmtime())
+    print(time.localtime())
     rtc = machine.RTC()
     data = json.load(upip.url_open(reg.uplink + "/time"))
-    print(data)
-    rtc.datetime(data)
-    return data
+    rtc.init(data)
+    reg.set('last_timeset',time.localtime())
+    return time.localtime()
 
 
 print("Running Update")
