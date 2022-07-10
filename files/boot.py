@@ -1,3 +1,4 @@
+# change
 # This file is executed on every boot (including wake-boot from deepsleep)
 # import esp
 # esp.osdebug(None)
@@ -209,43 +210,48 @@ def update():
             gc.collect()
             time.sleep(2)
 
+
 def format_drive():
-    print('whoops, that may have been a mistake')
+    print("whoops, that may have been a mistake")
     global reg
     # low level drive format
-    print('collecting stuff.')
-    b = open('boot.py').read()
-    v = ['wifi','uplink','ws','web','telnet']
+    print("collecting stuff.")
+    b = open("boot.py").read()
+    v = ["wifi", "uplink", "ws", "web", "telnet"]
     d = {}
     for i in v:
-        d[i] = reg.get(i) 
+        d[i] = reg.get(i)
     # format the drive
     reg._db.close()
     del reg
     import os
     import flashbdev
+
     os.VfsLfs2.mkfs(flashbdev.bdev)
-    print('too late now...')
+    print("too late now...")
     # write the boot back down
-    f = open('boot.py','w')
+    f = open("boot.py", "w")
     f.write(b)
     f.close()
     rnew = Registry()
     for i in d:
-        rnew.set(i,d[i])
+        rnew.set(i, d[i])
     rnew._db.flush()
     rnew._db.close()
-    print('all gone, rebuild...')
+    print("all gone, rebuild...")
     machine.reset()
+
 
 def set_time():
     print(time.gmtime())
-    rtc =machine.RTC()
-    data = json.load(upip.url_open(reg.uplink+'/time'))
+    rtc = machine.RTC()
+    data = json.load(upip.url_open(reg.uplink + "/time"))
     print(data)
     rtc.datetime(data)
     return data
 
+
 print("Running Update")
+set_time()
 update()
 gc.collect()

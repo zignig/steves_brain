@@ -80,13 +80,21 @@
 		float fx = (float)x;
 		float fy = (float)y;
 
+		// maybe the joy should be rescaled 
+		// not the raw drive.
+		  
+
+
+
+		  
 		magnitude = sqrt(fx * fx + fy * fy);
 		rad = acos(abs(fx)/magnitude);
 		
 		if(isnan(rad)){
 			rad= 0;
-		}        
-			float angle = rad * 180 / PI;
+		} 
+
+		float angle = rad * 180 / PI;
 		float tcoeff = -1 + (angle / 90) * 2;
 		float turn = tcoeff * abs(abs(fy) - abs(fx));
 		turn = round(turn * 100) / 100;
@@ -109,6 +117,9 @@
 			rawLeft = 0 - rawLeft;
 			rawRight = 0 - rawRight;
 		}
+
+		// rescale reduce twitch
+		
 		float minspeed = 60;
 		float trigger = 10;
 		if ( rawLeft > trigger)

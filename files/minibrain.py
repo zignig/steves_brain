@@ -43,8 +43,7 @@ class Frame:
             ]
         )
 
-
-    def set(self,action,data1=None,data2=None,data3=None,data4=None):
+    def set(self, action, data1=None, data2=None, data3=None, data4=None):
         self.action = action
         if data1 is not None:
             self.data1 = data1
@@ -59,6 +58,7 @@ class Frame:
         val = (self.data1 + self.data2 + self.data3 + self.data4) % 256
         return val
 
+
 class diff_drive:
     def __init__(self, speed=10000):
         self.ss = Pin(27, Pin.OUT)
@@ -69,7 +69,7 @@ class diff_drive:
         self.accel(200)
         self.interval = 100000
 
-    def _char(self,c):
+    def _char(self, c):
         self.ss.off()
         self.port.write(c)
         self.ss.on()
@@ -78,18 +78,17 @@ class diff_drive:
         self.frame.set(0)
         self._char(self.frame.get())
 
-    def accel(self,acc):
-        if ( acc > 255 ) or (acc<= 0):
+    def accel(self, acc):
+        if (acc > 255) or (acc <= 0):
             raise Exception("accleration out of range")
-        self.frame.set(3,acc)
+        self.frame.set(3, acc)
         self._char(self.frame.get())
 
-
-    def joy(self,m1,m2):
-        if ( m1 > 255 ) or (m1 < -255):
+    def joy(self, m1, m2):
+        if (m1 > 255) or (m1 < -255):
             print("motor 1 out of range")
             return
-        if ( m2 > 255 ) or (m2 < -255):
+        if (m2 > 255) or (m2 < -255):
             print("motor 2 out of range")
             return
         # default to forward
@@ -101,14 +100,14 @@ class diff_drive:
         if m2 < 0:
             m2 = abs(m2)
             dir2 = 1
-        
-        self.frame.set(4,m1,m2,dir1,dir2)
+
+        self.frame.set(4, m1, m2, dir1, dir2)
         self._char(self.frame.get())
 
-    def move(self,m1,m2):
-        if ( m1 > 255 ) or (m1 < -255):
+    def move(self, m1, m2):
+        if (m1 > 255) or (m1 < -255):
             raise Exception("motor 1 out of range")
-        if ( m2 > 255 ) or (m2 < -255):
+        if (m2 > 255) or (m2 < -255):
             raise Exception("motor 2 out of range")
         # default to forward
         dir1 = 0
@@ -119,7 +118,7 @@ class diff_drive:
         if m2 < 0:
             m2 = abs(m2)
             dir2 = 1
-        self.frame.set(2,m1,m2,dir1,dir2)
+        self.frame.set(2, m1, m2, dir1, dir2)
         self._char(self.frame.get())
 
     @property
@@ -138,19 +137,18 @@ class diff_drive:
     def d(self):
         self.right()
 
-
     def stop(self):
-        self.frame.set(2,0,0,0,0)
+        self.frame.set(2, 0, 0, 0, 0)
         self._char(self.frame.get())
 
     def forward(self):
-        self.move(self.rate,self.rate)
+        self.move(self.rate, self.rate)
 
     def backward(self):
-        self.move(-self.rate,-self.rate)
+        self.move(-self.rate, -self.rate)
 
     def left(self):
-        self.move(-self.rate,self.rate)
+        self.move(-self.rate, self.rate)
 
     def right(self):
-        self.move(self.rate,-self.rate)
+        self.move(self.rate, -self.rate)

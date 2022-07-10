@@ -5,11 +5,22 @@ from flask import jsonify
 import hashlib 
 
 app = Flask(__name__)
-import os 
+import os,time 
 base_path = 'files'
 
 key = "xkDoOyC05K6DeKIr/37beQg8YeA0KnYlF98PYG2W6CQ=\\n"
 
+@app.route('/')
+@app.route('/index.html')
+def index():
+    return 'index'
+
+@app.route('/time')
+def get_time():
+    t = tuple(time.gmtime())[:-1]
+    return jsonify(t)
+    
+# scan the files and get the sha sums of the files   
 def scanner(path,data):
     sc = os.scandir(path)
     for i in sc:
@@ -48,5 +59,6 @@ def status():
 @app.route('/uplink')
 def uplink():
     return 'hello'
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5001) 
+    app.run(host='0.0.0.0',port=5001,debug=True) 

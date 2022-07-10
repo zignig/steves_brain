@@ -21,6 +21,7 @@ void SteveBot::Robot::SetAcceleration(int acceleration)
 {
         difDrive.SetAcceleration(acceleration);
 }
+
 void SteveBot::Robot::SetDiff(int left, int right)
 {
         difDrive.SetDiff(left,right);

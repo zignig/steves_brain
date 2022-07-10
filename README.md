@@ -37,3 +37,8 @@ when it gets moved to (battery) only
 -  replaced with fixed level shifters, spi working 
 -  power brownout with heavy motor usage, need to rework regulation
 
+## 20200708 update
+
+- spi fixed , asyncio weirdness fixed
+- don't run asyncio in two threads...
+
