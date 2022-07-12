@@ -17,6 +17,10 @@ namespace SteveBot
 
 		virtual int GetAverageCurrent() = 0;
 
+		virtual int GetMinCurrent() = 0;
+
+		virtual int GetMaxCurrent() = 0;
+
 	private:
 	};
 };

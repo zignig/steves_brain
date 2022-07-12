@@ -15,6 +15,18 @@ import time
 # sync , sync , command , d1,d2,d3,d4 check
 # rewrite the Arduino software first
 
+# FRAME type enum in diff_drive comms.h
+FRAME_HELLO = 0
+FRAME_STOP = 1
+FRAME_RUN = 2 
+FRAME_SETACC = 3 
+FRAME_SETJOY = 4 
+FRAME_SETTIMEOUT = 5 
+FRAME_SETTRIGGER = 6 
+FRAME_SETMINSPEED = 7
+FRAME_SENSOR = 8
+FRAME_CONFIG = 9 
+FRAME_COUNT = 10
 
 class Frame:
     "simple dataframe for arduino comms"
@@ -81,7 +93,13 @@ class diff_drive:
     def accel(self, acc):
         if (acc > 255) or (acc <= 0):
             raise Exception("accleration out of range")
-        self.frame.set(3, acc)
+        self.frame.set(FRAME_SETACC, acc)
+        self._char(self.frame.get())
+
+    def timeout(self, timeout):
+        if (timeout > 255) or (timeout <= 0):
+            raise Exception("timeout out of range")
+        self.frame.set(FRAME_SETTIMEOUT, timeout)
         self._char(self.frame.get())
 
     def joy(self, m1, m2):
@@ -101,7 +119,7 @@ class diff_drive:
             m2 = abs(m2)
             dir2 = 1
 
-        self.frame.set(4, m1, m2, dir1, dir2)
+        self.frame.set(FRAME_SETJOY, m1, m2, dir1, dir2)
         self._char(self.frame.get())
 
     def move(self, m1, m2):
@@ -118,7 +136,7 @@ class diff_drive:
         if m2 < 0:
             m2 = abs(m2)
             dir2 = 1
-        self.frame.set(2, m1, m2, dir1, dir2)
+        self.frame.set(FRAME_RUN, m1, m2, dir1, dir2)
         self._char(self.frame.get())
 
     @property
@@ -138,7 +156,7 @@ class diff_drive:
         self.right()
 
     def stop(self):
-        self.frame.set(2, 0, 0, 0, 0)
+        self.frame.set(FRAME_STOP, 0, 0, 0, 0)
         self._char(self.frame.get())
 
     def forward(self):

@@ -11,7 +11,7 @@
 
 	void DifferentialDriveController::Update()
 	{
-		if ( _lastUpdate + _timeout < millis()){
+		if ( _lastUpdate + _timeOut < millis()){
 			_leftSpeed = 0;
 			_rightSpeed= 0;
 			UpdateMotorsSpeed();
@@ -49,6 +49,11 @@
 		UpdateMotorsSpeed();
 	}
 
+	void DifferentialDriveController::SetTimeout(int timeout)
+	{
+		_timeOut = timeout;
+	}
+
 	int DifferentialDriveController::GetSpeed()
 	{
 		return 0;
@@ -83,10 +88,6 @@
 		// maybe the joy should be rescaled 
 		// not the raw drive.
 		  
-
-
-
-		  
 		magnitude = sqrt(fx * fx + fy * fy);
 		rad = acos(abs(fx)/magnitude);
 		
@@ -120,27 +121,25 @@
 
 		// rescale reduce twitch
 		
-		float minspeed = 60;
-		float trigger = 10;
-		if ( rawLeft > trigger)
+		if ( rawLeft > _trigger)
 		{
-			rawLeft = map(rawLeft,0,255,minspeed,255);
+			rawLeft = map(rawLeft,0,255,_minSpeed,255);
 
 		}
-		if ( rawLeft < -trigger)
+		if ( rawLeft < -_trigger)
 		{
-			rawLeft = map(rawLeft,0,-255,-minspeed,-255);
+			rawLeft = map(rawLeft,0,-255,-_minSpeed,-255);
 		}
-		if ( rawRight > trigger)
+		if ( rawRight > _trigger)
 		{
-			rawRight = map(rawRight,0,255,minspeed,255);
+			rawRight = map(rawRight,0,255,_minSpeed,255);
 
 		}
-		if ( rawRight < -trigger)
+		if ( rawRight < -_trigger)
 		{
-			rawRight = map(rawRight,0,-255,-minspeed,-255);
+			rawRight = map(rawRight,0,-255,-_minSpeed,-255);
 		}
-		Serial.println(rawLeft);
-		Serial.println(rawRight);
+		//Serial.println(rawLeft);
+		//Serial.println(rawRight);
 		SetSpeed(rawLeft,rawRight);
 	}

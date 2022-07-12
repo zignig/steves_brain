@@ -21,12 +21,17 @@ namespace SteveBot
 
 		void SetAcceleration(int acceleration);
 		int GetAcceleration();
+		void SetTimeout(int timeout);
+		void SetMinSpeed(int minspeed);
+		void SetTrigger(int trigger);
 
 		// Sets the required speed and direction of movement
 		// speed: valid range between 0 and 255
 		// direction: between 0 and 360 degrees
 		void SetSpeed(int speed, int direction);
+		// calculate joystick to diff drive calcs
 		void SetJoy(int x, int y);
+		// drive the motors individually
 		void SetDiff(int x, int y);
 
 		int GetSpeed();
@@ -43,9 +48,12 @@ namespace SteveBot
 		// ie: If _acceleration=10, _currentspeed will be increased in 10, every 100 ms, so if we start at _currentspeed=0 and _targetSpeed=255, it will take 2550ms ((255/10)*100) to get to full speed
 		// ie: If _acceleration=100, _currentspeed will be increased in 100, every 100 ms, so if we start at _currentspeed=0 and _targetSpeed=255, it will take 255ms ((255/100)*100) to get to full speed
 		unsigned int _acceleration = 20;
+		int _trigger = 10;
+		int _minSpeed = 70;
+		int _timeOut = 500;
 
 		// The last speed set to the motors
-                int _leftSpeed;
+        int _leftSpeed;
 		int _rightSpeed;
 		// The speed we want to achieve, (we will get to this _targetSpeed ant _acceleration increments per second) 
 
@@ -57,7 +65,5 @@ namespace SteveBot
 		
 		// timeout for drive commands
 		unsigned long _lastUpdate;
-		unsigned long _timeout = 500;
-                
 	};
 };

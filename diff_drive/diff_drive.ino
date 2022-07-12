@@ -13,26 +13,13 @@
 #include "Robot.h"
 using namespace SteveBot;
 
+// The robot
 Robot robot;
-
-// Left Motor (A)
-int Lenable = 3;
-int L1 = 9;
-int L2 = 8;
-// Right Motor (B)
-int Renable = 5;
-int R2 = 7;
-int R1 = 6;
-
-
-//L298NMotorService leftMotor(true,true,Lenable,L1,L2);
-//L298NMotorService rightMotor(true,true,Renable,R1,R2);
 
 // spi boot stolen from
 // Written by Nick Gammon
 // February 2011
 // taken from https://gammon.com.au/spi
-
 
 volatile uint8_t comm ; 
 volatile boolean _boop;
@@ -56,8 +43,6 @@ void setup (void)
   // now turn on interrupts
   SPI.attachInterrupt();
   Serial.println("minibrain 0.1");
-  //leftMotor.Setup();
-  //rightMotor.Setup();
 }  // end of setup
 
 
@@ -104,7 +89,7 @@ void loop (void)
     }else{
         rspeed = the_packet.data2;
     }
-    int acc = the_packet.data1;
+    int val1 = the_packet.data1;
     switch(the_packet.type){
         case FRAME_HELLO:
             Serial.println("hello");
@@ -115,15 +100,16 @@ void loop (void)
         case FRAME_RUN:
             Serial.println("run");
             // Set the motor speed
-            //leftMotor.SetSpeed(lspeed); 
-            //rightMotor.SetSpeed(rspeed); 
             robot.SetDiff(lspeed,rspeed);
             break;
         case FRAME_SETACC:
-            robot.SetAcceleration(acc);
+            robot.SetAcceleration(val1);
             break;
         case FRAME_SETJOY:
             robot.SetJoy(lspeed,rspeed);
+            break;
+        case FRAME_SETTIMEOUT:
+            robot.SetTimeout(val1);
             break;
     }
   }

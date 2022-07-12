@@ -23,9 +23,9 @@ int ACS712Current::GetCurrent()
 	{
 		if (_lastReadingTime + MAX_READING_FREQUENCY_CURRENT <= millis())
 		{
-                        _latestCurrent = analogRead(_aPin);
-                        float rescale =  -_latestCurrent + 512;
-                        _latestCurrent = rescale *3.5 ; 
+			_latestCurrent = analogRead(_aPin);
+			float rescale =  -_latestCurrent + 512;
+			_latestCurrent = rescale ; 
 			average.Add(_latestCurrent);
 			if (IsVerbose())
 			{
@@ -34,11 +34,29 @@ int ACS712Current::GetCurrent()
 				//Serial.print(average.Get());
 				Serial.println(F(" units"));
 			}
-                        _lastReadingTime = millis();
+			if (_latestCurrent < _minCurrent)
+			{
+				_minCurrent = _latestCurrent;
+			}
+			if (_latestCurrent > _maxCurrent)
+			{
+				_maxCurrent = _latestCurrent;
+			}
+			_lastReadingTime = millis();
 		}
 
 		return _latestCurrent;
 	}
+}
+
+int ACS712Current::GetMinCurrent()
+{
+	return _minCurrent;
+}
+
+int ACS712Current::GetMaxCurrent()
+{
+	return _maxCurrent;
 }
 
 int ACS712Current::GetAverageCurrent()

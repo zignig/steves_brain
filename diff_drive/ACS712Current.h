@@ -16,9 +16,11 @@ namespace SteveBot
 	public:
 		ACS712Current(bool isEnabled, bool isVerbose, int APin);
                 
-                void Update();
+        void Update();
 		int GetCurrent();
 		int GetAverageCurrent();
+		int GetMinCurrent();
+		int GetMaxCurrent();
 
 	private:
                 //ACS712 Current sensor ;
@@ -26,8 +28,11 @@ namespace SteveBot
 		unsigned long _lastReadingTime = 0;
 
 		// The last reading we made
+		int _minCurrent = 0;
+		int _maxCurrent = 0;
 		int _latestCurrent = 0;
-                int _aPin =0;
-		MovingAverage<int, 3> average;
+        int _aPin =0;
+
+		MovingAverage<int, 10> average;
 	};
 };

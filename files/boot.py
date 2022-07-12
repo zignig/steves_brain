@@ -245,8 +245,11 @@ def format_drive():
 def set_time():
     print(time.localtime())
     rtc = machine.RTC()
-    data = json.load(upip.url_open(reg.uplink + "/time"))
-    rtc.init(data)
+    t = json.load(upip.url_open(reg.uplink + "/time"))
+    # esp32 rtc has a weird format
+    # weekday in the middle
+    val = (t[0],t[1],t[2],0,t[3],t[4],t[5],0)
+    rtc.init(val)
     reg.set('last_timeset',time.localtime())
     return time.localtime()
 

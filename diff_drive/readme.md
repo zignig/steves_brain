@@ -3,6 +3,8 @@
 [x] get the compass connected
 
 [x] add the current sensor
+[x] min and max on the current sensor 
+
 - add the distance sensor ( in progress )
 - have spi comms return data to the esp32
     - need to rework the frames , possibly 8 byte payload
@@ -15,6 +17,7 @@
 - have spi be able to read a frame after a send ( sensor info back to esp)
 
 - expose the timeout as a command 
+
 - expose trigger and minspeed as a command
 
 - servo driver , need to move one o the Diffdrives pins for PWM
@@ -30,7 +33,8 @@
 ## Cortex
 
 the cortex needs to sit between the input and the drive
-Add a small mutable NN inbetween commands and actions
+Add a small mutable NN inbetween commands and actions. Sensor 
+data needs to be able to overide user input.
 
-save and load the data from eeprom
+- save and load the data from eeprom
 
