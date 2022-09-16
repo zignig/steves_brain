@@ -109,7 +109,7 @@ void loop (void)
             robot.SetJoy(lspeed,rspeed);
             break;
         case FRAME_SETTIMEOUT:
-            robot.SetTimeout(val1);
+            robot.SetTimeout(val1 << 3);
             break;
     }
   }

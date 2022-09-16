@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jul 12 14:00:50 2022
+# Make data base, printed on Sat Sep  3 21:22:42 2022
 
 # Variables
 
@@ -24,8 +24,6 @@ XDG_SESSION_CLASS = user
 VSCODE_AGENT_FOLDER = /home/zignig/.vscode-server
 # environment
 XDG_SESSION_TYPE = tty
-# environment
-VSCODE_LOG_NATIVE = false
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # automatic
@@ -41,7 +39,7 @@ SHELL = /bin/sh
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en","availableLanguages":{}}
 # environment
-_ = /home/zignig/.vscode-server/bin/30d9c6cd9483b2cc586687151bcbcd635f373630/node
+_ = /home/zignig/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/node
 # makefile
 MAKEFILE_LIST := 
 # 'override' directive
@@ -53,23 +51,21 @@ XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
 # environment
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
-VSCODE_VERBOSE_LOGGING = true
-# environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
 VSCODE_CWD = /home/zignig
 # environment
-SSH_CONNECTION = 192.168.2.185 51326 192.168.1.83 22
+SSH_CONNECTION = 192.168.2.185 54930 192.168.1.83 22
 # environment
-PATH = /home/zignig/.vscode-server/bin/30d9c6cd9483b2cc586687151bcbcd635f373630/bin/remote-cli:/home/zignig/.cargo/bin:/home/zignig/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+PATH = /home/zignig/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/remote-cli:/home/zignig/.cargo/bin:/home/zignig/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
 CQPARTS_SERVER = http://localhost:8080
 # environment
-VSCODE_LOG_STACK = false
+ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-44152406-01d8-409f-8d02-1e3b10fab1d2.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-3dec1261-617c-44c3-be96-49c74739a2a5.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -78,8 +74,6 @@ LS_COLORS =
 CQPARTS_DB = postgresql+psycopg2://zignig:insecure@localhost/zignig
 # automatic
 %F = $(notdir $%)
-# environment
-VSCODE_PIPE_LOGGING = true
 # environment
 LUNA_PLATFORM = luna.gateware.platform.tinyfpga:TinyFPGABxPlatform
 # environment
@@ -99,7 +93,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 LOGNAME = zignig
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
 # automatic
 +F = $(notdir $+)
 # environment
@@ -115,7 +109,7 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 0
 # environment
-XDG_SESSION_ID = 2192
+XDG_SESSION_ID = 999
 # environment
 USER = zignig
 # environment
@@ -139,11 +133,11 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 192.168.2.185 51326 22
+SSH_CLIENT = 192.168.2.185 54930 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
-BROWSER = /home/zignig/.vscode-server/bin/30d9c6cd9483b2cc586687151bcbcd635f373630/bin/helpers/browser.sh
+BROWSER = /home/zignig/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/helpers/browser.sh
 # environment
 VSCODE_HANDLES_SIGPIPE = true
 # environment
@@ -169,11 +163,9 @@ MAKE_HOST := x86_64-pc-linux-gnu
 # environment
 LANG = C
 # environment
-VSCODE_EXTHOST_WILL_SEND_SOCKET = true
-# environment
 MOTD_SHOWN = pam
 # variable set hash-table stats:
-# Load=80/1024=8%, Rehash=0, Collisions=11/102=11%
+# Load=76/1024=7%, Rehash=0, Collisions=11/98=11%
 
 # Pattern-specific Variable Values
 
@@ -240,6 +232,6 @@ GNUmakefile:
 # hash-table stats:
  
 # Load=30/8192=0%, Rehash=0, Collisions=1/33=3%
-# Finished Make data base on Tue Jul 12 14:00:50 2022
+# Finished Make data base on Sat Sep  3 21:22:42 2022
 
  

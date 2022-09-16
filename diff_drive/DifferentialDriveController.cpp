@@ -119,12 +119,11 @@
 			rawRight = 0 - rawRight;
 		}
 
-		// rescale reduce twitch
+		// rescale to reduce twitch
 		
 		if ( rawLeft > _trigger)
 		{
 			rawLeft = map(rawLeft,0,255,_minSpeed,255);
-
 		}
 		if ( rawLeft < -_trigger)
 		{

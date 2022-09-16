@@ -17,6 +17,8 @@ def index():
 
 @app.route('/time')
 def get_time():
+    # this gets transformed for the RTC onboard.
+    # should just be default local time for others.
     t = time.localtime()
     return jsonify(t)
     
