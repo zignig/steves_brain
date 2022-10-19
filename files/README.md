@@ -8,7 +8,7 @@ A micropython relay system that will update the device with only a cool boot fil
 
 Yay!
 
-# Update systes are working
+# Update systems are working
 
 need to rewrite the arduino brain
 

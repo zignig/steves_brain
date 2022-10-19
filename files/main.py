@@ -95,6 +95,8 @@ def main_runner(reg, app, ws, mb):
 import _thread
 import ws
 
+# Run all the async in this thread
+# otherwise bad things happen
 _thread.start_new_thread(
     main_runner,
     (
@@ -104,7 +106,8 @@ _thread.start_new_thread(
         d,
     ),
 )
+
+# Run the telnet server
 if reg.telnet:
     import utelnetserver
-
     utelnetserver.start()

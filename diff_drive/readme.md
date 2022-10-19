@@ -1,7 +1,6 @@
 # Stuff to do
 
 [x] get the compass connected
-
 [x] add the current sensor
 [x] min and max on the current sensor 
 
