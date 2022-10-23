@@ -1,66 +1,53 @@
+
 // Differential drive setup
 use arduino_hal::port;
 use arduino_hal::simple_pwm;
-pub struct PwmDriver<S> {
-    pub drive: S,
-    pos: u32,
-    rate: u32,
-    
+
+use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::PwmPin;
+
+pub struct Config {
+    enabled: bool, // If the motor is running or not
+    rate: f32, // speed at which the rate approaches the goal
+    timeout: u32, // how long it will run a command for before stopping
+    interval: u32, // it update interval
 }
 
-impl<S> PwmDriver<S>{
-    pub fn new(){
-
+impl Config { 
+    fn default() -> Self{
+    Self { 
+        enabled: false,
+        rate: 100.,
+        timeout: 4000,
+        interval: 50,
+    }
     }
 }
-
-pub struct Drive {
-    active: bool,
-    direction: bool,
-    speed: u8,
-    //enable: arduino_hal::simple_pwm::Timer0Pwm,
-    pin1: port::Pin<port::mode::Output>,
-    pin2: port::Pin<port::mode::Output>,
+pub struct DiffDrive< E, P1,P2>
+where
+ E: PwmPin,
+ P1: OutputPin,
+ P2: OutputPin,
+{ 
+    en: E,
+    p1: P1, 
+    p2: P2,
+    config: Config
 }
 
-impl Drive{
-    pub fn new(
-        timer: arduino_hal::simple_pwm::Timer0Pwm,
-        //enable:  port::Pin<port>,
-        pin1: port::Pin<port::mode::Output>,
-        pin2: port::Pin<port::mode::Output>
-    ) -> Self {
-        Self {
-            active: false,
-            direction: false,
-            speed: 0,
-            //enable: arduino_hal::IntoPwmPin!(enable);
-            pin1: pin1,
-            pin2: pin2,
+impl< E,P1,P2> DiffDrive< E,P1,P2>
+where 
+ E: PwmPin,
+ P1: OutputPin,
+ P2: OutputPin,
+  { 
+    fn new(mut en: E,mut p1: P1,mut  p2:P2) -> Self{
+        let conf = Config::default();
+        Self { 
+            en: en,
+            p1: p1,
+            p2: p2,
+            config: conf,
         }
     }
-
-    pub fn enable(&mut self) {
-        self.active = true;
-    }
-
-    pub fn disable(&mut self) {
-        self.active = false;
-    }
-
-    pub fn forward(&mut self) {
-        self.pin1.set_low();
-        self.pin2.set_high();
-    }
-
-    pub fn backwards(&mut self) {
-        self.pin1.set_high();
-        self.pin2.set_low();
-    }
-
-    pub fn set_speed(&mut self, speed: u8) {
-        self.speed = speed;
-    }
-
-    pub fn update(&mut self) {}
 }

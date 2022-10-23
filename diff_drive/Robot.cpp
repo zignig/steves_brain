@@ -6,8 +6,8 @@ Robot::Robot() :
 	rightMotor(true, false, PIN_L298N_ENA, PIN_L298N_IN1, PIN_L298N_IN2),
 	leftMotor(true, false, PIN_L298N_ENB, PIN_L298N_IN3, PIN_L298N_IN4),
 	difDrive(true, false, &rightMotor, &leftMotor),
-        compass(true,false,0),
-        currentSensor(true,true,PIN_CURRENT)
+        compass(true,true,0),
+        currentSensor(true,false,PIN_CURRENT)
 {
 }
 
