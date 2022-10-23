@@ -8,11 +8,12 @@ pub const SLAVE_ADDRESS: u8 = 0x21;
 // get bearing 2 bytes , reformatted
 //use arduino_hal::prelude::*;
 use embedded_hal::blocking::i2c::{ WriteRead };
-use core::marker::PhantomData;
+//use core::marker::PhantomData;
 
 pub struct Compass<I2C> {
-    i2c: PhantomData<I2C>,
-    pub bearing: i32,
+    i2c: I2C,
+    bearing: u16,
+    avebearing: u16,
     address: u8,
 }
 
@@ -22,19 +23,21 @@ where
     I2C: WriteRead<Error= E>,
 {
        
-    pub fn new(_i2c: &I2C) -> Result<Self, E> {
+    pub fn new(i2c: I2C) -> Result<Self, E> {
         let com = Compass {
-            i2c: PhantomData,
+            i2c: i2c,
             bearing: 0,
+            avebearing: 0,
             address: SLAVE_ADDRESS,
         };
         Ok(com)
     }
 
-    pub fn get_bearing(&self, i2c: &mut I2C) -> Result<u16,E>{
+    pub fn get_bearing(&mut self) -> Result<u16,E>{
         let mut data:[u8;2] = [0;2];
-        i2c.write_read(self.address,&[0x41],&mut data)?;
+        self.i2c.write_read(self.address,&[0x41],&mut data)?;
         let val = ((data[0] as u16) << 8 ) | data[1] as u16;
+        self.bearing = val.clone();
         Ok(val)
     }
 

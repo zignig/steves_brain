@@ -42,14 +42,8 @@ fn main() -> ! {
     //ufmt::uwriteln!(&mut serial,"i2c data {}{}",data[0],data[1]).void_unwrap();
     
     
-    let compass = compass::Compass::new(&mut i2c).unwrap();
-    let test = compass.get_bearing(&mut i2c).unwrap();
-    ufmt::uwriteln!(&mut serial, "The Compass: {}",test).void_unwrap();
+    let mut compass = compass::Compass::new(i2c).unwrap();
     
-    
-    // ufmt::uwriteln!(&mut serial, "\r\nRead direction test:\r").void_unwrap();
-    // i2c.i2cdetect(&mut serial, arduino_hal::i2c::Direction::Write).void_unwrap();
-
 
     let mut counter: u32 = 0;
     loop {
@@ -58,6 +52,6 @@ fn main() -> ! {
         counter = counter + 1;
         
         }
-    ufmt::uwriteln!(&mut serial, "The Compass: {}",compass.get_bearing(&mut i2c).unwrap()).void_unwrap();
+    ufmt::uwriteln!(&mut serial, "The Compass: {}",compass.get_bearing().unwrap()).void_unwrap();
     }
 }
