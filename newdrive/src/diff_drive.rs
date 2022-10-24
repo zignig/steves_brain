@@ -51,3 +51,14 @@ where
         }
     }
 }
+
+    //let timer0 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);
+    //let mut pwm_pin = pins.d3.into_output().into_pwm(&timer0);
+    //let mut en_pin1 = pins.d8.into_output();
+    //let mut en_pin2 = pins.d9.into_output();
+    //let mut DD = diff_drive::DiffDrive::new(pwm_pin,en_pin1,en_pin2);
+    // //pwm_pin.enable();
+    // pwm_pin.disable();
+    // //pwm_pin.set_duty(50);
+    // en_pin1.set_low();
+    // en_pin2.set_high();

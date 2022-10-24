@@ -3,11 +3,19 @@
 
 //mod diff_drive;
 mod compass;
+mod current_sensor; 
 
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
 use embedded_hal::prelude::*;
+
+// wrap the robot in a struct
+pub struct Robot<I2C> { 
+    compass: compass::Compass<I2C>,
+    //diff drive: diffdrive::DiffDrive,
+    // current_sensor: Current Sensor
+}
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -23,35 +31,23 @@ fn main() -> ! {
         pins.a5.into_pull_up_input(),
         20000,
     );
-
-    //let timer0 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);
-    //let mut pwm_pin = pins.d3.into_output().into_pwm(&timer0);
-    //let mut en_pin1 = pins.d8.into_output();
-    //let mut en_pin2 = pins.d9.into_output();
-    //let mut DD = diff_drive::DiffDrive::new(pwm_pin,en_pin1,en_pin2);
-    // //pwm_pin.enable();
-    // pwm_pin.disable();
-    // //pwm_pin.set_duty(50);
-    // en_pin1.set_low();
-    // en_pin2.set_high();
+    // create the compass
+    let mut compass = compass::Compass::new(i2c).unwrap();
+    
+    // create the current sensor
+    let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
+    let current_pin = pins.a0.into_analog_input(&mut adc);
+    //  let mut current = current_sensor::CurrentSensor::new(current_pin);
 
     ufmt::uwriteln!(&mut serial,"this is the diff drive").void_unwrap();
 
-    //let mut data:[u8;2] = [0,0];
-    //i2c.write_read(compass::SLAVE_ADDRESS,&[0x41],&mut data).unwrap();
-    //ufmt::uwriteln!(&mut serial,"i2c data {}{}",data[0],data[1]).void_unwrap();
-    
-    
-    let mut compass = compass::Compass::new(i2c).unwrap();
-    
-
     let mut counter: u32 = 0;
     loop {
-        if counter < 20 { 
+        if (counter % 10000) == 0  { 
         ufmt::uwriteln!(&mut serial,"counter {}",counter).void_unwrap();
+        ufmt::uwriteln!(&mut serial, "The Compass: {}",compass.get_bearing().unwrap()).void_unwrap();
+        ufmt::uwriteln!(&mut serial, "Current: {}",current_pin.analog_read(&mut adc)).void_unwrap();
+        }    
         counter = counter + 1;
-        
-        }
-    ufmt::uwriteln!(&mut serial, "The Compass: {}",compass.get_bearing().unwrap()).void_unwrap();
     }
 }

@@ -7,7 +7,7 @@ pub const SLAVE_ADDRESS: u8 = 0x21;
 
 // get bearing 2 bytes , reformatted
 //use arduino_hal::prelude::*;
-use embedded_hal::blocking::i2c::{ WriteRead };
+use embedded_hal::blocking::i2c::{ Write,  WriteRead };
 //use core::marker::PhantomData;
 
 pub struct Compass<I2C> {
@@ -20,7 +20,7 @@ pub struct Compass<I2C> {
 
 impl<I2C, E> Compass<I2C>
 where
-    I2C: WriteRead<Error= E>,
+    I2C: Write<Error = E> + WriteRead<Error= E>,
 {
        
     pub fn new(i2c: I2C) -> Result<Self, E> {
