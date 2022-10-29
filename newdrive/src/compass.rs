@@ -12,25 +12,24 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 
 // this is a transliteration of the spec
-
-// pub enum Command<u8>{
-//     write_eeprom(u8) = 0x77 , // 'w'   write eeprom address
-//     read_eeprom(u8) = 0x72 , // 'r' read eeprom address
-//     write_ram(u8) = 0x47 , // 'G' write ram register
-//     read_ram(u8) = 0x67, // g write ram register
-//     enter_sleep_mode(u8) = 0x53, // 'S' Enter sleep mode
-//     exit_sleep_mode(u8) = 0x57, // 'W' Exit sleep mode
-//     update_bridge_offsets(u8) = 0x4F, // 'O' update bridge ofsets
-//     enter_callibration_mode(u8) = 0x4f, // 'C' enter callibration mode
-//     exit_callibration_mod(u8) = 0x43, // 'E' exit callibation mode
-//     save_op_to_eeprom(u8) = 0x4C, // 'L' save op mode to eeprom
-//     get_data(u8) = 0x41  // 'A' get heading
-// }
+#[repr(u8)]
+pub enum Commands {
+    WriteEeprom = 0x77,  // 'w'   write eeprom address
+    ReadEeprom = 0x72, // 'r' read eeprom address
+    WriteRam = 0x47,  // 'G' write ram register
+    ReadRam = 0x67, // g write ram register
+    EnterSleepMode = 0x53, // 'S' Enter sleep mode
+    ExitSleepMode = 0x57, // 'W' Exit sleep mode
+    UpdateBridgeOffsets = 0x4F, // 'O' update bridge ofsets
+    GetData = 0x41, // 'A' get heading
+    EnterCallibrationMode = 0x43, // 'C' enter callibration mode
+    ExitCallibrationMode = 0x45, // 'E' exit callibation mode
+    SaveOpToEeprom = 0x4C, // 'L' save op mode to eeprom
+}
 
 pub struct Compass<I2C> {
     i2c: I2C,
     bearing: u16,
-    avebearing: u16,
     address: u8,
 }
 
@@ -43,7 +42,6 @@ where
         let com = Compass {
             i2c: i2c,
             bearing: 0,
-            avebearing: 0,
             address: SLAVE_ADDRESS,
         };
         Ok(com)
@@ -63,7 +61,7 @@ where
     pub fn update(&mut self) {
         // get two bytes from the device
         let mut data: [u8; 2] = [0; 2];
-        self.i2c.write_read(self.address, &[0x41], &mut data);
+        self.i2c.write_read(self.address, &[Commands::GetData as u8], &mut data);
         let val = ((data[0] as u16) << 8) | data[1] as u16;
         // save it to me
         self.bearing = val.clone();

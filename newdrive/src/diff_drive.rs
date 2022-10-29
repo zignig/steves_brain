@@ -1,7 +1,7 @@
 // Differential drive setup
 //use arduino_hal::port;
 //use arduino_hal::simple_pwm::*;
-
+extern crate embedded_hal;
 use embedded_hal::digital::v2::OutputPin;
 use embedded_hal::PwmPin;
 

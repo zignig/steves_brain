@@ -2,9 +2,9 @@
 #![no_main]
 
 mod compass;
-//mod diff_drive;
+mod diff_drive;
 mod current_sensor;
-
+mod utils;
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
@@ -15,7 +15,7 @@ use arduino_hal::simple_pwm::*;
 pub struct Robot<I2C> {
     compass: compass::Compass<I2C>,
     //diff drive: diffdrive::DiffDrive,
-    // current_sensor: Current Sensor
+    current_sensor: current_sensor::CurrentSensor
 }
 
 #[arduino_hal::entry]
@@ -52,7 +52,7 @@ fn main() -> ! {
     let current_pin = pins.a0.into_analog_input(&mut adc).into_channel();
     let mut current = current_sensor::CurrentSensor::new(current_pin);
 
-    ufmt::uwriteln!(&mut serial, "this is the diff drive").void_unwrap();
+    ufmt::uwriteln!(&mut serial, "Behold steve's minibrain").void_unwrap();
 
     let mut counter: u32 = 0;
     loop {

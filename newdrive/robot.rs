@@ -12,6 +12,10 @@
 // ? store this in eeprom and load it so behavior can be changed with out  a recompile
 
 // import the devices 
+ 
+
+
+
 
 // The robot struct.
 
