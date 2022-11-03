@@ -7,12 +7,15 @@ mod current_sensor;
 mod diff_drive;
 mod systick;
 mod utils;
+mod shared;
+
+use shared::{PeriodicUpdate, Update } ;
+
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
 
-use diff_drive::Update;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -77,6 +80,10 @@ fn main() -> ! {
     right_drive.enable();
     right_drive.set_speed(255);
     left_drive.set_speed(-255);
+    let now = systick::millis();
+
+
+    let ev = PeriodicUpdate::new(600,&right_drive,now);
     loop {
         let time = systick::millis();
         if time > 100000 {
@@ -84,8 +91,9 @@ fn main() -> ! {
             left_drive.stop();
         }
         if systick::is_tick() {
-            right_drive.update();
+            //right_drive.update();  
             left_drive.update();
+            ev.run(time);
             serial_println!("TICK").void_unwrap();
             serial_println!("time {}", time).void_unwrap();
             serial_println!("drive {}",right_drive.get_current()).void_unwrap();

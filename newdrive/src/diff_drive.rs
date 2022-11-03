@@ -90,7 +90,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         if self.config.enabled {
             // constrain the speed
             let speed = speed_i16.clamp(-255, 255);
-            if (speed >= 0) {
+            if speed >= 0 {
                 self.p1.set_high();
                 self.p2.set_low();
                 let speed_u8: u8 = speed.try_into().unwrap();
@@ -106,11 +106,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
 }
 
 
-use crate::systick::millis;
-
-pub trait Update {
-    fn update(&mut self);
-}
+//use crate::systick::millis;
+use crate::shared::Update;
 
 impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E, P1, P2> {
     fn update(&mut self) {
@@ -121,20 +118,20 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
         let rate = cf.rate;
         if cf.enabled {
             // accelerate
-            if (current < target) {
+            if current < target {
                 current += rate;
                 // to far ?
-                if (current > target) {
+                if current > target {
                     current = target;
                 }
                 self.config.current_speed = current;
                 self.set_target(current);
             }
             // decellerate
-            if (current > target) {
+            if current > target {
                 current -= rate;
                 // to far ?
-                if (current < target) {
+                if current < target {
                     current = target;
                 }                
                 self.config.current_speed = current;
