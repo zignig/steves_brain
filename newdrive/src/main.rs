@@ -12,18 +12,20 @@ use panic_halt as _;
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
 
+use diff_drive::Update;
+
 #[arduino_hal::entry]
 fn main() -> ! {
     // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    
+
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 57600);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
 
-    serial_println!("Woot it works");
+    serial_println!("Woot it works").void_unwrap();
 
     // i2c driver
     let i2c = arduino_hal::I2c::new(
@@ -73,18 +75,20 @@ fn main() -> ! {
     unsafe { avr_device::interrupt::enable() };
     left_drive.enable();
     right_drive.enable();
+    right_drive.set_speed(255);
+    left_drive.set_speed(-255);
     loop {
         let time = systick::millis();
-        if time < 50000 {
-            left_drive.forward(255);
-            right_drive.forward(255);
-        } else {
-            left_drive.stop();
+        if time > 100000 {
             right_drive.stop();
+            left_drive.stop();
         }
         if systick::is_tick() {
+            right_drive.update();
+            left_drive.update();
             serial_println!("TICK").void_unwrap();
             serial_println!("time {}", time).void_unwrap();
+            serial_println!("drive {}",right_drive.get_current()).void_unwrap();
             compass.update();
             serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
             serial_println!("Current: {}", current.get_value(&mut adc)).void_unwrap();
