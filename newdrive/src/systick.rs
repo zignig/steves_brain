@@ -1,15 +1,16 @@
 // This is using timer1 (16Bit) as a systick timer
 
-use arduino_hal::prelude::*;
 use arduino_hal::pac::*;
+use arduino_hal::prelude::*;
 use core::cell;
 use panic_halt as _;
+
+use crate::serial_println;
 
 //use avr_device::interrupt;
 //pub fn test(tc1: arduino_hal::pac::TC1){
 //    tc1.tccr1a.write(|w| w.wgm1());
 //}
-
 
 // Possible Values:
 //
@@ -23,45 +24,40 @@ use panic_halt as _;
 // ║      1024 ║          250 ║             16 ms ║
 // ╚═══════════╩══════════════╩═══════════════════╝
 const PRESCALER: u32 = 1024;
-const TIMER_COUNTS: u32 = 125;
-
-const MILLIS_INCREMENT: u32 = PRESCALER * TIMER_COUNTS / 16000;
+const TICK_INTERVAL: u32 = 4096;
+const MILLIS_INCREMENT: u32 = PRESCALER * 256 / 16000;
 
 static MILLIS_COUNTER: avr_device::interrupt::Mutex<cell::Cell<u32>> =
     avr_device::interrupt::Mutex::new(cell::Cell::new(0));
 
-// pub fn millis_init(tc1: arduino_hal::pac::TC1) {
-//     // Configure the timer for the above interval (in CTC mode)
-//     // and enable its interrupt.
-    
-//     tc1.tccr1a.write(|w| w.wgm1().ctc());
-//     tc1.ocr1a.write(|w| unsafe { w.bits(TIMER_COUNTS as u16) });
-//     tc1.tccr1b.write(|w| match PRESCALER {
-//         8 => w.cs1().prescale_8(),
-//         64 => w.cs1().prescale_64(),
-//         256 => w.cs1().prescale_256(),
-//         1024 => w.cs1().prescale_1024(),
-//         _ => panic!(),
-//     });
-//     tc1.timsk1.write(|w| w.ocie1a().set_bit());
-
-//     // Reset the global millisecond counter
-//     avr_device::interrupt::free(|cs| {
-//         MILLIS_COUNTER.borrow(cs).set(0);
-//     });
-// }
+static TICK_FLAG: avr_device::interrupt::Mutex<cell::Cell<bool>> =
+    avr_device::interrupt::Mutex::new(cell::Cell::new(false));
 
 #[avr_device::interrupt(atmega328p)]
-fn TIMER1_COMPA() {
+fn TIMER0_OVF() {
     avr_device::interrupt::free(|cs| {
         let counter_cell = MILLIS_COUNTER.borrow(cs);
         let counter = counter_cell.get();
         counter_cell.set(counter + MILLIS_INCREMENT);
+        //activate the TICK
+        if counter % TICK_INTERVAL == 0 {
+            let tick = TICK_FLAG.borrow(cs);
+            tick.set(true);
+        }
     })
 }
 
 pub fn millis() -> u32 {
     avr_device::interrupt::free(|cs| MILLIS_COUNTER.borrow(cs).get())
+}
+
+pub fn is_tick() -> bool {
+    let mut flag: bool = false;
+    avr_device::interrupt::free(|cs| {
+        flag = TICK_FLAG.borrow(cs).get();
+        TICK_FLAG.borrow(cs).set(false);
+    });
+    flag
 }
 
 // ----------------------------------------------------------------------------

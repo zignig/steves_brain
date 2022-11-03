@@ -49,6 +49,28 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.config.enabled = false;
         self.en.disable();
     }
+
+    pub fn forward(&mut self, value: u8) {
+        if self.config.enabled {
+            self.p1.set_high();
+            self.p2.set_low();
+            self.en.set_duty(value);
+        }
+    }
+
+    pub fn reverse(&mut self, value: u8) {
+        if self.config.enabled {
+            self.p2.set_high();
+            self.p1.set_low();
+            self.en.set_duty(value);
+        }
+    }
+
+    pub fn stop(&mut self) {
+        self.p1.set_low();
+        self.p2.set_low();
+        self.en.set_duty(0);
+    }
 }
 
 // Dual drive takes two single drives

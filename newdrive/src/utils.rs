@@ -1,5 +1,3 @@
-
-
 // Some util functions
 
 //! Liberated from https://github.com/kchmck/moving_avg.rs
@@ -44,18 +42,17 @@ impl MovingAverage16 {
     }
 }
 
+pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
+pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::new(None));
 
-    pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
-    pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::new(None));
+pub fn serial_init(serial: Usart) {
+    avr_device::interrupt::free(|cs| {
+        GLOBAL_SERIAL.borrow(&cs).replace(Some(serial));
+    })
+}
 
-    pub fn serial_init(serial: Usart) {
-        avr_device::interrupt::free(|cs| {
-            GLOBAL_SERIAL.borrow(&cs).replace(Some(serial));
-        })
-    }
-
-    #[macro_export]
-    macro_rules! serial_println {
+#[macro_export]
+macro_rules! serial_println {
         ($($arg:tt)*) => {
             ::avr_device::interrupt::free(|cs| {
                 if let Some(serial) = &mut *utils::GLOBAL_SERIAL.borrow(&cs).borrow_mut() {
