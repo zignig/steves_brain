@@ -9,7 +9,7 @@ import time
 
 
 class Console:
-    def __init__(self, port="/dev/ttyUSB0", baud=115200):
+    def __init__(self, port="/dev/ttyUSB1", baud=115200):
         self.port = port
         self.baud = baud
         self.ser = serial.serial_for_url(

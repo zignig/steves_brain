@@ -7,24 +7,23 @@ pub const SLAVE_ADDRESS: u8 = 0x21;
 
 // get bearing 2 bytes , reformatted
 //use arduino_hal::prelude::*;
-use embedded_hal::blocking::i2c::{Write, WriteRead};
+use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
 //use core::marker::PhantomData;
-
 
 // this is a transliteration of the spec
 #[repr(u8)]
 pub enum Commands {
-    WriteEeprom = 0x77,  // 'w'   write eeprom address
-    ReadEeprom = 0x72, // 'r' read eeprom address
-    WriteRam = 0x47,  // 'G' write ram register
-    ReadRam = 0x67, // g write ram register
-    EnterSleepMode = 0x53, // 'S' Enter sleep mode
-    ExitSleepMode = 0x57, // 'W' Exit sleep mode
-    UpdateBridgeOffsets = 0x4F, // 'O' update bridge ofsets
-    GetData = 0x41, // 'A' get heading
+    WriteEeprom = 0x77,           // 'w'   write eeprom address
+    ReadEeprom = 0x72,            // 'r' read eeprom address
+    WriteRam = 0x47,              // 'G' write ram register
+    ReadRam = 0x67,               // g write ram register
+    EnterSleepMode = 0x53,        // 'S' Enter sleep mode
+    ExitSleepMode = 0x57,         // 'W' Exit sleep mode
+    UpdateBridgeOffsets = 0x4F,   // 'O' update bridge ofsets
+    GetData = 0x41,               // 'A' get heading
     EnterCallibrationMode = 0x43, // 'C' enter callibration mode
-    ExitCallibrationMode = 0x45, // 'E' exit callibation mode
-    SaveOpToEeprom = 0x4C, // 'L' save op mode to eeprom
+    ExitCallibrationMode = 0x45,  // 'E' exit callibation mode
+    SaveOpToEeprom = 0x4C,        // 'L' save op mode to eeprom
 }
 
 pub struct Compass<I2C> {
@@ -35,7 +34,7 @@ pub struct Compass<I2C> {
 
 impl<I2C, E> Compass<I2C>
 where
-    I2C: Write<Error = E> + WriteRead<Error = E>,
+    I2C: Read<Error = E> + Write<Error = E> + WriteRead<Error = E>,
 {
     // create the device
     pub fn new(i2c: I2C) -> Result<Self, E> {
@@ -47,7 +46,7 @@ where
         Ok(com)
     }
 
-    // enable the device 
+    // enable the device
     pub fn enable(&mut self) {
         todo!();
     }
@@ -61,7 +60,8 @@ where
     pub fn update(&mut self) {
         // get two bytes from the device
         let mut data: [u8; 2] = [0; 2];
-        self.i2c.write_read(self.address, &[Commands::GetData as u8], &mut data);
+        self.i2c
+            .write_read(self.address, &[Commands::GetData as u8], &mut data);
         let val = ((data[0] as u16) << 8) | data[1] as u16;
         // save it to me
         self.bearing = val.clone();
