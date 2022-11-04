@@ -8,14 +8,16 @@ mod diff_drive;
 mod systick;
 mod utils;
 mod shared;
+mod comms;
 
+use embedded_hal::blocking::serial;
 use shared::Update  ;
 
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
-
+use arduino_hal::spi;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -24,7 +26,7 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(dp);
 
     // serial port
-    let serial_port = arduino_hal::default_serial!(dp, pins, 57600);
+    let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
 
@@ -37,6 +39,26 @@ fn main() -> ! {
         pins.a5.into_pull_up_input(),
         50000,
     );
+    // spi slave setup ( experimental )
+    //let f = dp.SPI.spcr.write(|w| w.mstr().clear_bit)
+    pins.d13.into_pull_up_input(); // sclk
+    pins.d11.into_floating_input(); // mosi
+    pins.d12.into_output();         // miso
+    let j = pins.d10.into_pull_up_input(); // cs
+    // there is some evil magic in here.
+    comms::SlaveSPI::init(
+        dp.SPI,
+    );
+
+    // let (mut spi, _) = arduino_hal::Spi::new(
+    //     dp.SPI,
+    //     pins.d13.into_output(), // sclk
+    //     pins.d11.into_output(), // mosi
+    //     pins.d12.into_pull_up_input(), //miso
+    //     pins.d10.into_output(), //cs
+    //     spi::Settings::default(),
+    // );
+    
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
 
@@ -76,22 +98,25 @@ fn main() -> ! {
     // Set the overflow interupt for the millis system
 
     unsafe { avr_device::interrupt::enable() };
+
     left_drive.enable();
     right_drive.enable();
     right_drive.set_speed(255);
     left_drive.set_speed(-255);
+
     loop {
         let time = systick::millis();
         if systick::is_tick() {
             right_drive.update();  
             left_drive.update();
-
-            serial_println!("time {}", time).void_unwrap();
-            serial_println!("drive {}",right_drive.get_current()).void_unwrap();
-            compass.update();
-            serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
-            serial_println!("Current: {}", current.get_value(&mut adc)).void_unwrap();
-            serial_println!("").void_unwrap();
+            // serial_println!("data {}",comms::get_data()).void_unwrap();
+            // serial_println!("data {}",j.is_high()).void_unwrap();
+            // serial_println!("time {}", time).void_unwrap();
+            // serial_println!("drive {}",right_drive.get_current()).void_unwrap();
+            // compass.update();
+            // serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
+            // serial_println!("Current: {}", current.get_value(&mut adc)).void_unwrap();
+            // serial_println!("").void_unwrap();
         }
     }
 }

@@ -1,18 +1,18 @@
 // Differential drive setup
 //use arduino_hal::port;
-use arduino_hal::prelude::*;
 use arduino_hal::port::{mode, Pin, PinOps};
+use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::PwmPinOps;
 
+use crate::serial_println;
 use crate::shared::Update;
 use crate::systick::millis;
-use crate::serial_println;
 
 pub struct Config {
     enabled: bool,      // If the motor is running or not
     rate: i16,          // speed at which the rate approaches the goal
     timeout: u32,       // how long it will run a command for before stopping
-    last_update: u32,      // last update
+    last_update: u32,   // last update
     current_speed: i16, // the current speed that the motor is running
     target_speed: i16,  //
 }
@@ -58,7 +58,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.en.disable();
     }
 
-    pub fn get_current(&self) ->i16{
+    pub fn get_current(&self) -> i16 {
         self.config.current_speed
     }
 
@@ -66,13 +66,13 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.p1.set_low();
         self.p2.set_low();
         self.en.set_duty(0);
-        self.config.current_speed =0 ;
+        self.config.current_speed = 0;
         self.disable();
     }
 
-    pub fn set_speed(&mut self,speed: i16){
+    pub fn set_speed(&mut self, speed: i16) {
         let now = millis();
-            self.config.last_update = now + self.config.timeout;
+        self.config.last_update = now + self.config.timeout;
         self.config.target_speed = speed;
     }
 
@@ -95,9 +95,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
     }
 }
 
-
 //use crate::systick::millis;
-
 
 impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E, P1, P2> {
     fn update(&mut self) {
@@ -107,8 +105,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
         let rate = cf.rate;
         if cf.enabled {
             let now = millis();
-            // check the timeout 
-            if self.config.last_update < now { 
+            // check the timeout
+            if self.config.last_update < now {
                 serial_println!("timeout").void_unwrap();
                 self.stop();
                 return;
@@ -129,7 +127,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
                 // to far ?
                 if current < target {
                     current = target;
-                }                
+                }
                 self.config.current_speed = current;
                 self.set_target(current);
             }

@@ -4,7 +4,6 @@
 //use arduino_hal::prelude::*;
 use core::cell;
 
-
 const PRESCALER: u32 = 1024;
 const TICK_INTERVAL: u32 = 2048;
 const MILLIS_INCREMENT: u32 = PRESCALER * 256 / 16000;
@@ -37,10 +36,9 @@ pub fn is_tick() -> bool {
     let mut flag: bool = false;
     avr_device::interrupt::free(|cs| {
         flag = TICK_FLAG.borrow(cs).get();
-        if flag { 
+        if flag {
             TICK_FLAG.borrow(cs).set(false);
         }
     });
     flag
 }
-

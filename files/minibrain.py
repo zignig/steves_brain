@@ -87,7 +87,7 @@ class diff_drive:
         self.ss.on()
 
     def hello(self):
-        self.frame.set(0)
+        self.frame.set(FRAME_HELLO,0,0,0,0)
         self._char(self.frame.get())
 
     def accel(self, acc):
