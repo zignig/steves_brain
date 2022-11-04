@@ -9,7 +9,7 @@ mod systick;
 mod utils;
 mod shared;
 
-use shared::{PeriodicUpdate, Update } ;
+use shared::Update  ;
 
 use panic_halt as _;
 
@@ -80,21 +80,12 @@ fn main() -> ! {
     right_drive.enable();
     right_drive.set_speed(255);
     left_drive.set_speed(-255);
-    let now = systick::millis();
-
-
-    let ev = PeriodicUpdate::new(600,&right_drive,now);
     loop {
         let time = systick::millis();
-        if time > 100000 {
-            right_drive.stop();
-            left_drive.stop();
-        }
         if systick::is_tick() {
-            //right_drive.update();  
+            right_drive.update();  
             left_drive.update();
-            ev.run(time);
-            serial_println!("TICK").void_unwrap();
+
             serial_println!("time {}", time).void_unwrap();
             serial_println!("drive {}",right_drive.get_current()).void_unwrap();
             compass.update();

@@ -6,10 +6,10 @@ from serial.tools.miniterm import Miniterm
 import serial
 import time
 
-
+the_port ="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0"
 
 class Console:
-    def __init__(self, port="/dev/ttyUSB1", baud=115200):
+    def __init__(self, port=the_port, baud=115200):
         self.port = port
         self.baud = baud
         self.ser = serial.serial_for_url(

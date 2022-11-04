@@ -1,14 +1,18 @@
 // Differential drive setup
 //use arduino_hal::port;
-
+use arduino_hal::prelude::*;
 use arduino_hal::port::{mode, Pin, PinOps};
 use arduino_hal::simple_pwm::PwmPinOps;
+
+use crate::shared::Update;
+use crate::systick::millis;
+use crate::serial_println;
 
 pub struct Config {
     enabled: bool,      // If the motor is running or not
     rate: i16,          // speed at which the rate approaches the goal
     timeout: u32,       // how long it will run a command for before stopping
-    interval: u32,      // it update
+    last_update: u32,      // last update
     current_speed: i16, // the current speed that the motor is running
     target_speed: i16,  //
 }
@@ -18,8 +22,8 @@ impl Config {
         Self {
             enabled: false,
             rate: 20,
-            timeout: 4000,
-            interval: 50,
+            timeout: 40000,
+            last_update: 0,
             current_speed: 0,
             target_speed: 0,
         }
@@ -58,22 +62,6 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.config.current_speed
     }
 
-    pub fn forward(&mut self, value: u8) {
-        if self.config.enabled {
-            self.p1.set_high();
-            self.p2.set_low();
-            self.en.set_duty(value);
-        }
-    }
-
-    pub fn reverse(&mut self, value: u8) {
-        if self.config.enabled {
-            self.p2.set_high();
-            self.p1.set_low();
-            self.en.set_duty(value);
-        }
-    }
-
     pub fn stop(&mut self) {
         self.p1.set_low();
         self.p2.set_low();
@@ -83,6 +71,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
     }
 
     pub fn set_speed(&mut self,speed: i16){
+        let now = millis();
+            self.config.last_update = now + self.config.timeout;
         self.config.target_speed = speed;
     }
 
@@ -107,16 +97,22 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
 
 
 //use crate::systick::millis;
-use crate::shared::Update;
+
 
 impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E, P1, P2> {
     fn update(&mut self) {
-        //let time = millis();
         let mut cf = &self.config;
         let mut current = cf.current_speed;
         let target = cf.target_speed;
         let rate = cf.rate;
         if cf.enabled {
+            let now = millis();
+            // check the timeout 
+            if self.config.last_update < now { 
+                serial_println!("timeout").void_unwrap();
+                self.stop();
+                return;
+            }
             // accelerate
             if current < target {
                 current += rate;
