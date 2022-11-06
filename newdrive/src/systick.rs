@@ -6,6 +6,7 @@ use core::cell;
 
 const PRESCALER: u32 = 1024;
 const TICK_INTERVAL: u32 = 2048;
+
 const MILLIS_INCREMENT: u32 = PRESCALER * 256 / 16000;
 
 static MILLIS_COUNTER: avr_device::interrupt::Mutex<cell::Cell<u32>> =

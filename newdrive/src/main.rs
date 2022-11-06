@@ -2,16 +2,21 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
+// extern crate serde;
+// extern crate serde_cbor;
+// use serde::Deserialize;
+// use serde_derive;
+
+mod comms;
 mod compass;
 mod current_sensor;
 mod diff_drive;
+mod shared;
 mod systick;
 mod utils;
-mod shared;
-mod comms;
 
 use embedded_hal::blocking::serial;
-use shared::Update  ;
+use shared::Update;
 
 use panic_halt as _;
 
@@ -39,16 +44,14 @@ fn main() -> ! {
         pins.a5.into_pull_up_input(),
         50000,
     );
+
     // spi slave setup ( experimental )
-    //let f = dp.SPI.spcr.write(|w| w.mstr().clear_bit)
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
-    pins.d12.into_output();         // miso
+    pins.d12.into_output(); // miso
     let j = pins.d10.into_pull_up_input(); // cs
-    // there is some evil magic in here.
-    comms::SlaveSPI::init(
-        dp.SPI,
-    );
+                                           // there is some evil magic in here.
+    comms::SlaveSPI::init(dp.SPI);
 
     // let (mut spi, _) = arduino_hal::Spi::new(
     //     dp.SPI,
@@ -58,7 +61,7 @@ fn main() -> ! {
     //     pins.d10.into_output(), //cs
     //     spi::Settings::default(),
     // );
-    
+
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
 
@@ -107,7 +110,7 @@ fn main() -> ! {
     loop {
         let time = systick::millis();
         if systick::is_tick() {
-            right_drive.update();  
+            right_drive.update();
             left_drive.update();
             // serial_println!("data {}",comms::get_data()).void_unwrap();
             // serial_println!("data {}",j.is_high()).void_unwrap();
