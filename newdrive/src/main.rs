@@ -2,11 +2,6 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
-// extern crate serde;
-// extern crate serde_cbor;
-// use serde::Deserialize;
-// use serde_derive;
-
 mod comms;
 mod compass;
 mod current_sensor;
@@ -14,15 +9,14 @@ mod diff_drive;
 mod shared;
 mod systick;
 mod utils;
+mod ring_buffer;
 
-use embedded_hal::blocking::serial;
 use shared::Update;
-
+use comms::fetch_command;
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
-use arduino_hal::spi;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -110,11 +104,16 @@ fn main() -> ! {
     loop {
         let time = systick::millis();
         if systick::is_tick() {
+
             right_drive.update();
             left_drive.update();
+            if let Some(comm) = fetch_command() { 
+                serial_println!("time {}", time).void_unwrap();
+                serial_println!("{:#?}", comm).void_unwrap();
+                serial_println!("").void_unwrap();
+            }
             // serial_println!("data {}",comms::get_data()).void_unwrap();
             // serial_println!("data {}",j.is_high()).void_unwrap();
-            // serial_println!("time {}", time).void_unwrap();
             // serial_println!("drive {}",right_drive.get_current()).void_unwrap();
             // compass.update();
             // serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();

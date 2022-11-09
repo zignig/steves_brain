@@ -5,7 +5,7 @@
 use core::cell;
 
 const PRESCALER: u32 = 1024;
-const TICK_INTERVAL: u32 = 2048;
+const TICK_INTERVAL: u32 = 512;
 
 const MILLIS_INCREMENT: u32 = PRESCALER * 256 / 16000;
 
