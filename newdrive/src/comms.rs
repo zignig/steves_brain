@@ -8,11 +8,10 @@ use crate::serial_println;
 use arduino_hal::{pac::SPI, prelude::*};
 use avr_device;
 //use avr_device::generic::{Reg, RegisterSpec};
+use crate::ring_buffer::Ring;
 use avr_device::interrupt::Mutex;
 use core::cell::RefCell;
 use core::u8;
-use crate::ring_buffer::Ring;
-
 
 const FRAME_SIZE: usize = 8;
 const SYNC1: u8 = 0xF;
@@ -103,7 +102,6 @@ static DATA_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::ne
 static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
     Mutex::new(RefCell::new(None));
 
-
 impl SlaveSPI {
     pub fn init(s: SPI) {
         // activate spi interrupt ( spie )
@@ -115,7 +113,9 @@ impl SlaveSPI {
         avr_device::interrupt::free(|cs| {
             SPI_INT.borrow(&cs).replace(Some(s));
             DATA_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
-            COMMAND_RING.borrow(&cs).replace(Some(Ring::<Command,RING_SIZE>::new()));
+            COMMAND_RING
+                .borrow(&cs)
+                .replace(Some(Ring::<Command, RING_SIZE>::new()));
         });
     }
 }
@@ -139,7 +139,6 @@ fn SPI_STC() {
                     cr.append(comm);
                     //cr.get_absolute_mut(index)
                 }
-        
             }
         }
     });

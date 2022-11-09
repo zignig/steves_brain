@@ -73,5 +73,4 @@ impl<T: Copy + Default, const N: usize> Ring<T, N> {
         self.increment_head();
         Some(result)
     }
-    
 }

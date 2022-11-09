@@ -6,14 +6,16 @@ mod comms;
 mod compass;
 mod current_sensor;
 mod diff_drive;
+mod ring_buffer;
 mod shared;
 mod systick;
 mod utils;
-mod ring_buffer;
 
-use shared::Update;
+use arduino_hal::pac::ac::acsr::R;
 use comms::fetch_command;
+use comms::Command;
 use panic_halt as _;
+use shared::Update;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
@@ -95,22 +97,29 @@ fn main() -> ! {
     // Set the overflow interupt for the millis system
 
     unsafe { avr_device::interrupt::enable() };
-
-    left_drive.enable();
-    right_drive.enable();
-    right_drive.set_speed(255);
-    left_drive.set_speed(-255);
-
     loop {
         let time = systick::millis();
         if systick::is_tick() {
-
             right_drive.update();
             left_drive.update();
-            if let Some(comm) = fetch_command() { 
+            if let Some(rvalue) = right_drive.remaining() {
+                serial_println!("rd {}", rvalue).void_unwrap();
+            }
+            if let Some(comm) = fetch_command() {
                 serial_println!("time {}", time).void_unwrap();
                 serial_println!("{:#?}", comm).void_unwrap();
                 serial_println!("").void_unwrap();
+                match comm {
+                    Command::Run(x, y) => {
+                        left_drive.set_speed(x);
+                        right_drive.set_speed(y);
+                    }
+                    Command::Stop => {
+                        left_drive.stop();
+                        right_drive.stop();
+                    }
+                    _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
+                }
             }
             // serial_println!("data {}",comms::get_data()).void_unwrap();
             // serial_println!("data {}",j.is_high()).void_unwrap();

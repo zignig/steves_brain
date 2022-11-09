@@ -21,8 +21,8 @@ impl Config {
     fn default() -> Self {
         Self {
             enabled: false,
-            rate: 20,
-            timeout: 40000,
+            rate: 5,
+            timeout: 20_000,
             last_update: 0,
             current_speed: 0,
             target_speed: 0,
@@ -58,8 +58,22 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.en.disable();
     }
 
-    pub fn get_current(&self) -> i16 {
-        self.config.current_speed
+    pub fn get_current(&self) -> Option<i16> {
+        if self.config.current_speed == 0 {
+            None
+        } else {
+            Some(self.config.current_speed)
+        }
+    }
+
+    pub fn remaining(&self) -> Option<u32> {
+        if self.config.enabled { 
+            let now = millis();
+            let remaining = self.config.last_update - now;
+            Some(remaining)
+        } else {
+            None
+        }   
     }
 
     pub fn stop(&mut self) {
@@ -74,6 +88,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         let now = millis();
         self.config.last_update = now + self.config.timeout;
         self.config.target_speed = speed;
+        self.enable();
     }
 
     pub fn set_target(&mut self, speed_i16: i16) {
