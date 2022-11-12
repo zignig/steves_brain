@@ -102,8 +102,8 @@ fn main() -> ! {
         if systick::is_tick() {
             right_drive.update();
             left_drive.update();
-            if let Some(rvalue) = right_drive.remaining() {
-                serial_println!("rd {}", rvalue).void_unwrap();
+            if let Some(value) = right_drive.get_current() {
+                serial_println!("rd {}", value).void_unwrap();
             }
             if let Some(comm) = fetch_command() {
                 serial_println!("time {}", time).void_unwrap();

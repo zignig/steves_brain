@@ -80,8 +80,9 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.p1.set_low();
         self.p2.set_low();
         self.en.set_duty(0);
-        self.config.current_speed = 0;
         self.disable();
+        self.config.current_speed = 0;
+        //self.disable();
     }
 
     pub fn set_speed(&mut self, speed: i16) {
