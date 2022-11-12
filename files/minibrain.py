@@ -24,7 +24,7 @@ FRAME_SETJOY = 4
 FRAME_SETTIMEOUT = 5 
 FRAME_SETTRIGGER = 6 
 FRAME_SETMINSPEED = 7
-FRAME_SENSOR = 8
+FRAME_MAXCUR = 8
 FRAME_CONFIG = 9 
 FRAME_COUNT = 10
 
@@ -77,8 +77,9 @@ class diff_drive:
         self.ss.on()
         self.port = SPI(1, speed)
         self.frame = Frame()
-        self.rate = 255
-        self.accel(200)
+        self.rate = 100
+        self.accel(15)
+        self.timeout(30)
         self.interval = 100000
 
     def _char(self, c):
@@ -90,6 +91,12 @@ class diff_drive:
         self.frame.set(FRAME_HELLO,0,0,0,0)
         self._char(self.frame.get())
 
+    def maxc(self, cur):
+        if (cur > 255) or (cur <= 0):
+            raise Exception("current out of range")
+        self.frame.set(FRAME_MAXCUR, cur)
+        self._char(self.frame.get())
+
     def accel(self, acc):
         if (acc > 255) or (acc <= 0):
             raise Exception("accleration out of range")
@@ -99,7 +106,7 @@ class diff_drive:
     def timeout(self, timeout):
         if (timeout > 255) or (timeout <= 0):
             raise Exception("timeout out of range")
-        self.frame.set(FRAME_SETTIMEOUT, timeout)
+        self.frame.set(FRAME_SETTIMEOUT, timeout,0,0,0)
         self._char(self.frame.get())
 
     def joy(self, m1, m2):

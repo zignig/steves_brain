@@ -49,7 +49,7 @@ pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::ne
 pub fn serial_init(serial: Usart) {
     avr_device::interrupt::free(|cs| {
         GLOBAL_SERIAL.borrow(&cs).replace(Some(serial));
-    })
+    });
 }
 
 #[macro_export]

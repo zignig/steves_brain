@@ -8,4 +8,5 @@
 
 - split out Command enum (tick)
 - join the two drives into a single diff drive (tick)
+- change max current remotely (tick)
 

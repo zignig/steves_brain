@@ -43,10 +43,10 @@ impl CurrentSensor {
     }
 
     pub fn set_upper(&mut self, val: i16) {
-        self.overload = val; 
+        self.overload = val;
     }
 
-    pub fn overload(&mut self,adc: &mut arduino_hal::Adc) -> bool {
+    pub fn overload(&mut self, adc: &mut arduino_hal::Adc) -> bool {
         if self.get_value(adc) > self.overload {
             true
         } else {

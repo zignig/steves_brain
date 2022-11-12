@@ -126,7 +126,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
 
 impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E, P1, P2> {
     fn update(&mut self) {
-        let mut cf = &self.config;
+        let cf = &self.config;
         let mut current = cf.current_speed;
         let target = cf.target_speed;
         let rate = cf.rate;
@@ -166,6 +166,8 @@ pub struct DiffDrive<TCL, EL, P1L, P2L, TCR, ER, P1R, P2R> {
     pub left: SingleDrive<TCL, EL, P1L, P2L>,
     pub right: SingleDrive<TCR, ER, P1R, P2R>,
 }
+use crate::shared::TankDrive;
+
 
 impl<
         TCL,
@@ -191,43 +193,55 @@ impl<
             right: SingleDrive::new(r_en, r_p1, r_p2),
         }
     }
+}
 
-    pub fn update(&mut self) {
+impl<
+        TCL,
+        EL: PwmPinOps<TCL>,
+        P1L: PinOps,
+        P2L: PinOps,
+        TCR,
+        ER: PwmPinOps<TCR>,
+        P1R: PinOps,
+        P2R: PinOps,
+    > TankDrive for DiffDrive<TCL, EL, P1L, P2L, TCR, ER, P1R, P2R>
+{
+    fn update(&mut self) {
         self.left.update();
         self.right.update();
     }
 
-    pub fn enable(&mut self) {
+    fn enable(&mut self) {
         self.left.enable();
         self.right.enable();
     }
 
-    pub fn disable(&mut self) {
+    fn disable(&mut self) {
         self.left.disable();
         self.right.disable();
     }
 
-    pub fn stop(&mut self) {
+    fn stop(&mut self) {
         self.left.stop();
         self.right.stop();
     }
 
-    pub fn set_speed(&mut self, l_speed: i16, r_speed: i16) {
+    fn set_speed(&mut self, l_speed: i16, r_speed: i16) {
         self.left.set_speed(l_speed);
         self.right.set_speed(r_speed);
     }
 
-    pub fn set_timeout(&mut self, timeout: i16) {
+    fn set_timeout(&mut self, timeout: i16) {
         self.left.set_timeout(timeout);
         self.right.set_timeout(timeout);
     }
 
-    pub fn set_rate(&mut self, rate: u8) {
+    fn set_rate(&mut self, rate: u8) {
         self.left.set_rate(rate);
         self.right.set_rate(rate);
     }
 
-    pub fn get_current(&self) -> Option<(i16, i16)> {
+    fn get_current(&self) -> Option<(i16, i16)> {
         let mut val: (i16, i16) = (0, 0);
         let mut active: bool = false;
         if let Some(left_c) = self.left.get_current() {
