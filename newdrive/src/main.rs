@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
+mod commands;
 mod comms;
 mod compass;
 mod current_sensor;
@@ -11,9 +12,8 @@ mod shared;
 mod systick;
 mod utils;
 
-use arduino_hal::pac::ac::acsr::R;
+use commands::Command;
 use comms::fetch_command;
-use comms::Command;
 use panic_halt as _;
 use shared::Update;
 
@@ -97,9 +97,10 @@ fn main() -> ! {
     // Set the overflow interupt for the millis system
 
     unsafe { avr_device::interrupt::enable() };
+
     loop {
-        let time = systick::millis();
         if systick::is_tick() {
+            let time = systick::millis();
             right_drive.update();
             left_drive.update();
             if let Some(value) = right_drive.get_current() {

@@ -1,0 +1,5 @@
+- state machine for robot control
+- join the two drives into a single diff drive
+- comms
+    - outgoing frames
+- split out Command enum

@@ -21,7 +21,7 @@ impl Config {
     fn default() -> Self {
         Self {
             enabled: false,
-            rate: 5,
+            rate: 10,
             timeout: 20_000,
             last_update: 0,
             current_speed: 0,
@@ -67,13 +67,13 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
     }
 
     pub fn remaining(&self) -> Option<u32> {
-        if self.config.enabled { 
+        if self.config.enabled {
             let now = millis();
             let remaining = self.config.last_update - now;
             Some(remaining)
         } else {
             None
-        }   
+        }
     }
 
     pub fn stop(&mut self) {
