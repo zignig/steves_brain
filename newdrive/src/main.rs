@@ -16,7 +16,7 @@ use commands::Command;
 use comms::fetch_command;
 use diff_drive::DiffDrive;
 use panic_halt as _;
-use shared::Update;
+//use shared::Update;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
@@ -46,18 +46,10 @@ fn main() -> ! {
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
     pins.d12.into_output(); // miso
-    let j = pins.d10.into_pull_up_input(); // cs
+    pins.d10.into_pull_up_input(); // cs
                                            // there is some evil magic in here.
     comms::SlaveSPI::init(dp.SPI);
 
-    // let (mut spi, _) = arduino_hal::Spi::new(
-    //     dp.SPI,
-    //     pins.d13.into_output(), // sclk
-    //     pins.d11.into_output(), // mosi
-    //     pins.d12.into_pull_up_input(), //miso
-    //     pins.d10.into_output(), //cs
-    //     spi::Settings::default(),
-    // );
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
@@ -79,7 +71,7 @@ fn main() -> ! {
     let r_en_pin1 = pins.d6.into_output();
     let r_en_pin2 = pins.d7.into_output();
 
-    //Create the drives
+    //Create the drive
     let mut diff_drive = DiffDrive::new(
         l_pwm_pin, l_en_pin1, l_en_pin2, r_pwm_pin, r_en_pin1, r_en_pin2,
     );
@@ -95,14 +87,40 @@ fn main() -> ! {
     // Set the overflow interupt for the millis system
 
     unsafe { avr_device::interrupt::enable() };
+    struct Robot<DR,CO,CM> { 
+        drive: DR,
+        compass: CO,
+        current: CM
+    }
 
+    impl<DR,CO,CM> Robot<DR,CO,CM> { 
+        pub fn new(drive: DR , compass:CO,current:CM) -> Self {
+            Self { 
+                drive,
+                compass,
+                current,
+            }
+        }
+        pub fn go(&mut self){
+        }
+    }
+    //  let z = Robot::new(diff_drive,current,compass);
+
+    current.set_upper(90);
     loop {
+        if current.overload(&mut adc){
+            serial_println!("STOP").void_unwrap();
+            diff_drive.stop();
+        }
         if systick::is_tick() {
             let time = systick::millis();
             diff_drive.update();
+           
             if let Some(value) = diff_drive.get_current() {
-                serial_println!("drive {},{}", value.0,value.1).void_unwrap();
-                serial_println!("current {}",current.get_value(&mut adc)).void_unwrap();
+                //serial_println!("drive {},{}", value.0, value.1).void_unwrap();
+                serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
+                //serial_println!("zero {}", current.zero_offset).void_unwrap();
+
             }
             if let Some(comm) = fetch_command() {
                 serial_println!("time {}", time).void_unwrap();

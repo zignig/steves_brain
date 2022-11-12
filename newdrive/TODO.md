@@ -1,5 +1,11 @@
+# TODO 
+- add joystick input to diff drive
 - state machine for robot control
-- join the two drives into a single diff drive
 - comms
     - outgoing frames
-- split out Command enum
+
+# DONE 
+
+- split out Command enum (tick)
+- join the two drives into a single diff drive (tick)
+

@@ -8,7 +8,6 @@ pub struct Ring<T, const N: usize> {
     data: [T; N],
     head: usize,
     tail: usize,
-    len: usize,
 }
 
 /// Iterator over `Ring` starting from the oldest element
@@ -25,7 +24,6 @@ impl<T: Copy + Default, const N: usize> Ring<T, N> {
             data: [T::default(); N],
             head: 0usize,
             tail: 0usize,
-            len: 0usize,
         }
     }
 
@@ -43,19 +41,9 @@ impl<T: Copy + Default, const N: usize> Ring<T, N> {
         self.increment_tail()
     }
 
-    /// Number of elements in the `Ring`, it never decreases.
-    pub fn len(&self) -> usize {
-        self.len
-    }
-
     /// If the `Ring` is empty. Zero elements
     pub fn is_empty(&self) -> bool {
         self.head == self.tail
-    }
-
-    /// Return the max size of the ring
-    pub fn size(&self) -> usize {
-        N
     }
 
     pub fn pop(&mut self) -> Option<T> {

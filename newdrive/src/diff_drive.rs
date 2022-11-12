@@ -207,7 +207,7 @@ impl<
         self.right.disable();
     }
 
-    pub fn stop(&mut self){ 
+    pub fn stop(&mut self) {
         self.left.stop();
         self.right.stop();
     }

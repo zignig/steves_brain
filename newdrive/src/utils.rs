@@ -4,6 +4,7 @@
 //!
 //! Moving average filter.
 use avr_device::interrupt::Mutex;
+//use bare_metal::Mutex;
 use core::cell::RefCell;
 /// Computes a moving average over a ring buffer of numbers.
 #[derive(Clone, Copy)]
