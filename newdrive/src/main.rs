@@ -14,6 +14,7 @@ mod utils;
 
 use commands::Command;
 use comms::fetch_command;
+use diff_drive::DiffDrive;
 use panic_halt as _;
 use shared::Update;
 
@@ -71,20 +72,17 @@ fn main() -> ! {
     let l_pwm_pin = pins.d3.into_output().into_pwm(&timer2);
     let l_en_pin1 = pins.d9.into_output();
     let l_en_pin2 = pins.d8.into_output();
-    let mut left_drive = diff_drive::SingleDrive::new(l_pwm_pin, l_en_pin1, l_en_pin2);
 
     // create the right drive
     let timer0 = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);
     let r_pwm_pin = pins.d5.into_output().into_pwm(&timer0);
     let r_en_pin1 = pins.d6.into_output();
     let r_en_pin2 = pins.d7.into_output();
-    let mut right_drive = diff_drive::SingleDrive::new(r_pwm_pin, r_en_pin1, r_en_pin2);
 
     //Create the drives
-    // let diff_drive = diff_drive::DiffDrive {
-    //     left: left_drive,
-    //     right: right_drive,
-    // };
+    let mut diff_drive = DiffDrive::new(
+        l_pwm_pin, l_en_pin1, l_en_pin2, r_pwm_pin, r_en_pin1, r_en_pin2,
+    );
 
     // create the current sensor
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
@@ -101,10 +99,10 @@ fn main() -> ! {
     loop {
         if systick::is_tick() {
             let time = systick::millis();
-            right_drive.update();
-            left_drive.update();
-            if let Some(value) = right_drive.get_current() {
-                serial_println!("rd {}", value).void_unwrap();
+            diff_drive.update();
+            if let Some(value) = diff_drive.get_current() {
+                serial_println!("drive {},{}", value.0,value.1).void_unwrap();
+                serial_println!("current {}",current.get_value(&mut adc)).void_unwrap();
             }
             if let Some(comm) = fetch_command() {
                 serial_println!("time {}", time).void_unwrap();
@@ -112,12 +110,16 @@ fn main() -> ! {
                 serial_println!("").void_unwrap();
                 match comm {
                     Command::Run(x, y) => {
-                        left_drive.set_speed(x);
-                        right_drive.set_speed(y);
+                        diff_drive.set_speed(x, y);
                     }
                     Command::Stop => {
-                        left_drive.stop();
-                        right_drive.stop();
+                        diff_drive.stop();
+                    }
+                    Command::SetAcc(rate) => {
+                        diff_drive.set_rate(rate);
+                    }
+                    Command::SetTimeout(timeout) => {
+                        diff_drive.set_timeout(timeout);
                     }
                     _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
                 }

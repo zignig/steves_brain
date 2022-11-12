@@ -12,13 +12,6 @@ pub struct Ring<T, const N: usize> {
 }
 
 /// Iterator over `Ring` starting from the oldest element
-#[derive(Debug)]
-pub struct RingIterator<'a, T, const N: usize> {
-    start: usize,
-    count: usize,
-    circular: &'a Ring<T, N>,
-}
-
 impl<T: Copy + Default, const N: usize> Default for Ring<T, N> {
     fn default() -> Self {
         Self::new()

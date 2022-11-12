@@ -1,3 +1,4 @@
+//use arduino_hal::port::mode::Output;
 // Differential drive setup
 //use arduino_hal::port;
 use arduino_hal::port::{mode, Pin, PinOps};
@@ -10,7 +11,7 @@ use crate::systick::millis;
 
 pub struct Config {
     enabled: bool,      // If the motor is running or not
-    rate: i16,          // speed at which the rate approaches the goal
+    rate: u8,           // speed at which the rate approaches the goal
     timeout: u32,       // how long it will run a command for before stopping
     last_update: u32,   // last update
     current_speed: i16, // the current speed that the motor is running
@@ -82,9 +83,19 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.en.set_duty(0);
         self.disable();
         self.config.current_speed = 0;
-        //self.disable();
     }
 
+    // Set the time out value for the drive
+    pub fn set_timeout(&mut self, timeout: i16) {
+        self.config.timeout = (timeout as u32) << 10;
+    }
+
+    // Set the acceleration rate
+    pub fn set_rate(&mut self, rate: u8) {
+        self.config.rate = rate;
+    }
+
+    // Set the target speed with time out
     pub fn set_speed(&mut self, speed: i16) {
         let now = millis();
         self.config.last_update = now + self.config.timeout;
@@ -92,7 +103,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.enable();
     }
 
-    pub fn set_target(&mut self, speed_i16: i16) {
+    fn set_target(&mut self, speed_i16: i16) {
         if self.config.enabled {
             // constrain the speed
             let speed = speed_i16.clamp(-255, 255);
@@ -129,7 +140,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             }
             // accelerate
             if current < target {
-                current += rate;
+                current += rate as i16;
                 // to far ?
                 if current > target {
                     current = target;
@@ -139,7 +150,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             }
             // decellerate
             if current > target {
-                current -= rate;
+                current -= rate as i16;
                 // to far ?
                 if current < target {
                     current = target;
@@ -154,6 +165,85 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
 pub struct DiffDrive<TCL, EL, P1L, P2L, TCR, ER, P1R, P2R> {
     pub left: SingleDrive<TCL, EL, P1L, P2L>,
     pub right: SingleDrive<TCR, ER, P1R, P2R>,
+}
+
+impl<
+        TCL,
+        EL: PwmPinOps<TCL>,
+        P1L: PinOps,
+        P2L: PinOps,
+        TCR,
+        ER: PwmPinOps<TCR>,
+        P1R: PinOps,
+        P2R: PinOps,
+    > DiffDrive<TCL, EL, P1L, P2L, TCR, ER, P1R, P2R>
+{
+    pub fn new(
+        l_en: Pin<mode::PwmOutput<TCL>, EL>,
+        l_p1: Pin<mode::Output, P1L>,
+        l_p2: Pin<mode::Output, P2L>,
+        r_en: Pin<mode::PwmOutput<TCR>, ER>,
+        r_p1: Pin<mode::Output, P1R>,
+        r_p2: Pin<mode::Output, P2R>,
+    ) -> Self {
+        Self {
+            left: SingleDrive::new(l_en, l_p1, l_p2),
+            right: SingleDrive::new(r_en, r_p1, r_p2),
+        }
+    }
+
+    pub fn update(&mut self) {
+        self.left.update();
+        self.right.update();
+    }
+
+    pub fn enable(&mut self) {
+        self.left.enable();
+        self.right.enable();
+    }
+
+    pub fn disable(&mut self) {
+        self.left.disable();
+        self.right.disable();
+    }
+
+    pub fn stop(&mut self){ 
+        self.left.stop();
+        self.right.stop();
+    }
+
+    pub fn set_speed(&mut self, l_speed: i16, r_speed: i16) {
+        self.left.set_speed(l_speed);
+        self.right.set_speed(r_speed);
+    }
+
+    pub fn set_timeout(&mut self, timeout: i16) {
+        self.left.set_timeout(timeout);
+        self.right.set_timeout(timeout);
+    }
+
+    pub fn set_rate(&mut self, rate: u8) {
+        self.left.set_rate(rate);
+        self.right.set_rate(rate);
+    }
+
+    pub fn get_current(&self) -> Option<(i16, i16)> {
+        let mut val: (i16, i16) = (0, 0);
+        let mut active: bool = false;
+        if let Some(left_c) = self.left.get_current() {
+            val.0 = left_c;
+            active = true;
+        };
+        if let Some(right_c) = self.right.get_current() {
+            val.1 = right_c;
+            active = true;
+        };
+        if active {
+            Some(val)
+        } else {
+            None
+        }
+    }
 }
 
 //let timer0 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);

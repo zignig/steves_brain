@@ -7,7 +7,7 @@ use ufmt::derive::uDebug;
 
 use crate::comms::{PacketBuffer, SYNC1, SYNC2};
 
-#[derive(uDebug,Clone,Copy)]
+#[derive(uDebug, Clone, Copy)]
 pub enum Command {
     Hello,
     Stop,
@@ -49,17 +49,17 @@ impl Command {
         let mut pb = PacketBuffer::new();
         pb.data[0] = SYNC1;
         pb.data[1] = SYNC2;
-        pb.data[2] = match self{
+        pb.data[2] = match self {
             Command::Hello => 0,
             Command::Stop => 1,
-            Command::Run(x, y) =>{
-                let (a,b,c,d)= split(x,y);
+            Command::Run(x, y) => {
+                let (a, b, c, d) = split(x, y);
                 pb.data[4] = a;
                 pb.data[5] = b;
                 pb.data[6] = c;
                 pb.data[7] = d;
                 2
-            },
+            }
             _ => 255,
         };
         pb
