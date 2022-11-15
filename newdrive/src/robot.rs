@@ -20,12 +20,11 @@ impl<DR: TankDrive, CO, CM> Robot<DR, CO, CM> {
         }
     }
 
-    pub fn drive(&mut self){
+    pub fn drive(&mut self) {
         self.drive.enable();
-        
     }
 
-    pub fn runner(&mut self){
+    pub fn runner(&mut self) {
         loop {}
     }
 }

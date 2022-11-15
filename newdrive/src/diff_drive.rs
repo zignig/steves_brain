@@ -67,15 +67,15 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         }
     }
 
-    pub fn remaining(&self) -> Option<u32> {
-        if self.config.enabled {
-            let now = millis();
-            let remaining = self.config.last_update - now;
-            Some(remaining)
-        } else {
-            None
-        }
-    }
+    // pub fn remaining(&self) -> Option<u32> {
+    //     if self.config.enabled {
+    //         let now = millis();
+    //         let remaining = self.config.last_update - now;
+    //         Some(remaining)
+    //     } else {
+    //         None
+    //     }
+    // }
 
     pub fn stop(&mut self) {
         self.p1.set_low();
@@ -167,7 +167,6 @@ pub struct DiffDrive<TCL, EL, P1L, P2L, TCR, ER, P1R, P2R> {
     pub right: SingleDrive<TCR, ER, P1R, P2R>,
 }
 use crate::shared::TankDrive;
-
 
 impl<
         TCL,

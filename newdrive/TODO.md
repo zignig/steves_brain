@@ -1,6 +1,7 @@
 # TODO 
 - add joystick input to diff drive
-- state machine for robot control
+- state machine for robot control 
+- fix change of timeout
 - comms
     - outgoing frames
 

@@ -38,6 +38,7 @@ impl CurrentSensor {
     pub fn get_value(&mut self, adc: &mut arduino_hal::Adc) -> i16 {
         let mut val = adc.read_blocking(&self.channel) as i16;
         val = self.zero_offset - val;
+        self.value = val;
         self.average.feed(val as i16 - self.zero_offset);
         val
     }

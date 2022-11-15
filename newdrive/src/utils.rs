@@ -1,8 +1,10 @@
 // Some util functions
 
-//! Liberated from https://github.com/kchmck/moving_avg.rs
+//! Liberated from <https://github.com/kchmck/moving_avg.rs>
 //!
 //! Moving average filter.
+
+
 use avr_device::interrupt::Mutex;
 //use bare_metal::Mutex;
 use core::cell::RefCell;

@@ -3,11 +3,15 @@
 //!
 //!
 
+use crate::serial_println;
+use arduino_hal::prelude::*;
 use ufmt::derive::uDebug;
 
 use crate::comms::{PacketBuffer, SYNC1, SYNC2};
 
-#[derive(uDebug, Clone, Copy)]
+//use serde::{Deserialize, Serialize};
+
+#[derive(uDebug, Clone, Copy)] //, Serialize, Deserialize)]
 pub enum Command {
     Hello,
     Stop,
@@ -84,4 +88,22 @@ impl Command {
         };
         comm
     }
+}
+
+pub fn show(comm: Command) {
+    let mut buf: [u8; 32] = [0; 32];
+    serial_println!("des").void_unwrap();
+    //let res  = embedded_msgpack::encode::serde::to_array(&comm, &mut buf);
+    // match  embedded_msgpack::encode::serde::to_array(&comm, &mut buf){
+    //     Ok(len) => {
+    //         serial_println!("{} - {:#?}",len,buf).void_unwrap();
+    //     },
+    //     Err(err) =>{
+    //         match err{
+    //             Error::EndOfBuffer => todo!(),
+    //             Error::OutOfBounds => todo!(),
+    //             Error::InvalidType => todo!(),
+    //         }
+    //     },
+    // }
 }

@@ -1,12 +1,13 @@
 //! Comms interface
 //! SPI slave interface that makes packets
-//! lifted from https://medium.com/embedism/the-definitive-guide-on-writing-a-spi-communications-protocol-for-stm32-73594add4c09
+//! lifted from <https://medium.com/embedism/the-definitive-guide-on-writing-a-spi-communications-protocol-for-stm32-73594add4c09>
 //! and rewritten again in rust ( after c++ )
 //!
 
-//use crate::serial_println;
+use crate::serial_println;
 use arduino_hal::pac::SPI;
 use avr_device;
+use arduino_hal::prelude::*;
 //use avr_device::generic::{Reg, RegisterSpec};
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
@@ -18,7 +19,7 @@ use core::u8;
 pub const FRAME_SIZE: usize = 8;
 pub const SYNC1: u8 = 0xF;
 pub const SYNC2: u8 = 0xE;
-pub const RING_SIZE: usize = 8;
+pub const RING_SIZE: usize = 4;
 // use serde_cbor::{Deserializer, Serializer};
 // use serde_derive::{Deserialize, Serialize};
 
@@ -119,6 +120,7 @@ pub fn process_packet(data: u8, pb: &mut PacketBuffer) -> Option<PacketBuffer> {
 
     if val == Ok(()) {
         //  If the packet is good so far
+        serial_println!("{:?}",data).void_unwrap();
         pb.data[pb.pos] = data;
         pb.pos += 1;
         // end of the frame

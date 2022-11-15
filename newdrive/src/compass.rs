@@ -13,17 +13,17 @@ use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
 // this is a transliteration of the spec
 #[repr(u8)]
 pub enum Commands {
-    WriteEeprom = 0x77,           // 'w'   write eeprom address
-    ReadEeprom = 0x72,            // 'r' read eeprom address
-    WriteRam = 0x47,              // 'G' write ram register
-    ReadRam = 0x67,               // g write ram register
-    EnterSleepMode = 0x53,        // 'S' Enter sleep mode
-    ExitSleepMode = 0x57,         // 'W' Exit sleep mode
-    UpdateBridgeOffsets = 0x4F,   // 'O' update bridge ofsets
-    GetData = 0x41,               // 'A' get heading
-    EnterCallibrationMode = 0x43, // 'C' enter callibration mode
-    ExitCallibrationMode = 0x45,  // 'E' exit callibation mode
-    SaveOpToEeprom = 0x4C,        // 'L' save op mode to eeprom
+    // WriteEeprom = 0x77,           // 'w'   write eeprom address
+    // ReadEeprom = 0x72,            // 'r' read eeprom address
+    // WriteRam = 0x47,              // 'G' write ram register
+    // ReadRam = 0x67,               // g write ram register
+    // EnterSleepMode = 0x53,        // 'S' Enter sleep mode
+    // ExitSleepMode = 0x57,         // 'W' Exit sleep mode
+    // UpdateBridgeOffsets = 0x4F,   // 'O' update bridge ofsets
+    GetData = 0x41, // 'A' get heading
+                    // EnterCallibrationMode = 0x43, // 'C' enter callibration mode
+                    // ExitCallibrationMode = 0x45,  // 'E' exit callibation mode
+                    // SaveOpToEeprom = 0x4C,        // 'L' save op mode to eeprom
 }
 
 pub struct Compass<I2C> {
@@ -47,20 +47,21 @@ where
     }
 
     // enable the device
-    pub fn enable(&mut self) {
-        todo!();
-    }
+    // pub fn enable(&mut self) {
+    //     todo!();
+    // }
 
-    pub fn set_slave_address(&mut self, address: u8) {
-        todo!();
-    }
+    // pub fn set_slave_address(&mut self, address: u8) {
+    //     todo!();
+    // }
 
     // fetch the data and put it into local storage
     // update should be a general trait for all devices
     pub fn update(&mut self) {
         // get two bytes from the device
         let mut data: [u8; 2] = [0; 2];
-        self.i2c
+        let _res = self
+            .i2c
             .write_read(self.address, &[Commands::GetData as u8], &mut data);
         let val = ((data[0] as u16) << 8) | data[1] as u16;
         // save it to me
