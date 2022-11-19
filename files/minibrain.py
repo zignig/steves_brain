@@ -87,6 +87,11 @@ class diff_drive:
         self.port.write(c)
         self.ss.on()
 
+    def send(self,fr):
+        self.ss.off()
+        self.port.write(fr)
+        self.ss.on()
+      
     def hello(self):
         self.frame.set(FRAME_HELLO,0,0,0,0)
         self._char(self.frame.get())

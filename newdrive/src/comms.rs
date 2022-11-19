@@ -83,8 +83,8 @@ fn SPI_STC() {
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
                 //serial_println!("{:#?}", the_packet.data[3..]).void_unwrap();
-                //let other_comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
-                let comm = Command::deserialize(&the_packet);
+                let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
+                //let comm = Command::deserialize(&the_packet);
                 //serial_println!("{:#?}", other_comm).void_unwrap();
                 // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {

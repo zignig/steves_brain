@@ -94,13 +94,12 @@ impl Command {
 
 pub fn show(comm: Command) {
     let mut buf: [u8; 8] = [0; 8];
-    serial_println!("des").void_unwrap();
     buf[0] = SYNC1;
     buf[1] = SYNC2;
-    comm.dump_into_be_bytes(&mut buf[3..]);
+    buf[2] = 50;
+    serial_println!("des").void_unwrap();
+    comm.dump_into_bytes(&mut buf[3..]).unwrap_or_default();
     serial_println!("{:?}", buf).void_unwrap();
-    let unw = Command::load_from_be_bytes(&mut buf[3..]);
-    if let Ok(up) = unw {
-         serial_println!("{:#?}", up).void_unwrap();
-    }
+    let up = Command::load_from_bytes( &buf[3..]).unwrap_or_default();
+    serial_println!("{:#?}", up).void_unwrap();
 }
