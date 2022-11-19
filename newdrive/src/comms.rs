@@ -4,9 +4,10 @@
 //! and rewritten again in rust ( after c++ )
 //!
 
-use crate::serial_println;
+//use crate::serial_println;
+//use arduino_hal::prelude::*;
+
 use arduino_hal::pac::SPI;
-use arduino_hal::prelude::*;
 use avr_device;
 use store::Load;
 //use avr_device::generic::{Reg, RegisterSpec};
@@ -24,7 +25,7 @@ pub const RING_SIZE: usize = 4;
 // use serde_cbor::{Deserializer, Serializer};
 // use serde_derive::{Deserialize, Serialize};
 
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub struct PacketBuffer {
     pub data: [u8; FRAME_SIZE],
     pos: usize,
@@ -39,16 +40,32 @@ impl PacketBuffer {
     }
 }
 
+impl Default for PacketBuffer {
+    fn default() -> Self {
+        Self {
+            data: [0; FRAME_SIZE],
+            pos: 0,
+        }
+    }
+}
+
 pub struct SlaveSPI;
 
 // guarded access to the SPI object
 static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 
-// guarded data PacketBuffer
+// guarded incoming data PacketBuffer
 static DATA_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
 
-// ring buffer for the created commans
+// guarded outgoing data PacketBuffer 
+static OUT_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
+
+// ring buffer for the created commands
 static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
+    Mutex::new(RefCell::new(None));
+
+// ring buffer for outgoing packets
+static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> = 
     Mutex::new(RefCell::new(None));
 
 impl SlaveSPI {
@@ -62,9 +79,11 @@ impl SlaveSPI {
         avr_device::interrupt::free(|cs| {
             SPI_INT.borrow(&cs).replace(Some(s));
             DATA_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
+            OUT_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
             COMMAND_RING
                 .borrow(&cs)
                 .replace(Some(Ring::<Command, RING_SIZE>::new()));
+            OUT_RING.borrow(&cs).replace(Some(Ring::<PacketBuffer,RING_SIZE>::new()));
         });
     }
 }
@@ -82,14 +101,12 @@ fn SPI_STC() {
             // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
-                //serial_println!("{:#?}", the_packet.data[3..]).void_unwrap();
+                //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
+                // deserialize the command part of the packet
                 let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
-                //let comm = Command::deserialize(&the_packet);
-                //serial_println!("{:#?}", other_comm).void_unwrap();
                 // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
                     cr.append(comm);
-                    //cr.get_absolute_mut(index)
                 }
             }
         }
@@ -113,8 +130,8 @@ pub fn process_packet(data: u8, pb: &mut PacketBuffer) -> Option<PacketBuffer> {
                 Err(())
             }
         } //Sync2
-        2 => Ok(()),  //Command
-        3 => Ok(()),  //Checksum
+        2 => Ok(()),  //Checksum
+        3 => Ok(()),  //Command
         4 => Ok(()),  //data1
         5 => Ok(()),  //data2
         6 => Ok(()),  //data3

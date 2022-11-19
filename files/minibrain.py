@@ -9,13 +9,15 @@
 
 from machine import Pin, SPI
 import time
+import struct
 
 # 20220614 - drive rework
 # Convert mini_brain to a frame based comm
-# sync , sync , command , d1,d2,d3,d4 check
-# rewrite the Arduino software first
+# sync , sync ,check, command , d1,d2,d3,d4
+# rewrite the Arduino software first (almost dne
 
-# FRAME type enum in diff_drive comms.h
+# FRAME type enum in newdrive/src/commands.rs
+
 FRAME_HELLO = 0
 FRAME_STOP = 1
 FRAME_RUN = 2 
@@ -27,48 +29,9 @@ FRAME_SETMINSPEED = 7
 FRAME_MAXCUR = 8
 FRAME_CONFIG = 9 
 FRAME_COUNT = 10
-
-class Frame:
-    "simple dataframe for arduino comms"
-    sync1 = 0xF
-    sync2 = 0xE
-
-    def __init__(self):
-        self.action = 0
-        self.checksum = 0
-        self.data1 = 0
-        self.data2 = 0
-        self.data3 = 0
-        self.data4 = 0
-
-    def get(self):
-        return bytearray(
-            [
-                self.sync1,
-                self.sync2,
-                self.action,
-                self.cs(),
-                self.data1,
-                self.data2,
-                self.data3,
-                self.data4,
-            ]
-        )
-
-    def set(self, action, data1=None, data2=None, data3=None, data4=None):
-        self.action = action
-        if data1 is not None:
-            self.data1 = data1
-        if data2 is not None:
-            self.data2 = data2
-        if data3 is not None:
-            self.data3 = data3
-        if data4 is not None:
-            self.data4 = data4
-
-    def cs(self):
-        val = (self.data1 + self.data2 + self.data3 + self.data4) % 256
-        return val
+# Sync bytes for the frame
+SYNC1 = 0xF
+SYNC2 = 0xE
 
 
 class diff_drive:
@@ -76,109 +39,79 @@ class diff_drive:
         self.ss = Pin(27, Pin.OUT)
         self.ss.on()
         self.port = SPI(1, speed)
-        self.frame = Frame()
-        self.rate = 100
-        self.accel(15)
-        self.timeout(15)
+        self._frame = bytes([0]*8)
+        self._rate = 100
+        #self.accel(15)
+        #self.timeout(15)
         self.interval = 100000
 
-    def _char(self, c):
-        self.ss.off()
-        self.port.write(c)
-        self.ss.on()
+    def build(self,action,data):
+        self._frame  = bytes([SYNC1,SYNC2,0,action])
+        self._frame  = self._frame + bytes(data)
 
-    def send(self,fr):
+    def send(self,action,data):
+        self.build(action,data)
+        self._send(self._frame)
+
+    def _send(self,fr):
         self.ss.off()
         self.port.write(fr)
         self.ss.on()
-      
+
+    def rate(self,val):
+        self._rate = val 
+    
+    def i16_2(self,m1,m2):
+        return struct.pack('2h',m1,m2)
+
+    def i16_1(self,m1):
+        return self.i16_2(m1,0)
+    
+
+    def u8_4(self,u1,u2,u3,u4):
+        return struct.pack('4B',u1,u2,u3,u4)
+
+    def u8_1(self,u1):
+        return self.u8_4(u1,0,0,0)
+
     def hello(self):
-        self.frame.set(FRAME_HELLO,0,0,0,0)
-        self._char(self.frame.get())
-
-    def maxc(self, cur):
-        if (cur > 255) or (cur <= 0):
-            raise Exception("current out of range")
-        self.frame.set(FRAME_MAXCUR, cur)
-        self._char(self.frame.get())
-
-    def accel(self, acc):
-        if (acc > 255) or (acc <= 0):
-            raise Exception("accleration out of range")
-        self.frame.set(FRAME_SETACC, acc)
-        self._char(self.frame.get())
-
-    def timeout(self, timeout):
-        if (timeout > 255) or (timeout <= 0):
-            raise Exception("timeout out of range")
-        self.frame.set(FRAME_SETTIMEOUT, timeout,0,0,0)
-        self._char(self.frame.get())
-
-    def joy(self, m1, m2):
-        if (m1 > 255) or (m1 < -255):
-            print("motor 1 out of range")
-            return
-        if (m2 > 255) or (m2 < -255):
-            print("motor 2 out of range")
-            return
-        # default to forward
-        dir1 = 0
-        dir2 = 0
-        if m1 < 0:
-            m1 = abs(m1)
-            dir1 = 1
-        if m2 < 0:
-            m2 = abs(m2)
-            dir2 = 1
-
-        self.frame.set(FRAME_SETJOY, m1, m2, dir1, dir2)
-        self._char(self.frame.get())
-
-    def move(self, m1, m2):
-        if (m1 > 255) or (m1 < -255):
-            raise Exception("motor 1 out of range")
-        if (m2 > 255) or (m2 < -255):
-            raise Exception("motor 2 out of range")
-        # default to forward
-        dir1 = 0
-        dir2 = 0
-        if m1 < 0:
-            m1 = abs(m1)
-            dir1 = 1
-        if m2 < 0:
-            m2 = abs(m2)
-            dir2 = 1
-        self.frame.set(FRAME_RUN, m1, m2, dir1, dir2)
-        self._char(self.frame.get())
-
-    # @property
-    # def w(self):
-    #     self.forward()
-
-    # @property
-    # def s(self):
-    #     self.backward()
-
-    # @property
-    # def a(self):
-    #     self.left()
-
-    # @property
-    # def d(self):
-    #     self.right()
-
+        self.send(FRAME_HELLO,[0,0,0,0])
+    
     def stop(self):
-        self.frame.set(FRAME_STOP, 0, 0, 0, 0)
-        self._char(self.frame.get())
+        self.send(FRAME_STOP,[0,0,0,0])
+    
+    def accel(self,val):
+        self.send(FRAME_SETACC,self.u8_1(val))
+
+    def timeout(self,val):
+        self.send(FRAME_SETTIMEOUT,self.i16_1(val))
+
+    def maxc(self,val):
+        self.send(FRAME_MAXCUR,self.u8_1(val))
+
+    def move(self,m1,m2):
+        data = self.i16_2(m1,m2)
+        self.send(FRAME_RUN,data)
+
+    def joy(self,m1,m2):
+        self.send(FRAME_SETJOY,self.i16_2(m1,m2))
 
     def forward(self):
-        self.move(self.rate, self.rate)
+        self.move(self._rate, self._rate)
 
     def backward(self):
-        self.move(-self.rate, -self.rate)
+        self.move(-self._rate, -self._rate)
 
     def left(self):
-        self.move(-self.rate, self.rate)
+        self.move(-self._rate, self._rate)
 
     def right(self):
-        self.move(self.rate, -self.rate)
+        self.move(self._rate, -self._rate)
+
+    def bounce(self,count=10,timeout=0.1):
+        for i in range(count):
+            self.forward()
+            time.sleep(timeout)
+            self.backward()
+            time.sleep(timeout)
+        self.stop()

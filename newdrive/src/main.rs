@@ -8,10 +8,11 @@ mod compass;
 mod current_sensor;
 mod diff_drive;
 mod ring_buffer;
-mod robot;
 mod shared;
 mod systick;
 mod utils;
+
+//mod robot;
 
 use commands::Command;
 use comms::fetch_command;
@@ -96,6 +97,15 @@ fn main() -> ! {
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
+    use store::{Dump, Load};
+
+    let mut buf: [u8; 8] = [0; 8];
+    let the_comm = Command::Run(10, 10);
+    the_comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
+    serial_println!("{:#?} - {:#?}", the_comm, buf).void_unwrap();
+    let new_com = Command::load_from_bytes(&buf[..]).unwrap_or_default();
+    serial_println!(" into {:#?}", new_com).void_unwrap();
+    //commands::show(the_comm);
     loop {
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();
@@ -105,17 +115,16 @@ fn main() -> ! {
             let time = systick::millis();
             diff_drive.update();
             //serial_println!("tick {}",time);
-            if let Some(value) = diff_drive.get_current() {
-                serial_println!("drive {},{}", value.0, value.1).void_unwrap();
-                //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
-                //serial_println!("zero {}", current.zero_offset).void_unwrap();
-            }
+            // if let Some(value) = diff_drive.get_current() {
+            //     //serial_println!("drive {},{}", value.0, value.1).void_unwrap();
+            //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
+            //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
+            // }
             if let Some(comm) = fetch_command() {
                 serial_println!("time {}", time).void_unwrap();
                 serial_println!("{:#?}", comm).void_unwrap();
                 serial_println!("").void_unwrap();
-                commands::show(comm);
-
+                //commands::show(comm);
                 match comm {
                     Command::Run(x, y) => {
                         diff_drive.set_speed(x, y);
