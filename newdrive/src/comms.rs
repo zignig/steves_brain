@@ -4,8 +4,8 @@
 //! and rewritten again in rust ( after c++ )
 //!
 
-//use crate::serial_println;
-//use arduino_hal::prelude::*;
+use crate::serial_println;
+use arduino_hal::prelude::*;
 
 use arduino_hal::pac::SPI;
 use avr_device;
@@ -58,15 +58,15 @@ static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 static DATA_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
 
 // guarded outgoing data PacketBuffer 
-static OUT_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
+//static OUT_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
 
 // ring buffer for the created commands
 static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
     Mutex::new(RefCell::new(None));
 
 // ring buffer for outgoing packets
-static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> = 
-    Mutex::new(RefCell::new(None));
+// static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> = 
+//     Mutex::new(RefCell::new(None));
 
 impl SlaveSPI {
     pub fn init(s: SPI) {
@@ -79,11 +79,11 @@ impl SlaveSPI {
         avr_device::interrupt::free(|cs| {
             SPI_INT.borrow(&cs).replace(Some(s));
             DATA_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
-            OUT_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
+            // OUT_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
             COMMAND_RING
                 .borrow(&cs)
                 .replace(Some(Ring::<Command, RING_SIZE>::new()));
-            OUT_RING.borrow(&cs).replace(Some(Ring::<PacketBuffer,RING_SIZE>::new()));
+            // OUT_RING.borrow(&cs).replace(Some(Ring::<PacketBuffer,RING_SIZE>::new()));
         });
     }
 }
@@ -95,13 +95,14 @@ fn SPI_STC() {
         let mut data: u8 = 0;
         if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
             data = s.spdr.read().bits();
+
         }
         // put the data into the buffer
         if let Some(pb) = &mut *DATA_FRAME.borrow(&cs).borrow_mut() {
             // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
-                //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
+                serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
                 // deserialize the command part of the packet
                 let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
                 // chuck the command into a ring buffer

@@ -97,15 +97,8 @@ fn main() -> ! {
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
-    use store::{Dump, Load};
-
-    let mut buf: [u8; 8] = [0; 8];
-    let the_comm = Command::Run(10, 10);
-    the_comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
-    serial_println!("{:#?} - {:#?}", the_comm, buf).void_unwrap();
-    let new_com = Command::load_from_bytes(&buf[..]).unwrap_or_default();
-    serial_println!(" into {:#?}", new_com).void_unwrap();
-    //commands::show(the_comm);
+    let the_comm = Command::Stop;
+    commands::show(the_comm);
     loop {
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();

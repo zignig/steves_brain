@@ -35,15 +35,23 @@ impl Default for Command {
 }
 
 /// For packet debugging
-#[allow(dead_code)]
 pub fn show(comm: Command) {
     let mut buf: [u8; 8] = [0; 8];
-    buf[0] = SYNC1;
-    buf[1] = SYNC2;
-    buf[2] = 50;
-    serial_println!("des").void_unwrap();
-    comm.dump_into_bytes(&mut buf[3..]).unwrap_or_default();
-    serial_println!("{:?}", buf).void_unwrap();
-    let up = Command::load_from_bytes(&buf[3..]).unwrap_or_default();
-    serial_println!("{:#?}", up).void_unwrap();
+    //buf[0] = SYNC1;
+    //buf[1] = SYNC2;
+    //buf[2] = 50;
+    // serial_println!("des").void_unwrap();
+    //comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
+    //serial_println!("{:?}", buf).void_unwrap();
+    let _up = Command::load_from_bytes(&buf[..]).unwrap_or_default();
+    // let wtf = Command::load_from_be_bytes(&buf[..]);
+    // match wtf {
+    //       Ok(command) => {
+    //         serial_println!("{:#?}",command).void_unwrap();
+    //     }
+    //     Err(_) => {
+    //         serial_println!("BORK").void_unwrap();
+    //     }
+    // }
+    // serial_println!("{:#?}", up).void_unwrap();
 }

@@ -32,21 +32,20 @@ FRAME_COUNT = 10
 # Sync bytes for the frame
 SYNC1 = 0xF
 SYNC2 = 0xE
-
+FRAME_SIZE = 8
 
 class diff_drive:
     def __init__(self, speed=10000):
         self.ss = Pin(27, Pin.OUT)
         self.ss.on()
         self.port = SPI(1, speed)
-        self._frame = bytes([0]*8)
+        self._frame = bytes([0]*FRAME_SIZE)
         self._rate = 100
-        #self.accel(15)
-        #self.timeout(15)
-        self.interval = 100000
-
+        self.accel(15)
+        self.timeout(15)
+        
     def build(self,action,data):
-        self._frame  = bytes([SYNC1,SYNC2,0,action])
+        self._frame  = bytes([SYNC1,SYNC2,50,action])
         self._frame  = self._frame + bytes(data)
 
     def send(self,action,data):
@@ -57,6 +56,13 @@ class diff_drive:
         self.ss.off()
         self.port.write(fr)
         self.ss.on()
+    
+    def _sr(self):
+        outdata = bytearray([0]*FRAME_SIZE)
+        self.ss.off()
+        self.port.write_readinto(self._frame,outdata)
+        self.ss.on()
+        return outdata
 
     def rate(self,val):
         self._rate = val 
