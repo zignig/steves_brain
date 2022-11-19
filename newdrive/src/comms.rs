@@ -6,8 +6,9 @@
 
 use crate::serial_println;
 use arduino_hal::pac::SPI;
-use avr_device;
 use arduino_hal::prelude::*;
+use avr_device;
+use store::Load;
 //use avr_device::generic::{Reg, RegisterSpec};
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
@@ -78,11 +79,14 @@ fn SPI_STC() {
         }
         // put the data into the buffer
         if let Some(pb) = &mut *DATA_FRAME.borrow(&cs).borrow_mut() {
+            // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
-                //serial_println!("{:#?}", the_packet.data).void_unwrap();
+                //serial_println!("{:#?}", the_packet.data[3..]).void_unwrap();
+                //let other_comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
                 let comm = Command::deserialize(&the_packet);
-                //serial_println!("{:#?}", comm).void_unwrap();
+                //serial_println!("{:#?}", other_comm).void_unwrap();
+                // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
                     cr.append(comm);
                     //cr.get_absolute_mut(index)
@@ -120,7 +124,7 @@ pub fn process_packet(data: u8, pb: &mut PacketBuffer) -> Option<PacketBuffer> {
 
     if val == Ok(()) {
         //  If the packet is good so far
-        serial_println!("{:?}",data).void_unwrap();
+        //serial_println!("{:?}",data).void_unwrap();
         pb.data[pb.pos] = data;
         pb.pos += 1;
         // end of the frame

@@ -79,7 +79,7 @@ class diff_drive:
         self.frame = Frame()
         self.rate = 100
         self.accel(15)
-        self.timeout(30)
+        self.timeout(15)
         self.interval = 100000
 
     def _char(self, c):

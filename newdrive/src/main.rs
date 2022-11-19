@@ -91,7 +91,7 @@ fn main() -> ! {
 
     //let r = robot::Robot::new(diff_drive,compass,current);
 
-    current.set_upper(70);
+    current.set_upper(100);
 
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();

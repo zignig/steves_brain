@@ -9,9 +9,10 @@ use ufmt::derive::uDebug;
 
 use crate::comms::{PacketBuffer, SYNC1, SYNC2};
 
-//use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
+use store::{Dump, Load};
 
-#[derive(uDebug, Clone, Copy)] //, Serialize, Deserialize)]
+#[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
 pub enum Command {
     Hello,
     Stop,
@@ -90,20 +91,16 @@ impl Command {
     }
 }
 
+
 pub fn show(comm: Command) {
-    let mut buf: [u8; 32] = [0; 32];
+    let mut buf: [u8; 8] = [0; 8];
     serial_println!("des").void_unwrap();
-    //let res  = embedded_msgpack::encode::serde::to_array(&comm, &mut buf);
-    // match  embedded_msgpack::encode::serde::to_array(&comm, &mut buf){
-    //     Ok(len) => {
-    //         serial_println!("{} - {:#?}",len,buf).void_unwrap();
-    //     },
-    //     Err(err) =>{
-    //         match err{
-    //             Error::EndOfBuffer => todo!(),
-    //             Error::OutOfBounds => todo!(),
-    //             Error::InvalidType => todo!(),
-    //         }
-    //     },
-    // }
+    buf[0] = SYNC1;
+    buf[1] = SYNC2;
+    comm.dump_into_be_bytes(&mut buf[3..]);
+    serial_println!("{:?}", buf).void_unwrap();
+    let unw = Command::load_from_be_bytes(&mut buf[3..]);
+    if let Ok(up) = unw {
+         serial_println!("{:#?}", up).void_unwrap();
+    }
 }
