@@ -17,7 +17,9 @@ mod utils;
 use commands::Command;
 use comms::fetch_command;
 use diff_drive::DiffDrive;
+
 use panic_halt as _;
+
 use shared::TankDrive;
 //use shared::Update;
 
@@ -97,7 +99,7 @@ fn main() -> ! {
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
-    let the_comm = Command::Stop;
+    let the_comm = Command::SetJoy(100,-100);
     commands::show(the_comm);
     loop {
         if current.overload(&mut adc) {
