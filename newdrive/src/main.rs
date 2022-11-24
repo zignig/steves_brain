@@ -99,8 +99,6 @@ fn main() -> ! {
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
-    let the_comm = Command::SetJoy(100,-100);
-    commands::show(the_comm);
     loop {
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();

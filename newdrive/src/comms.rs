@@ -9,7 +9,6 @@ use arduino_hal::prelude::*;
 
 use arduino_hal::pac::SPI;
 use avr_device;
-use store::Load;
 //use avr_device::generic::{Reg, RegisterSpec};
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
@@ -25,7 +24,7 @@ pub const RING_SIZE: usize = 4;
 // use serde_cbor::{Deserializer, Serializer};
 // use serde_derive::{Deserialize, Serialize};
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct PacketBuffer {
     pub data: [u8; FRAME_SIZE],
     pos: usize,
@@ -57,7 +56,7 @@ static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 // guarded incoming data PacketBuffer
 static DATA_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
 
-// guarded outgoing data PacketBuffer 
+// guarded outgoing data PacketBuffer
 //static OUT_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
 
 // ring buffer for the created commands
@@ -65,7 +64,7 @@ static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
     Mutex::new(RefCell::new(None));
 
 // ring buffer for outgoing packets
-// static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> = 
+// static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> =
 //     Mutex::new(RefCell::new(None));
 
 impl SlaveSPI {
@@ -95,16 +94,16 @@ fn SPI_STC() {
         let mut data: u8 = 0;
         if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
             data = s.spdr.read().bits();
-
         }
         // put the data into the buffer
         if let Some(pb) = &mut *DATA_FRAME.borrow(&cs).borrow_mut() {
             // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
-                serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
+                //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
                 // deserialize the command part of the packet
-                let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
+                //let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
+                let comm = Command::deserialize(pb);
                 // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
                     cr.append(comm);

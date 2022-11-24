@@ -45,7 +45,7 @@ class diff_drive:
         self.timeout(15)
         
     def build(self,action,data):
-        self._frame  = bytes([SYNC1,SYNC2,0,action])
+        self._frame  = bytes([SYNC1,SYNC2,action,0])
         self._frame  = self._frame + bytes(data)
 
     def send(self,action,data):

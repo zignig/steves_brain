@@ -7,12 +7,12 @@ use crate::serial_println;
 use arduino_hal::prelude::*;
 use ufmt::derive::uDebug;
 
-use crate::comms::{SYNC1, SYNC2};
+use crate::comms::{PacketBuffer, SYNC1, SYNC2};
 
-use serde_derive::{Deserialize, Serialize};
-use store::{Dump, Load};
+//use serde_derive::{Deserialize, Serialize};
+//use store::{Dump, Load};
 
-#[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
+#[derive(uDebug, Clone, Copy)] //, Deserialize, Serialize)]
 pub enum Command {
     Hello,
     Stop,
@@ -26,6 +26,9 @@ pub enum Command {
     Config,
     Count,
     Empty,
+    // Returns
+    Compass(i16)
+
 }
 
 impl Default for Command {
@@ -34,16 +37,69 @@ impl Default for Command {
     }
 }
 
+fn toi16(data: [u8; 2]) -> i16 {
+    i16::from_le_bytes(data)
+}
+
+impl Command {
+    pub fn deserialize(pb: &PacketBuffer) -> Self {
+        // match on the third byte , command type
+        let ctype_u8 = pb.data[2];
+        let data: [u8; 4] = pb.data[4..8].try_into().unwrap();
+        let comm: Command = match ctype_u8 {
+            0 => Command::Hello,
+            1 => Command::Stop,
+            2 => Command::Run(toi16([data[0], data[1]]), toi16([data[2], data[3]])),
+            3 => Command::SetAcc(data[0]),
+            4 => Command::SetJoy(toi16([data[0], data[1]]), toi16([data[2], data[3]])),
+            5 => Command::SetTimeout(toi16([data[0], data[1]])),
+            6 => Command::SetTrigger(toi16([data[0], data[1]])),
+            7 => Command::SetMinspeed(data[0].try_into().unwrap()),
+            8 => Command::SetMaxCurrent(data[0].try_into().unwrap()),
+            9 => Command::Config,
+            10 => Command::Count,
+            _ => Command::Empty,
+        };
+        comm
+    }
+
+    pub fn ser(&self) -> PacketBuffer {
+        let mut descr: u8 = 0;
+        let mut pb = PacketBuffer::new();
+        match self {
+            Command::Hello => descr = 0,
+            Command::Stop => descr = 1,
+            Command::Run(l, r) => todo!(),
+            Command::SetAcc(_) => todo!(),
+            Command::SetJoy(_, _) => todo!(),
+            Command::SetTimeout(_) => todo!(),
+            Command::SetTrigger(_) => todo!(),
+            Command::SetMinspeed(_) => todo!(),
+            Command::SetMaxCurrent(_) => todo!(),
+            Command::Config => todo!(),
+            Command::Count => todo!(),
+            Command::Empty => todo!(),
+            Command::Compass(_) => todo!(),
+        }
+        pb.data[0] = SYNC1;
+        pb.data[1] = SYNC2;
+        pb.data[3] = descr;
+        pb.data[4] = 0; //TODO checksum
+
+        pb
+    }
+}
 /// For packet debugging
 pub fn show(comm: Command) {
-    let  mut buf: [u8; 8] = [0; 8];
+    let buf = PacketBuffer::new();
     //buf[0] = SYNC1;
     //buf[1] = SYNC2;
     //buf[2] = 50;
-    // serial_println!("des").void_unwrap();
-    comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
-    serial_println!("{:?}", buf).void_unwrap();
-    let up = Command::load_from_bytes(&buf[..]).unwrap_or_default();
+    serial_println!("{:#?}", comm).void_unwrap();
+    //comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
+    //serial_println!("{:?}", buf).void_unwrap();
+    //let up = Command::load_from_bytes(&buf[..]).unwrap_or_default();
+    let up = Command::deserialize(&buf);
     //let _wtf = Command::load_from_bytes(&buf[..]);
     // match wtf {
     //       Ok(command) => {
