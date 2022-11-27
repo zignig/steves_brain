@@ -27,6 +27,7 @@ use shared::TankDrive;
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
+use systick::millis;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -99,6 +100,8 @@ fn main() -> ! {
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
+    let mut last: u32 = millis();
+
     loop {
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();
@@ -107,17 +110,24 @@ fn main() -> ! {
         if systick::is_tick() {
             let time = systick::millis();
             diff_drive.update();
-            //serial_println!("tick {}",time);
+
             // if let Some(value) = diff_drive.get_current() {
             //     //serial_println!("drive {},{}", value.0, value.1).void_unwrap();
             //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
             //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
             // }
             if let Some(comm) = fetch_command() {
-                serial_println!("time {}", time).void_unwrap();
-                serial_println!("{:#?}", comm).void_unwrap();
-                serial_println!("").void_unwrap();
+                serial_println!("tick {}", time - last).void_unwrap();
+                // if time - last > systick::TICK_INTERVAL {
+                //     serial_println!("MISSED").void_unwrap();
+                // }
+                last = time;
+                //serial_println!(" {}", time-last).void_unwrap();
+
+                //serial_println!("{:#?}", comm).void_unwrap();
+                //serial_println!("").void_unwrap();
                 //commands::show(comm);
+
                 match comm {
                     Command::Run(x, y) => {
                         diff_drive.set_speed(x, y);
@@ -134,8 +144,8 @@ fn main() -> ! {
                     Command::SetMaxCurrent(cur) => {
                         current.set_upper(cur as i16);
                     }
-                    Command::SetJoy(x,y ) => {
-                        diff_drive.set_joy(x,y);
+                    Command::SetJoy(x, y) => {
+                        diff_drive.set_joy(x, y);
                     }
                     _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
                 }

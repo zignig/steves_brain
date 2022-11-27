@@ -7,7 +7,7 @@ use crate::serial_println;
 use arduino_hal::prelude::*;
 use ufmt::derive::uDebug;
 
-use crate::comms::{PacketBuffer, SYNC1, SYNC2};
+use crate::comms::{FrameBuffer, SYNC1, SYNC2};
 
 //use serde_derive::{Deserialize, Serialize};
 //use store::{Dump, Load};
@@ -25,9 +25,10 @@ pub enum Command {
     SetMaxCurrent(u8),
     Config,
     Count,
-    Data(u8,u8,u8,u8),
+    Data(u8, u8, u8, u8),
     // Returns
     Compass(i16),
+    Millis(u32),
     // Fail
     Empty,
 }
@@ -38,21 +39,47 @@ impl Default for Command {
     }
 }
 
+fn from_u32(val: u32) -> [u8; 4] {
+    u32::to_le_bytes(val)
+}
+
+#[inline(always)]
+fn from_i16(val: i16) -> [u8; 4] {
+    let mut data: [u8; 4] = [0; 4];
+    let val: [u8; 2] = i16::to_le_bytes(val);
+    data[0] = val[0];
+    data[1] = val[1];
+    data
+}
+
+fn from_u8(val: u8) -> [u8; 4] {
+    let mut data: [u8; 4] = [0; 4];
+    data[0] = u8::to_le(val).try_into().unwrap();
+    data
+}
+
+fn from_2i16(l: i16, r: i16) -> [u8; 4] {
+    let mut data: [u8; 4] = [0; 4];
+    let first: [u8; 2] = i16::to_le_bytes(l).try_into().unwrap();
+    let second: [u8; 2] = i16::to_le_bytes(r).try_into().unwrap();
+    data = [first[0], first[1], second[0], second[1]];
+    data
+}
+
 fn toi16(data: [u8; 2]) -> i16 {
     i16::from_le_bytes(data)
 }
 
-
-fn toi8_4(data: [u8 ; 4]) -> (u8,u8,u8,u8) { 
+fn toi8_4(data: [u8; 4]) -> (u8, u8, u8, u8) {
     let d0 = data[0].try_into().unwrap();
     let d1 = data[1].try_into().unwrap();
     let d2 = data[2].try_into().unwrap();
     let d3 = data[3].try_into().unwrap();
-    (d0,d1,d2,d3)
+    (d0, d1, d2, d3)
 }
 
 impl Command {
-    pub fn deserialize(pb: &PacketBuffer) -> Self {
+    pub fn deserialize(pb: &FrameBuffer) -> Self {
         // match on the third byte , command type
         let ctype_u8 = pb.data[2];
         let data: [u8; 4] = pb.data[4..8].try_into().unwrap();
@@ -70,44 +97,62 @@ impl Command {
             10 => Command::Count,
             11 => {
                 let val = toi8_4(data);
-                Command::Data(val.0,val.1,val.2,val.3)
-            },
+                Command::Data(val.0, val.1, val.2, val.3)
+            }
             _ => Command::Empty,
-            
         };
         comm
     }
 
-    pub fn ser(&self) -> PacketBuffer {
+    pub fn ser(&self) -> FrameBuffer {
         let mut descr: u8 = 0;
-        let mut pb = PacketBuffer::new();
+        let mut pb = FrameBuffer::new();
+        let mut data: [u8; 4] = [0; 4];
         match self {
             Command::Hello => descr = 0,
             Command::Stop => descr = 1,
-            Command::Run(l, r) => todo!(),
-            Command::SetAcc(_) => todo!(),
-            Command::SetJoy(_, _) => todo!(),
-            Command::SetTimeout(_) => todo!(),
+            Command::Run(l, r) => {
+                descr = 2;
+                data = from_2i16(*l, *r)
+            }
+            Command::SetAcc(val) => {
+                descr = 3;
+                data = from_u8(*val)
+            }
+            Command::SetJoy(x, y) => {
+                descr = 4;
+                data = from_2i16(*x, *y)
+            }
+            Command::SetTimeout(timeout) => {
+                descr = 5;
+                data = from_i16(*timeout);
+            }
             Command::SetTrigger(_) => todo!(),
             Command::SetMinspeed(_) => todo!(),
             Command::SetMaxCurrent(_) => todo!(),
             Command::Config => todo!(),
             Command::Count => todo!(),
             Command::Empty => todo!(),
+            // Return stuff >>
             Command::Compass(_) => todo!(),
             Command::Data(_, _, _, _) => todo!(),
+            Command::Millis(val) => data = from_u32(*val),
         }
         pb.data[0] = SYNC1;
         pb.data[1] = SYNC2;
-        pb.data[3] = descr;
-        pb.data[4] = 0; //TODO checksum
-
+        pb.data[2] = descr;
+        pb.data[3] = 0; //TODO checksum
+        pb.data[4] = data[0];
+        pb.data[5] = data[1];
+        pb.data[6] = data[2];
+        pb.data[7] = data[3];
+        // return the data block
         pb
     }
 }
 /// For packet debugging
 pub fn show(comm: Command) {
-    let buf = PacketBuffer::new();
+    let buf = FrameBuffer::new();
     //buf[0] = SYNC1;
     //buf[1] = SYNC2;
     //buf[2] = 50;

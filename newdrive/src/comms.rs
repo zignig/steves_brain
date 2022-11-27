@@ -3,13 +3,14 @@
 //! lifted from <https://medium.com/embedism/the-definitive-guide-on-writing-a-spi-communications-protocol-for-stm32-73594add4c09>
 //! and rewritten again in rust ( after c++ )
 //!
+//! This is a frame based slave SPI interface 
+//! 
 
 use crate::serial_println;
 use arduino_hal::prelude::*;
 
 use arduino_hal::pac::SPI;
 use avr_device;
-//use avr_device::generic::{Reg, RegisterSpec};
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
 
@@ -18,19 +19,20 @@ use core::cell::RefCell;
 use core::u8;
 
 pub const FRAME_SIZE: usize = 8;
+/// Frame Header
 pub const SYNC1: u8 = 0xF;
 pub const SYNC2: u8 = 0xE;
-pub const RING_SIZE: usize = 4;
-// use serde_cbor::{Deserializer, Serializer};
-// use serde_derive::{Deserialize, Serialize};
+
+// Size of the ring buffer.
+pub const RING_SIZE: usize = 8;
 
 #[derive(Clone, Copy)]
-pub struct PacketBuffer {
+pub struct FrameBuffer {
     pub data: [u8; FRAME_SIZE],
     pos: usize,
 }
 
-impl PacketBuffer {
+impl FrameBuffer {
     pub fn new() -> Self {
         Self {
             data: [0; FRAME_SIZE],
@@ -39,7 +41,7 @@ impl PacketBuffer {
     }
 }
 
-impl Default for PacketBuffer {
+impl Default for FrameBuffer {
     fn default() -> Self {
         Self {
             data: [0; FRAME_SIZE],
@@ -48,24 +50,37 @@ impl Default for PacketBuffer {
     }
 }
 
-pub struct SlaveSPI;
+// Need to structure the outgoing 
+pub enum FrameStatus { 
+    Start,
+    Inside,
+    Finished,
+}
+// TODO use phantom data to consume the pins
+pub struct SlaveSPI{
+
+}
+
+// Incoming data
 
 // guarded access to the SPI object
 static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 
 // guarded incoming data PacketBuffer
-static DATA_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
-
-// guarded outgoing data PacketBuffer
-//static OUT_FRAME: Mutex<RefCell<Option<PacketBuffer>>> = Mutex::new(RefCell::new(None));
+static DATA_FRAME: Mutex<RefCell<Option<FrameBuffer>>> = Mutex::new(RefCell::new(None));
 
 // ring buffer for the created commands
 static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
     Mutex::new(RefCell::new(None));
 
+// Outgoing data
+
+// guarded outgoing data PacketBuffer
+static OUT_FRAME: Mutex<RefCell<Option<FrameBuffer>>> = Mutex::new(RefCell::new(None));
+
 // ring buffer for outgoing packets
-// static OUT_RING: Mutex<RefCell<Option<Ring<PacketBuffer,RING_SIZE>>>> =
-//     Mutex::new(RefCell::new(None));
+static OUT_RING: Mutex<RefCell<Option<Ring<FrameBuffer, RING_SIZE>>>> =
+    Mutex::new(RefCell::new(None));
 
 impl SlaveSPI {
     pub fn init(s: SPI) {
@@ -76,13 +91,17 @@ impl SlaveSPI {
             .write(|w| w.spie().set_bit().spe().set_bit().mstr().clear_bit());
         // put the spi , ring buffer and packetbuffer  into a protected globals
         avr_device::interrupt::free(|cs| {
+            // data incoming
             SPI_INT.borrow(&cs).replace(Some(s));
-            DATA_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
-            // OUT_FRAME.borrow(&cs).replace(Some(PacketBuffer::new()));
+            DATA_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
             COMMAND_RING
                 .borrow(&cs)
                 .replace(Some(Ring::<Command, RING_SIZE>::new()));
-            // OUT_RING.borrow(&cs).replace(Some(Ring::<PacketBuffer,RING_SIZE>::new()));
+            // data outgoing
+            OUT_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
+            OUT_RING
+                .borrow(&cs)
+                .replace(Some(Ring::<FrameBuffer, RING_SIZE>::new()));
         });
     }
 }
@@ -90,6 +109,7 @@ impl SlaveSPI {
 #[avr_device::interrupt(atmega328p)]
 fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
+        // Incoming Data
         // get the data byte from the SPI bus
         let mut data: u8 = 0;
         if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
@@ -102,7 +122,6 @@ fn SPI_STC() {
                 // the packet is well formed
                 //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
                 // deserialize the command part of the packet
-                //let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
                 let comm = Command::deserialize(&the_packet);
                 // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
@@ -110,10 +129,26 @@ fn SPI_STC() {
                 }
             }
         }
+        // Outgoing data
+        // When the interface is ready , spool out a frame
+        // Deserialize into the SPI interface.
+        if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
+            if let Some(pb) = &mut *OUT_FRAME.borrow(&cs).borrow_mut() { 
+                // OH NOES unsafitude !!DRAGONS!!
+                unsafe { 
+                    s.spdr.write(|w| w.bits(pb.data[pb.pos]));
+                }
+                pb.pos += 1;
+                if pb.pos == FRAME_SIZE{
+                    pb.pos = 0;
+                    // get new frame
+                }
+            }
+        }
     });
 }
 
-pub fn process_packet(data: u8, pb: &mut PacketBuffer) -> Option<PacketBuffer> {
+pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
     // match up the packet data
     let val = match pb.pos {
         0 => {

@@ -13,7 +13,7 @@ use crate::systick::millis;
 
 // some math stuff
 use libm;
-use libm::{fabsf,roundf,sqrtf,fmaxf,acosf};
+use libm::{acosf, fabsf, fmaxf, roundf, sqrtf};
 
 pub struct Config {
     enabled: bool,      // If the motor is running or not
@@ -251,50 +251,46 @@ impl<
         let mut raw_right: f32 = 0.0;
         let mut magnitude: f32 = 0.0;
         let mut rad: f32 = 0.0;
-        let fx:f32 = x as f32;
-        let fy:f32 = y as f32;
+        let fx: f32 = x as f32;
+        let fy: f32 = y as f32;
 
         magnitude = sqrtf(fx * fx + fy * fy);
         if magnitude != 0.0 {
-            rad = acosf(acosf(fx)/magnitude);
-        } else { 
+            rad = acosf(acosf(fx) / magnitude);
+        } else {
             rad = 0.0;
         }
 
         let angle: f32 = rad * 180.0 / PI;
-        let tcoeff: f32 = -1.0 + ( angle / 90.0) * 2.0;
+        let tcoeff: f32 = -1.0 + (angle / 90.0) * 2.0;
         let mut turn = tcoeff * fabsf(fabsf(fy) - fabsf(fx));
         turn = libm::roundf(turn * 100.0) / 100.0;
 
-        let mov:f32 = fmaxf(fabsf(fy),fabsf(fx));
-        
-        // First and third quadrant
-		if (fx >= 0.0 && fy >= 0.0)|| (fx < 0.0 && fy < 0.0)
-		{
-			raw_left = mov; 
-            raw_right = turn;
-		}
-		else
-		{
-			raw_right = mov; 
-            raw_left = turn;
-		}
+        let mov: f32 = fmaxf(fabsf(fy), fabsf(fx));
 
-        		// Reverse polarity
-		if fy < 0.0 {
-			raw_left = 0.0 - raw_left;
-			raw_right = 0.0 - raw_right;
-		}
+        // First and third quadrant
+        if (fx >= 0.0 && fy >= 0.0) || (fx < 0.0 && fy < 0.0) {
+            raw_left = mov;
+            raw_right = turn;
+        } else {
+            raw_right = mov;
+            raw_left = turn;
+        }
+
+        // Reverse polarity
+        if fy < 0.0 {
+            raw_left = 0.0 - raw_left;
+            raw_right = 0.0 - raw_right;
+        }
         let out_left = raw_left as i16;
         let out_right = raw_right as i16;
-        serial_println!("{}-{}",magnitude as i16,rad as i16).void_unwrap();
-        serial_println!("{},{}",out_left,out_right).void_unwrap();
+        serial_println!("{}-{}", magnitude as i16, rad as i16).void_unwrap();
+        serial_println!("{},{}", out_left, out_right).void_unwrap();
 
-        self.set_speed(out_left,out_right);
+        self.set_speed(out_left, out_right);
 
         //serial_println!("mag {}",magnitude).void_unwrap();
         //serial_println!("rad {}",rad as i16).void_unwrap();
-        
     }
 
     fn get_movement(&self) -> Option<(i16, i16)> {
