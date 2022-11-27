@@ -103,7 +103,7 @@ fn SPI_STC() {
                 //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
                 // deserialize the command part of the packet
                 //let comm = Command::load_from_bytes(&the_packet.data[3..]).unwrap_or_default();
-                let comm = Command::deserialize(pb);
+                let comm = Command::deserialize(&the_packet);
                 // chuck the command into a ring buffer
                 if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
                     cr.append(comm);

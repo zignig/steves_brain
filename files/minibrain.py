@@ -35,7 +35,7 @@ SYNC2 = 0xE
 FRAME_SIZE = 8
 
 class diff_drive:
-    def __init__(self, speed=10000):
+    def __init__(self, speed=5000):
         self.ss = Pin(27, Pin.OUT)
         self.ss.on()
         self.port = SPI(1, speed)
@@ -114,7 +114,7 @@ class diff_drive:
     def right(self):
         self.move(self._rate, -self._rate)
 
-    def bounce(self,count=10,timeout=0.1):
+    def bounce(self,count=5,timeout=0.5):
         for i in range(count):
             self.forward()
             time.sleep(timeout)

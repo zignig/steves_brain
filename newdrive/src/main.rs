@@ -12,6 +12,8 @@ mod shared;
 mod systick;
 mod utils;
 
+use core::sync;
+
 //mod robot;
 
 use commands::Command;
@@ -63,7 +65,6 @@ fn main() -> ! {
 
     // Create the drive parts
     // left drive
-
     let timer2 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);
     let l_pwm_pin = pins.d3.into_output().into_pwm(&timer2);
     let l_en_pin1 = pins.d9.into_output();
@@ -88,7 +89,6 @@ fn main() -> ! {
     current.get_zero(&mut adc);
 
     serial_println!("Behold steve's minibrain").void_unwrap();
-    // Set the overflow interupt for the millis system
 
     unsafe { avr_device::interrupt::enable() };
 
@@ -133,6 +133,9 @@ fn main() -> ! {
                     }
                     Command::SetMaxCurrent(cur) => {
                         current.set_upper(cur as i16);
+                    }
+                    Command::SetJoy(x,y ) => {
+                        diff_drive.set_joy(x,y);
                     }
                     _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
                 }

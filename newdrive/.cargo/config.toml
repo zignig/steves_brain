@@ -6,3 +6,4 @@ runner = "ravedude nano -cb 115200 -P /dev/serial/by-id/usb-FTDI_FT232R_USB_UART
 
 [unstable]
 build-std = ["core"]
+build-std-features = ["compiler-builtins-mangled-names"]

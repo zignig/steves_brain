@@ -25,10 +25,11 @@ pub enum Command {
     SetMaxCurrent(u8),
     Config,
     Count,
-    Empty,
+    Data(u8,u8,u8,u8),
     // Returns
-    Compass(i16)
-
+    Compass(i16),
+    // Fail
+    Empty,
 }
 
 impl Default for Command {
@@ -39,6 +40,15 @@ impl Default for Command {
 
 fn toi16(data: [u8; 2]) -> i16 {
     i16::from_le_bytes(data)
+}
+
+
+fn toi8_4(data: [u8 ; 4]) -> (u8,u8,u8,u8) { 
+    let d0 = data[0].try_into().unwrap();
+    let d1 = data[1].try_into().unwrap();
+    let d2 = data[2].try_into().unwrap();
+    let d3 = data[3].try_into().unwrap();
+    (d0,d1,d2,d3)
 }
 
 impl Command {
@@ -58,7 +68,12 @@ impl Command {
             8 => Command::SetMaxCurrent(data[0].try_into().unwrap()),
             9 => Command::Config,
             10 => Command::Count,
+            11 => {
+                let val = toi8_4(data);
+                Command::Data(val.0,val.1,val.2,val.3)
+            },
             _ => Command::Empty,
+            
         };
         comm
     }
@@ -80,6 +95,7 @@ impl Command {
             Command::Count => todo!(),
             Command::Empty => todo!(),
             Command::Compass(_) => todo!(),
+            Command::Data(_, _, _, _) => todo!(),
         }
         pb.data[0] = SYNC1;
         pb.data[1] = SYNC2;

@@ -191,6 +191,7 @@ except OSError as e:
 
 def update():
     "Get the updates"
+    import upip
     data = json.load(upip.url_open(reg.uplink + "/status"))
     for i in data:
         local = reg.get("f_" + i)
