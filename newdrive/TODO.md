@@ -2,8 +2,11 @@
 - add joystick input to diff drive
 - state machine for robot control 
 - fix change of timeout
+
 - comms
     - outgoing frames
+    - template the python interface from ser/des
+    
 
 # DONE 
 
