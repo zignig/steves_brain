@@ -12,8 +12,6 @@ mod shared;
 mod systick;
 mod utils;
 
-use core::sync;
-
 //mod robot;
 
 use commands::Command;
@@ -90,23 +88,29 @@ fn main() -> ! {
     current.get_zero(&mut adc);
 
     serial_println!("Behold steve's minibrain").void_unwrap();
-
+    //u activate the interrupts
+    // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };
 
     //let r = robot::Robot::new(diff_drive,compass,current);
-
+    
+    // set the current limit above normal usage.
     current.set_upper(100);
 
+    // Show some compass data.
     compass.update();
     serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
 
+    // find the now
     let mut last: u32 = millis();
 
     loop {
+        // if the current is to big , stop
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();
             diff_drive.stop();
         }
+        // on the tick ... DO.
         if systick::is_tick() {
             let time = systick::millis();
             diff_drive.update();
@@ -124,7 +128,7 @@ fn main() -> ! {
                 last = time;
                 //serial_println!(" {}", time-last).void_unwrap();
 
-                //serial_println!("{:#?}", comm).void_unwrap();
+                serial_println!("{:#?}", comm).void_unwrap();
                 //serial_println!("").void_unwrap();
                 //commands::show(comm);
 

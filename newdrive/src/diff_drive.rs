@@ -249,12 +249,11 @@ impl<
     fn set_joy(&mut self, x: i16, y: i16) {
         let mut raw_left: f32 = 0.0;
         let mut raw_right: f32 = 0.0;
-        let mut magnitude: f32 = 0.0;
         let mut rad: f32 = 0.0;
         let fx: f32 = x as f32;
         let fy: f32 = y as f32;
 
-        magnitude = sqrtf(fx * fx + fy * fy);
+        let magnitude:f32 = sqrtf(fx * fx + fy * fy);
         if magnitude != 0.0 {
             rad = acosf(acosf(fx) / magnitude);
         } else {

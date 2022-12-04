@@ -26,10 +26,23 @@ pub const SYNC2: u8 = 0xE;
 // Size of the ring buffer.
 pub const RING_SIZE: usize = 8;
 
+// Need to structure the outgoing 
+// status of the frame 
+#[derive(Clone,Copy)]
+pub enum FrameStatus { 
+    Start,
+    Inside,
+    Finished,
+}
+
+pub trait Buffer {
+}
+
 #[derive(Clone, Copy)]
 pub struct FrameBuffer {
     pub data: [u8; FRAME_SIZE],
     pos: usize,
+    status: FrameStatus,
 }
 
 impl FrameBuffer {
@@ -37,8 +50,11 @@ impl FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
+            status: FrameStatus::Finished,
         }
     }
+
+
 }
 
 impl Default for FrameBuffer {
@@ -46,16 +62,12 @@ impl Default for FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
+            status: FrameStatus::Finished,
         }
     }
 }
 
-// Need to structure the outgoing 
-pub enum FrameStatus { 
-    Start,
-    Inside,
-    Finished,
-}
+
 // TODO use phantom data to consume the pins
 pub struct SlaveSPI{
 
@@ -179,9 +191,11 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         //serial_println!("{:?}",data).void_unwrap();
         pb.data[pb.pos] = data;
         pb.pos += 1;
+        pb.status = FrameStatus::Inside;
         // end of the frame
         if pb.pos == FRAME_SIZE {
             pb.pos = 0;
+            pb.status = FrameStatus::Finished;
             //Packet Buffer Full ready to go
             return Some(pb.clone());
         }
@@ -191,6 +205,7 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         // bad packet data
         // reset
         pb.pos = 0;
+        pb.status = FrameStatus::Start;
         // not ready
         None
     }
