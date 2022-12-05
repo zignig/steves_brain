@@ -1,7 +1,6 @@
 use core::convert::TryInto;
 
 use byteio::ReadBytes;
-use nano_leb128::ULEB128;
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 use alloc::{borrow::ToOwned, vec::Vec};

@@ -1,0 +1,15 @@
+[package]
+name = "store_u8"
+version = "0.1.0"
+authors = ["Simon Kirkby <obeygiantrobot@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+byteio = { version = "0.2.3", default-features = false }
+serde = { version = "1.0.149", default-features = false }
+
+[dev-dependencies]
+quickcheck = { version = "0.8", default-features = false }
+quickcheck_macros = "0.8"
+serde_derive = "1.0"

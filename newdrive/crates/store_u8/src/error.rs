@@ -3,7 +3,6 @@ use core::fmt;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use alloc::string::{String, ToString};
 
-use nano_leb128::{LEB128DecodeError, LEB128EncodeError};
 
 /// A specialized [`Result`][std-result-result] type for `store` operations.
 ///

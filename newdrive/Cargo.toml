@@ -24,7 +24,9 @@ statig = "0.1.0"
 # serde_derive = { version = "1.0.147", default-features = false }
 
 libm = { version = "0.2.6", default-features = false }
-
+byteio = { version = "0.2.3", default-features = false }
+serde = { version = "1.0.149", default-features = false }
+store_u8 = { path = "crates/store_u8" } 
 
 
 [dependencies.arduino-hal]
@@ -48,3 +50,6 @@ codegen-units = 1
 debug = true
 lto = true
 opt-level = "s"
+
+[workspace]
+members = ["crates/*"]

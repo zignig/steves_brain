@@ -12,6 +12,7 @@ mod shared;
 mod systick;
 mod utils;
 
+use store_u8;
 //mod robot;
 
 use commands::Command;

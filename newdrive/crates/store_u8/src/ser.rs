@@ -1,7 +1,6 @@
 use core::convert::TryInto;
 
 use byteio::WriteBytes;
-use nano_leb128::ULEB128;
 use serde::Serialize;
 
 pub(crate) struct FunctionBank<W, E> {
