@@ -9,10 +9,10 @@ use ufmt::derive::uDebug;
 
 use crate::comms::{FrameBuffer, SYNC1, SYNC2};
 
-//use serde_derive::{Deserialize, Serialize};
-//use store::{Dump, Load};
+use serde_derive::{Deserialize, Serialize};
+use store_u8::{Dump, Load};
 
-#[derive(uDebug, Clone, Copy)] //, Deserialize, Serialize)]
+#[derive(uDebug, Clone, Copy,Deserialize, Serialize)]
 pub enum Command {
     Hello,
     Stop,
@@ -152,23 +152,13 @@ impl Command {
 }
 /// For packet debugging
 pub fn show(comm: Command) {
-    let buf = FrameBuffer::new();
-    //buf[0] = SYNC1;
-    //buf[1] = SYNC2;
-    //buf[2] = 50;
+    let mut buf = FrameBuffer::new();
+    buf.data[0] = SYNC1;
+    buf.data[1] = SYNC2;
+    buf.data[2] = 50;
     serial_println!("{:#?}", comm).void_unwrap();
-    //comm.dump_into_bytes(&mut buf[..]).unwrap_or_default();
-    //serial_println!("{:?}", buf).void_unwrap();
-    //let up = Command::load_from_bytes(&buf[..]).unwrap_or_default();
-    let up = Command::deserialize(&buf);
-    //let _wtf = Command::load_from_bytes(&buf[..]);
-    // match wtf {
-    //       Ok(command) => {
-    //         serial_println!("{:#?}",command).void_unwrap();
-    //     }
-    //     Err(_) => {
-    //         serial_println!("BORK").void_unwrap();
-    //     }
-    // }
+    comm.dump_into_bytes(&mut buf.data[2..]).unwrap_or_default();
+    serial_println!("{:?}", &mut buf.data).void_unwrap();
+    let up = Command::load_from_bytes(&buf.data[2..]).unwrap_or_default();
     serial_println!("{:#?}", up).void_unwrap();
 }

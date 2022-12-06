@@ -76,22 +76,6 @@ impl From<::byteio::Error> for Error {
     }
 }
 
-impl From<LEB128DecodeError> for Error {
-    fn from(err: LEB128DecodeError) -> Self {
-        match err {
-            LEB128DecodeError::BufferOverflow => Error::EndOfStream,
-            LEB128DecodeError::IntegerOverflow => Error::SequenceTooLong,
-        }
-    }
-}
-
-impl From<LEB128EncodeError> for Error {
-    fn from(err: LEB128EncodeError) -> Self {
-        match err {
-            LEB128EncodeError::BufferOverflow => Error::EndOfStream,
-        }
-    }
-}
 
 #[cfg(feature = "std")]
 impl ::alloc::error::Error for Error {}

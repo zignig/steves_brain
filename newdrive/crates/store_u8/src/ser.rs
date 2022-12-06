@@ -64,12 +64,15 @@ where
 {
     fn try_serialize_len<T>(&mut self, v: T) -> crate::Result<()>
     where
-        T: TryInto<u64>,
+        T: TryInto<u8>,
     {
-        ULEB128::from(v.try_into().map_err(|_| crate::Error::SequenceTooLong)?)
-            .write_into_byteio(&mut self.writer)
-            .map(|_| ())
-            .map_err(Into::into)
+        let u: u8 = v.try_into().map_err(|_| crate::Error::SequenceTooLong)?;
+        u.serialize(self)
+        //u32::from(v).serialize(self);
+        // ULEB128::from(v.try_into().map_err(|_| crate::Error::SequenceTooLong)?)
+        //     .write_into_byteio(&mut self.writer)
+        //     .map(|_| ())
+        //     .map_err(Into::into)
     }
 }
 

@@ -43,6 +43,8 @@ class diff_drive:
         self._rate = 100
         self.accel(15)
         self.timeout(15)
+        # incoming interval
+        self.interval = 1024
         
     def build(self,action,data):
         self._frame  = bytes([SYNC1,SYNC2,action,0])

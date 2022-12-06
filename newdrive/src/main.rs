@@ -12,7 +12,6 @@ mod shared;
 mod systick;
 mod utils;
 
-use store_u8;
 //mod robot;
 
 use commands::Command;
@@ -104,9 +103,10 @@ fn main() -> ! {
 
     // find the now
     let mut last: u32 = millis();
-
+    let c= commands::Command::Run(10,-10);
+    commands::show(c);
     loop {
-        // if the current is to big , stop
+        // if the current is too big , stop
         if current.overload(&mut adc) {
             serial_println!("STOP").void_unwrap();
             diff_drive.stop();
@@ -128,12 +128,12 @@ fn main() -> ! {
                 // }
                 last = time;
                 //serial_println!(" {}", time-last).void_unwrap();
-
+                commands::show(comm);
                 serial_println!("{:#?}", comm).void_unwrap();
                 //serial_println!("").void_unwrap();
                 //commands::show(comm);
 
-                match comm {
+                match comm { 
                     Command::Run(x, y) => {
                         diff_drive.set_speed(x, y);
                     }

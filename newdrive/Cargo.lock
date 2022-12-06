@@ -177,6 +177,7 @@ dependencies = [
  "nb 0.1.3",
  "panic-halt",
  "serde",
+ "serde_derive",
  "shared-bus",
  "statig",
  "store_u8",

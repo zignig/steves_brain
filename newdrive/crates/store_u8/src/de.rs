@@ -61,7 +61,7 @@ where
     crate::Error: From<E>,
 {
     fn try_deserialize_len(&mut self) -> crate::Result<usize> {
-        let (v, _) = ULEB128::read_from_byteio(&mut self.reader)?;
+        let v = (self.fb.u8fn)(&mut self.reader)?;
         Ok(u64::from(v).try_into().map_err(|_| crate::Error::SequenceTooLong)?)
     }
 
@@ -320,9 +320,7 @@ where
         V: ::serde::de::DeserializeSeed<'de>,
     {
         use ::serde::de::IntoDeserializer;
-
-        let variant_idx: u32 = ULEB128::read_from_byteio(&mut self.reader)
-            .map(|(v, _)| u64::from(v))?
+        let variant_idx: u32 = (self.fb.u8fn)(&mut self.reader)?
             .try_into()
             .map_err(|_| crate::Error::TooManyEnumVariants)?;
 
