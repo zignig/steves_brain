@@ -157,8 +157,8 @@ pub fn show(comm: Command) {
     buf.data[1] = SYNC2;
     buf.data[2] = 50;
     serial_println!("{:#?}", comm).void_unwrap();
-    comm.dump_into_bytes(&mut buf.data[2..]).unwrap_or_default();
+    comm.dump_into_bytes(&mut buf.data[3..]).unwrap_or_default();
     serial_println!("{:?}", &mut buf.data).void_unwrap();
-    let up = Command::load_from_bytes(&buf.data[2..]).unwrap_or_default();
+    let up = Command::load_from_bytes(&buf.data[3..]).unwrap_or_default();
     serial_println!("{:#?}", up).void_unwrap();
 }

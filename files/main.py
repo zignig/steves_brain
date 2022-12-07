@@ -51,7 +51,7 @@ _thread.start_new_thread(
     main_runner,
     (
         reg,
-        app,
+        web_interface.app,
         ws,
         d,
     ),

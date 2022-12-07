@@ -4,11 +4,9 @@ import picoweb
 app = picoweb.WebApp(__name__)
 
 
-# the default landing page
-@app.route("/")
-def index(req, resp):
+def stream_file(file_name, resp):
     yield from picoweb.start_response(resp)
-    htmlFile = open("static/index.html", "r")
+    htmlFile = open(file_name, "r")
     # for line in htmlFile:
     #    yield from resp.awrite(line)
     buf = bytearray(32)
@@ -19,6 +17,14 @@ def index(req, resp):
         yield from resp.awrite(buf, 0, l)
     htmlFile.close()
 
+# the default landing page
+@app.route("/")
+def index(req, resp):
+    yield from stream_file('static/index.html',resp)
+
+@app.route("/controller")
+def controller(req,resp):
+    yield from stream_file('static/controller.html',resp)
 
 @app.route("/status")
 def status(req, resp):
