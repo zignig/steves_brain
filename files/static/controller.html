@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+<html>
       <head>
       <meta charset="utf-8"> <title>Steve Controller</title>
       <meta name="viewport" content="width=device-width, user-scalable=no">
-  
+      <link rel="stylesheet" href="/app.css" />
       <style>
   
       .switch, .voltage {
@@ -28,7 +29,7 @@
       .slider {
         position: absolute;
         cursor: pointer;
-        border-radius: 2px;
+        border-radius: 10px;
         top: 0;
         left: 0;
         right: 0;
@@ -44,26 +45,30 @@
       </head>
       <body onload="start()">
       <br>
-      <label class="switch">
-        <input type="checkbox" id="Button0" onchange="Button1Change(this)">
+      <label class="button">
+        <input type="checkbox" id="Button1" onchange="Button1Change(this)">
         <span class="slider"></span>
       </label>
       <br>
-      <label class="switch">
+      <label class="button">
         <input type="checkbox" id="Button1" onchange="Button2Change(this)">
         <span class="slider"></span>
       </label>
       <br>
-      <label class="switch">
+      <label class="button">
         <input type="checkbox" id="Button2" onchange="Button3Change(this)">
         <span class="slider"></span>
       </label>
       <br>
-      <label class="switch">
+      <label class="button">
         <input type="checkbox" id="Button3" onchange="Button4Change(this)">
         <span class="slider"></span>
       </label>
-  
+      <br>
+      <div class="button minibutton">
+        <a href="/">M</a>
+      </div>
+
       <div id="trimdiv" style="display:none;">
         <input type="range" min="-100" max="100" value="0" class="slider" id="trim1x" style="position: absolute; left: 5%; top: 95%; width: 38%;">
         <input type="range" min="-100" max="100" value="0" class="slider" id="trim2x" style="position: absolute; left: 55%; top: 95%; width: 38%;">
@@ -134,7 +139,7 @@
   
       connection.onclose = function (e)
       {
-          console.log("Websocket close");
+        console.log("Websocket close");
         wsconnect=0;
         draw_stick(ctx_stickl,ctx_stickl.canvas.width/2,ctx_stickl.canvas.height,0,1);
         draw_stick(ctx_stickr,ctx_stickr.canvas.width/2,ctx_stickr.canvas.height/2,2,3);
@@ -170,6 +175,9 @@
         });    
         c_stickl.addEventListener('touchend', function() {
           console.log( "endl");
+          end= 1;
+          draw_stick(ctx_stickl,c_stickl.width/2,c_stickl.height/2,0,1);
+          window.requestAnimationFrame(update);
         });
         c_stickl.addEventListener('touchmove', function(event) {
           event.preventDefault();
@@ -330,7 +338,7 @@
         if ((w != nw) || (h != nh)) {
           w = nw;
           h = nh;
-          //resize();
+          resize();
         }
         // fix this to be coord data
         // every X millisecondss
