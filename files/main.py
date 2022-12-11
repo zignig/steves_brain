@@ -41,7 +41,6 @@ def main_runner(reg, app, ws, mb):
         loop.create_task(uasyncio.start_server(app._handle, "0.0.0.0", 80))
     loop.run_forever()
 
-
 import _thread
 import ws
 
@@ -61,3 +60,5 @@ _thread.start_new_thread(
 if reg.telnet:
     import utelnetserver
     utelnetserver.start()
+
+print("Steve Running")

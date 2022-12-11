@@ -7,8 +7,6 @@ app = picoweb.WebApp(__name__)
 def stream_file(resp,file_name, content='text/html'):
     yield from picoweb.start_response(resp,content_type=content)
     htmlFile = open(file_name, "r")
-    # for line in htmlFile:
-    #    yield from resp.awrite(line)
     buf = bytearray(32)
     while True:
         l = htmlFile.readinto(buf)
@@ -25,6 +23,10 @@ def index(req, resp):
 @app.route("/controller")
 def controller(req,resp):
     yield from stream_file(resp,'static/controller.html')
+
+@app.route("/settings")
+def controller(req,resp):
+    yield from stream_file(resp,'static/settings.html')
 
 @app.route("/app.css")
 def css(req,resp):

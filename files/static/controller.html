@@ -107,6 +107,8 @@
       var visible=0;
       var alarm;
       var alarmfreq=0;
+      var last_now=0;
+      var interval =  100;
 
       var connection = new WebSocket('ws://' + window.location.host + ':7777/socket');
   
@@ -159,7 +161,7 @@
   
         var c_stickr = document.getElementById("Canvas_stickr");
         ctx_stickr = c_stickr.getContext("2d");
-  
+        last_now = Date.now();
         update();
 
         draw_background(ctx_left);
@@ -333,6 +335,8 @@
   
   
       function update() {
+        now = Date.now();
+        console.log(now-last_now);
         var nw = window.innerWidth;
         var nh = window.innerHeight;
         if ((w != nw) || (h != nh)) {
@@ -341,17 +345,20 @@
           resize();
         }
         // fix this to be coord data
-        // every X millisecondss
-        for(var i=0;i<8;i++){
-          if(ppm[i]!=oldppm[i])
-          {
-            oldppm[i]=ppm[i];
-            var sendframe=new Uint8Array(2);
-            sendframe[0]=i;
-            //sendframe[1]=ppm[i]>>8;
-            sendframe[1]=ppm[i];
-            if(wsconnect)
-              connection.send(sendframe);
+        // every X milliseconds
+        if ((now - last_now) > interval ) {
+          last_now = now;
+          for(var i=0;i<8;i++){
+            if(ppm[i]!=oldppm[i])
+            {
+              oldppm[i]=ppm[i];
+              var sendframe=new Uint8Array(2);
+              sendframe[0]=i;
+              //sendframe[1]=ppm[i]>>8;
+              sendframe[1]=ppm[i];
+              if(wsconnect)
+                connection.send(sendframe);
+            }
           }
         }
           var i, len = touches.length;
@@ -389,6 +396,7 @@
               right=1;
             }
           }
+
       }
 
       function sendalive(){
