@@ -26,7 +26,7 @@ class WS_SERVER:
         try:
             async for msg in ws:
                 data = struct.unpack("bb", msg)
-                #print("data: ",data)
+                print("data: ",data)
                 if data[0] == 2:
                     x = -data[1]
                 if data[0] == 3:

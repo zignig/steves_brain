@@ -94,6 +94,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
     // Set the time out value for the drive
     pub fn set_timeout(&mut self, timeout: i16) {
         self.config.timeout = (timeout as u32) << 10;
+        let now = millis();
+        self.config.last_update = now + self.config.timeout;
     }
 
     // Set the acceleration rate
@@ -247,9 +249,9 @@ impl<
     }
 
     fn set_joy(&mut self, x: i16, y: i16) {
-        let mut raw_left: f32 = 0.0;
-        let mut raw_right: f32 = 0.0;
-        let mut rad: f32 = 0.0;
+        let mut raw_left: f32;
+        let mut raw_right: f32;
+        let rad: f32;
         let fx: f32 = x as f32;
         let fy: f32 = y as f32;
 
