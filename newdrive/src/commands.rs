@@ -1,6 +1,6 @@
 //! Enumeration for the commands
 //! Used but the comms module to make SPI frames
-//!
+//! 
 //!
 
 use crate::serial_println;
@@ -12,6 +12,8 @@ use crate::comms::{FrameBuffer, SYNC1, SYNC2};
 use serde_derive::{Deserialize, Serialize};
 use store_u8::{Dump, Load};
 
+// TODO use the store_u8 serialization ( and write a packet formatter)
+// This is the primary command enum
 #[derive(uDebug, Clone, Copy,Deserialize, Serialize)]
 pub enum Command {
     Hello,
@@ -30,12 +32,12 @@ pub enum Command {
     Compass(i16),
     Millis(u32),
     // Fail
-    Empty,
+    Fail,
 }
 
 impl Default for Command {
     fn default() -> Self {
-        Command::Empty
+        Command::Fail
     }
 }
 
@@ -99,7 +101,7 @@ impl Command {
                 let val = toi8_4(data);
                 Command::Data(val.0, val.1, val.2, val.3)
             }
-            _ => Command::Empty,
+            _ => Command::Fail,
         };
         comm
     }
@@ -132,7 +134,7 @@ impl Command {
             Command::SetMaxCurrent(_) => todo!(),
             Command::Config => todo!(),
             Command::Count => todo!(),
-            Command::Empty => todo!(),
+            Command::Fail => todo!(),
             // Return stuff >>
             Command::Compass(_) => todo!(),
             Command::Data(_, _, _, _) => todo!(),
@@ -150,15 +152,16 @@ impl Command {
         pb
     }
 }
+
 /// For packet debugging
 pub fn show(comm: Command) {
     let mut buf = FrameBuffer::new();
     buf.data[0] = SYNC1;
     buf.data[1] = SYNC2;
     buf.data[2] = 50;
-    serial_println!("{:#?}", comm).void_unwrap();
+    //serial_println!("{:#?}", comm).void_unwrap();
     comm.dump_into_bytes(&mut buf.data[3..]).unwrap_or_default();
-    serial_println!("{:?}", &mut buf.data).void_unwrap();
+    //serial_println!("{:?}", &mut buf.data).void_unwrap();
     let up = Command::load_from_bytes(&buf.data[3..]).unwrap_or_default();
     serial_println!("{:#?}", up).void_unwrap();
 }

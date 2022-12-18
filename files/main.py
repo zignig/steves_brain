@@ -29,9 +29,11 @@ import uasyncio
 def main_runner(reg, app, ws, mb):
     loop = uasyncio.get_event_loop()
     if reg.ws:
+        print("Starting Web Socket")
         ws_app = ws.get(mb)
         loop.create_task(ws_app)
     if reg.web:
+        print("Starting WebServer")
         app.debug = 0
         import ulogging
 
@@ -46,6 +48,7 @@ import ws
 
 # Run all the async in this thread
 # otherwise bad things happen
+print("Starting Async thread")
 _thread.start_new_thread(
     main_runner,
     (
@@ -58,6 +61,7 @@ _thread.start_new_thread(
 
 # Run the telnet server
 if reg.telnet:
+    print("Starting telnet server")
     import utelnetserver
     utelnetserver.start()
 

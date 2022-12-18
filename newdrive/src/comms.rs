@@ -160,6 +160,7 @@ fn SPI_STC() {
     });
 }
 
+#[inline(always)]
 pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
     // match up the packet data
     let val = match pb.pos {

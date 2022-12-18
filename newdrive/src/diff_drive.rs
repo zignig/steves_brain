@@ -19,9 +19,9 @@ pub struct Config {
     enabled: bool,      // If the motor is running or not
     rate: u8,           // speed at which the rate approaches the goal
     timeout: u32,       // how long it will run a command for before stopping
-    last_update: u32,   // last update
+    last_update: u32,   // last update in ms for the system clock
     current_speed: i16, // the current speed that the motor is running
-    target_speed: i16,  //
+    target_speed: i16,  // the goal speed changed at `rate` per update
 }
 
 impl Config {
@@ -257,7 +257,7 @@ impl<
 
         let magnitude:f32 = sqrtf(fx * fx + fy * fy);
         if magnitude != 0.0 {
-            rad = acosf(acosf(fx) / magnitude);
+            rad = acosf(fabsf(fx) / magnitude);
         } else {
             rad = 0.0;
         }
@@ -266,7 +266,8 @@ impl<
         let tcoeff: f32 = -1.0 + (angle / 90.0) * 2.0;
         let mut turn = tcoeff * fabsf(fabsf(fy) - fabsf(fx));
         turn = libm::roundf(turn * 100.0) / 100.0;
-
+        serial_println!("rad: {} , turn: {}", angle as i16, turn as i16).void_unwrap();
+        
         let mov: f32 = fmaxf(fabsf(fy), fabsf(fx));
 
         // First and third quadrant
@@ -285,8 +286,8 @@ impl<
         }
         let out_left = raw_left as i16;
         let out_right = raw_right as i16;
-        serial_println!("{}-{}", magnitude as i16, rad as i16).void_unwrap();
-        serial_println!("{},{}", out_left, out_right).void_unwrap();
+        serial_println!("mag: {} , rad: {}", magnitude as i16, rad as i16).void_unwrap();
+        serial_println!("(x:{},y:{})", out_left, out_right).void_unwrap();
 
         self.set_speed(out_left, out_right);
 

@@ -122,13 +122,13 @@ fn main() -> ! {
             //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
             // }
             if let Some(comm) = fetch_command() {
-                serial_println!("tick {}", time - last).void_unwrap();
+                //serial_println!("tick {}", time - last).void_unwrap();
                 // if time - last > systick::TICK_INTERVAL {
                 //     serial_println!("MISSED").void_unwrap();
                 // }
                 last = time;
                 //serial_println!(" {}", time-last).void_unwrap();
-                commands::show(comm);
+                //commands::show(comm);
                 serial_println!("{:#?}", comm).void_unwrap();
                 //serial_println!("").void_unwrap();
                 //commands::show(comm);

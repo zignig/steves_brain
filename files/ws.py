@@ -22,27 +22,29 @@ class WS_SERVER:
         print("Connection on {}".format(path))
         x = 0
         y = 0
-
-        try:
-            async for msg in ws:
-                data = struct.unpack("bb", msg)
-                print("data: ",data)
-                if data[0] == 2:
-                    x = -data[1]
-                if data[0] == 3:
-                    y = data[1]
-                now = time.ticks_us()
-                if (self._lastUpdate + self.control.interval) < now:
-                    # only on primary joystick
-                    if data[0] == 2 or data[0] == 3:
-                        print(x, y)
-                        self.control.joy(x * 2, y * 2)
-                        self._lastUpdate = now
-                finished = time.ticks_us()
-                # print("dur: ",finished-now)
-                # await ws.send(msg)
-        finally:
-            print("Disconnected")
+        if path == b'/controller':
+            try:
+                async for msg in ws:
+                    data = struct.unpack("bb", msg)
+                    # print("data: ",data)
+                    if data[0] == 2:
+                        x = -data[1]
+                    if data[0] == 3:
+                        y = data[1]
+                    now = time.ticks_us()
+                    if (self._lastUpdate + self.control.interval) < now:
+                        # only on primary joystick
+                        if data[0] == 2 or data[0] == 3:
+                            print(x, y)
+                            self.control.joy(x * 2, y * 2)
+                            self._lastUpdate = now
+                    finished = time.ticks_us()
+                    # print("dur: ",finished-now)
+                    # await ws.send(msg)
+            finally:
+                print("Disconnected")
+                return
+    # Other web sockets here (settings)
 
 def get(control):
     wss = WS_SERVER(control)

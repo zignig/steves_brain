@@ -66,7 +66,7 @@
       </label>
       <br>
       <div class="button minibutton">
-        <a href="/">M</a>
+        <a href="/">HOME</a>
       </div>
 
       <div id="trimdiv" style="display:none;">
@@ -110,7 +110,7 @@
       var last_now=0;
       var interval =  100;
 
-      var connection = new WebSocket('ws://' + window.location.host + ':7777/socket');
+      var connection = new WebSocket('ws://' + window.location.host + ':7777/controller');
   
       connection.onopen = function () {         //open
         console.log("Websocket Open");
@@ -402,12 +402,11 @@
       function sendalive(){
         var sendframe=new Uint8Array(2);
 
-        sendframe[0]=0;
+        sendframe[0]=50;
         //sendframe[1]=ppm[0]>>8;
         sendframe[1]=ppm[0];
         if(wsconnect)
           connection.send(sendframe);
-
       }
       </script>
       </body>
