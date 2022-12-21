@@ -22,6 +22,7 @@ pub struct Config {
     last_update: u32,   // last update in ms for the system clock
     current_speed: i16, // the current speed that the motor is running
     target_speed: i16,  // the goal speed changed at `rate` per update
+    min_speed: u8,
 }
 
 impl Config {
@@ -33,6 +34,7 @@ impl Config {
             last_update: 0,
             current_speed: 0,
             target_speed: 0,
+            min_speed: 0,
         }
     }
 }
@@ -103,6 +105,10 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.config.rate = rate;
     }
 
+    pub fn set_min(&mut self,val: u8){
+        self.config.min_speed = val;
+    }
+
     // Set the target speed with time out
     pub fn set_speed(&mut self, speed: i16) {
         let now = millis();
@@ -137,7 +143,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
         let cf = &self.config;
         let mut current = cf.current_speed;
         let target = cf.target_speed;
-        let rate = cf.rate;
+        let rate  = cf.rate;
+        let min: i16 = cf.min_speed as i16;
         if cf.enabled {
             let now = millis();
             // check the timeout
@@ -148,6 +155,9 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             }
             // accelerate
             if current < target {
+                if current < min { 
+                    current = min;
+                }
                 current += rate as i16;
                 // to far ?
                 if current > target {
@@ -158,6 +168,9 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             }
             // decellerate
             if current > target {
+                if current > -min { 
+                    current = -min;
+                }
                 current -= rate as i16;
                 // to far ?
                 if current < target {
@@ -241,6 +254,11 @@ impl<
     fn set_timeout(&mut self, timeout: i16) {
         self.left.set_timeout(timeout);
         self.right.set_timeout(timeout);
+    }
+
+    fn set_min(&mut self, val: u8) { 
+        self.left.set_min(val);
+        self.right.set_min(val);
     }
 
     fn set_rate(&mut self, rate: u8) {

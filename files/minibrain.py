@@ -43,6 +43,7 @@ class diff_drive:
         self._rate = 100
         self.accel(5)
         self.timeout(10)
+        self.min(50)
         # incoming interval
         self.interval = 50
         
@@ -94,8 +95,12 @@ class diff_drive:
     def timeout(self,val):
         self.send(FRAME_SETTIMEOUT,self.i16_1(val))
 
+    def min(self,val):
+        self.send(FRAME_SETMINSPEED,self.u8_1(val))
+
     def maxc(self,val):
         self.send(FRAME_MAXCUR,self.u8_1(val))
+
 
     def move(self,m1,m2):
         data = self.i16_2(m1,m2)

@@ -116,11 +116,11 @@ fn main() -> ! {
             let time = systick::millis();
             diff_drive.update();
 
-            // if let Some(value) = diff_drive.get_current() {
-            //     //serial_println!("drive {},{}", value.0, value.1).void_unwrap();
+            if let Some(value) = diff_drive.get_movement() {
+                serial_println!("drive {},{}", value.0, value.1).void_unwrap();
             //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
             //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
-            // }
+            }
             if let Some(comm) = fetch_command() {
                 //serial_println!("tick {}", time - last).void_unwrap();
                 // if time - last > systick::TICK_INTERVAL {
@@ -142,6 +142,9 @@ fn main() -> ! {
                     }
                     Command::SetAcc(rate) => {
                         diff_drive.set_rate(rate);
+                    }
+                    Command::SetMinspeed(val) => { 
+                        diff_drive.set_min(val);
                     }
                     Command::SetTimeout(timeout) => {
                         diff_drive.set_timeout(timeout);
