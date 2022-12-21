@@ -36,7 +36,7 @@ class WS_SERVER:
                         # only on primary joystick
                         if data[0] == 2 or data[0] == 3:
                             print(x, y)
-                            self.control.joy(x * 2, y * 2)
+                            self.control.joy(x, y)
                             self._lastUpdate = now
                     finished = time.ticks_us()
                     # print("dur: ",finished-now)

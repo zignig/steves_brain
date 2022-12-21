@@ -1,3 +1,4 @@
 external/
 build-pro5v328/
 .*.swp
+.vscode/

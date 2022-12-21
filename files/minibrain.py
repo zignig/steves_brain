@@ -41,8 +41,8 @@ class diff_drive:
         self.port = SPI(1, speed)
         self._frame = bytes([0]*FRAME_SIZE)
         self._rate = 100
-        self.accel(15)
-        self.timeout(15)
+        self.accel(5)
+        self.timeout(10)
         # incoming interval
         self.interval = 50
         

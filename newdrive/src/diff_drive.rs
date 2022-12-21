@@ -266,7 +266,7 @@ impl<
         let tcoeff: f32 = -1.0 + (angle / 90.0) * 2.0;
         let mut turn = tcoeff * fabsf(fabsf(fy) - fabsf(fx));
         turn = libm::roundf(turn * 100.0) / 100.0;
-        serial_println!("rad: {} , turn: {}", angle as i16, turn as i16).void_unwrap();
+        //serial_println!("rad: {} , turn: {}", angle as i16, turn as i16).void_unwrap();
         
         let mov: f32 = fmaxf(fabsf(fy), fabsf(fx));
 
@@ -286,8 +286,8 @@ impl<
         }
         let out_left = raw_left as i16;
         let out_right = raw_right as i16;
-        serial_println!("mag: {} , rad: {}", magnitude as i16, rad as i16).void_unwrap();
-        serial_println!("(x:{},y:{})", out_left, out_right).void_unwrap();
+        //serial_println!("mag: {} , rad: {}", magnitude as i16, rad as i16).void_unwrap();
+        //serial_println!("(x:{},y:{})", out_left, out_right).void_unwrap();
 
         self.set_speed(out_left, out_right);
 

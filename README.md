@@ -1,3 +1,13 @@
+# Steves Brain
+
+This project is the source code for steves brain.
+
+https://zignig.github.io/tags/steve/ has some outdated entries on the build. I am currently writing an updated entry.
+
+## Getting started.
+
+<hr>
+
 # Upload the firmware
 
 ## ESP8266
