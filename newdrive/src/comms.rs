@@ -3,16 +3,16 @@
 //! lifted from <https://medium.com/embedism/the-definitive-guide-on-writing-a-spi-communications-protocol-for-stm32-73594add4c09>
 //! and rewritten again in rust ( after c++ )
 //!
-//! This is a frame based slave SPI interface 
-//! 
+//! This is a frame based slave SPI interface
+//!
 
 use crate::serial_println;
 use arduino_hal::prelude::*;
 
-use arduino_hal::pac::SPI;
-use avr_device;
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
+use arduino_hal::pac::SPI;
+use avr_device;
 
 use avr_device::interrupt::Mutex;
 use core::cell::RefCell;
@@ -26,17 +26,16 @@ pub const SYNC2: u8 = 0xE;
 // Size of the ring buffer.
 pub const RING_SIZE: usize = 8;
 
-// Need to structure the outgoing 
-// status of the frame 
-#[derive(Clone,Copy)]
-pub enum FrameStatus { 
+// Need to structure the outgoing
+// status of the frame
+#[derive(Clone, Copy)]
+pub enum FrameStatus {
     Start,
     Inside,
     Finished,
 }
 
-pub trait Buffer {
-}
+pub trait Buffer {}
 
 #[derive(Clone, Copy)]
 pub struct FrameBuffer {
@@ -53,8 +52,6 @@ impl FrameBuffer {
             status: FrameStatus::Finished,
         }
     }
-
-
 }
 
 impl Default for FrameBuffer {
@@ -67,11 +64,8 @@ impl Default for FrameBuffer {
     }
 }
 
-
 // TODO use phantom data to consume the pins
-pub struct SlaveSPI{
-
-}
+pub struct SlaveSPI {}
 
 // Incoming data
 
@@ -145,13 +139,13 @@ fn SPI_STC() {
         // When the interface is ready , spool out a frame
         // Deserialize into the SPI interface.
         if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
-            if let Some(pb) = &mut *OUT_FRAME.borrow(&cs).borrow_mut() { 
+            if let Some(pb) = &mut *OUT_FRAME.borrow(&cs).borrow_mut() {
                 // OH NOES unsafitude !!DRAGONS!!
-                unsafe { 
+                unsafe {
                     s.spdr.write(|w| w.bits(pb.data[pb.pos]));
                 }
                 pb.pos += 1;
-                if pb.pos == FRAME_SIZE{
+                if pb.pos == FRAME_SIZE {
                     pb.pos = 0;
                     // get new frame
                 }

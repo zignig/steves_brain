@@ -3,7 +3,6 @@ use core::fmt;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use alloc::string::{String, ToString};
 
-
 /// A specialized [`Result`][std-result-result] type for `store` operations.
 ///
 /// [std-result-result]: https://doc.rust-lang.org/std/result/enum.Result.html
@@ -76,7 +75,6 @@ impl From<::byteio::Error> for Error {
     }
 }
 
-
 #[cfg(feature = "std")]
 impl ::alloc::error::Error for Error {}
 
@@ -88,7 +86,9 @@ impl ::serde::de::Error for Error {
 
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn custom<T: fmt::Display>(msg: T) -> Self {
-        Error::Serde { msg: msg.to_string() }
+        Error::Serde {
+            msg: msg.to_string(),
+        }
     }
 }
 
@@ -100,6 +100,8 @@ impl ::serde::ser::Error for Error {
 
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn custom<T: fmt::Display>(msg: T) -> Self {
-        Error::Serde { msg: msg.to_string() }
+        Error::Serde {
+            msg: msg.to_string(),
+        }
     }
 }

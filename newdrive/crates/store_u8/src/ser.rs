@@ -34,7 +34,18 @@ where
         f32fn: fn(&mut W, n: f32) -> Result<(), E>,
         f64fn: fn(&mut W, n: f64) -> Result<(), E>,
     ) -> Self {
-        Self { i8fn, i16fn, i32fn, i64fn, u8fn, u16fn, u32fn, u64fn, f32fn, f64fn }
+        Self {
+            i8fn,
+            i16fn,
+            i32fn,
+            i64fn,
+            u8fn,
+            u16fn,
+            u32fn,
+            u64fn,
+            f32fn,
+            f64fn,
+        }
     }
 }
 
@@ -160,7 +171,8 @@ where
         variant_index: u32,
         _variant: &'static str,
     ) -> crate::Result<()> {
-        self.try_serialize_len(variant_index).map_err(|_| crate::Error::TooManyEnumVariants)
+        self.try_serialize_len(variant_index)
+            .map_err(|_| crate::Error::TooManyEnumVariants)
     }
 
     fn serialize_newtype_struct<T: ?Sized>(
@@ -184,7 +196,8 @@ where
     where
         T: Serialize,
     {
-        self.try_serialize_len(variant_index).map_err(|_| crate::Error::TooManyEnumVariants)?;
+        self.try_serialize_len(variant_index)
+            .map_err(|_| crate::Error::TooManyEnumVariants)?;
         value.serialize(self)
     }
 
@@ -212,7 +225,8 @@ where
         _variant: &'static str,
         _len: usize,
     ) -> crate::Result<Self::SerializeTupleVariant> {
-        self.try_serialize_len(variant_index).map_err(|_| crate::Error::TooManyEnumVariants)?;
+        self.try_serialize_len(variant_index)
+            .map_err(|_| crate::Error::TooManyEnumVariants)?;
         Ok(self)
     }
 

@@ -36,7 +36,18 @@ where
         f32fn: fn(&mut R) -> Result<f32, E>,
         f64fn: fn(&mut R) -> Result<f64, E>,
     ) -> Self {
-        Self { i8fn, i16fn, i32fn, i64fn, u8fn, u16fn, u32fn, u64fn, f32fn, f64fn }
+        Self {
+            i8fn,
+            i16fn,
+            i32fn,
+            i64fn,
+            u8fn,
+            u16fn,
+            u32fn,
+            u64fn,
+            f32fn,
+            f64fn,
+        }
     }
 }
 
@@ -62,7 +73,9 @@ where
 {
     fn try_deserialize_len(&mut self) -> crate::Result<usize> {
         let v = (self.fb.u8fn)(&mut self.reader)?;
-        Ok(u64::from(v).try_into().map_err(|_| crate::Error::SequenceTooLong)?)
+        Ok(u64::from(v)
+            .try_into()
+            .map_err(|_| crate::Error::SequenceTooLong)?)
     }
 
     fn try_deserialize_bytes(&mut self) -> crate::Result<&'a [u8]> {
@@ -103,7 +116,9 @@ where
     where
         V: ::serde::de::Visitor<'de>,
     {
-        Err(crate::Error::Custom { msg: "store does not support 'deserialize_any'" })
+        Err(crate::Error::Custom {
+            msg: "store does not support 'deserialize_any'",
+        })
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> crate::Result<V::Value>
@@ -296,14 +311,18 @@ where
     where
         V: ::serde::de::Visitor<'de>,
     {
-        Err(crate::Error::Custom { msg: "store does not support 'deserialize_identifier'" })
+        Err(crate::Error::Custom {
+            msg: "store does not support 'deserialize_identifier'",
+        })
     }
 
     fn deserialize_ignored_any<V>(self, _visitor: V) -> crate::Result<V::Value>
     where
         V: ::serde::de::Visitor<'de>,
     {
-        Err(crate::Error::Custom { msg: "store does not support 'deserialize_ignored_any'" })
+        Err(crate::Error::Custom {
+            msg: "store does not support 'deserialize_ignored_any'",
+        })
     }
 }
 

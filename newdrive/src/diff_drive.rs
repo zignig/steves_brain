@@ -22,7 +22,7 @@ pub struct Config {
     last_update: u32,   // last update in ms for the system clock
     current_speed: i16, // the current speed that the motor is running
     target_speed: i16,  // the goal speed changed at `rate` per update
-    min_speed: u8,
+    pub min_speed: u8,
 }
 
 impl Config {
@@ -42,7 +42,7 @@ pub struct SingleDrive<TC, E, P1, P2> {
     en: Pin<mode::PwmOutput<TC>, E>,
     p1: Pin<mode::Output, P1>,
     p2: Pin<mode::Output, P2>,
-    config: Config,
+    pub config: Config,
 }
 
 impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
@@ -105,7 +105,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> SingleDrive<TC, E, P1, P2> {
         self.config.rate = rate;
     }
 
-    pub fn set_min(&mut self,val: u8){
+    pub fn set_min(&mut self, val: u8) {
         self.config.min_speed = val;
     }
 
@@ -142,8 +142,8 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
     fn update(&mut self) {
         let cf = &self.config;
         let mut current = cf.current_speed;
-        let target = cf.target_speed;
-        let rate  = cf.rate;
+        let mut target = cf.target_speed;
+        let mut rate = cf.rate;
         let min: i16 = cf.min_speed as i16;
         if cf.enabled {
             let now = millis();
@@ -153,11 +153,14 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
                 self.stop();
                 return;
             }
+            if target.abs() < min {
+                    rate = rate * 4 ;
+                    target = min * target.signum();
+                    //self.config.target_speed = min * target.signum();
+            } 
             // accelerate
             if current < target {
-                if current < min { 
-                    current = min;
-                }
+                // if below minimum , accel faster
                 current += rate as i16;
                 // to far ?
                 if current > target {
@@ -168,9 +171,6 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             }
             // decellerate
             if current > target {
-                if current > -min { 
-                    current = -min;
-                }
                 current -= rate as i16;
                 // to far ?
                 if current < target {
@@ -256,7 +256,7 @@ impl<
         self.right.set_timeout(timeout);
     }
 
-    fn set_min(&mut self, val: u8) { 
+    fn set_min(&mut self, val: u8) {
         self.left.set_min(val);
         self.right.set_min(val);
     }
@@ -273,7 +273,7 @@ impl<
         let fx: f32 = x as f32;
         let fy: f32 = y as f32;
 
-        let magnitude:f32 = sqrtf(fx * fx + fy * fy);
+        let magnitude: f32 = sqrtf(fx * fx + fy * fy);
         if magnitude != 0.0 {
             rad = acosf(fabsf(fx) / magnitude);
         } else {
@@ -285,7 +285,7 @@ impl<
         let mut turn = tcoeff * fabsf(fabsf(fy) - fabsf(fx));
         turn = libm::roundf(turn * 100.0) / 100.0;
         //serial_println!("rad: {} , turn: {}", angle as i16, turn as i16).void_unwrap();
-        
+
         let mov: f32 = fmaxf(fabsf(fy), fabsf(fx));
 
         // First and third quadrant

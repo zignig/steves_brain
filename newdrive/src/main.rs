@@ -93,7 +93,7 @@ fn main() -> ! {
     unsafe { avr_device::interrupt::enable() };
 
     //let r = robot::Robot::new(diff_drive,compass,current);
-    
+
     // set the current limit above normal usage.
     current.set_upper(100);
 
@@ -103,7 +103,7 @@ fn main() -> ! {
 
     // find the now
     let mut last: u32 = millis();
-    let c= commands::Command::Run(10,-10);
+    let c = commands::Command::Run(10, -10);
     commands::show(c);
     loop {
         // if the current is too big , stop
@@ -118,8 +118,10 @@ fn main() -> ! {
 
             if let Some(value) = diff_drive.get_movement() {
                 serial_println!("drive {},{}", value.0, value.1).void_unwrap();
-            //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
-            //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
+                serial_println!("min {}", diff_drive.left.config.min_speed).void_unwrap();
+
+                //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
+                //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
             }
             if let Some(comm) = fetch_command() {
                 //serial_println!("tick {}", time - last).void_unwrap();
@@ -133,7 +135,7 @@ fn main() -> ! {
                 //serial_println!("").void_unwrap();
                 //commands::show(comm);
 
-                match comm { 
+                match comm {
                     Command::Run(x, y) => {
                         diff_drive.set_speed(x, y);
                     }
@@ -143,7 +145,7 @@ fn main() -> ! {
                     Command::SetAcc(rate) => {
                         diff_drive.set_rate(rate);
                     }
-                    Command::SetMinspeed(val) => { 
+                    Command::SetMinspeed(val) => {
                         diff_drive.set_min(val);
                     }
                     Command::SetTimeout(timeout) => {
