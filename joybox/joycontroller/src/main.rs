@@ -10,12 +10,12 @@ mod shared;
 mod systick;
 mod utils;
 
+mod joystick;
 
 //use commands::Command;
 //use comms::fetch_command;
 
 use panic_halt as _;
-
 
 use arduino_hal::prelude::*;
 use arduino_hal::simple_pwm::*;
@@ -42,16 +42,16 @@ fn main() -> ! {
     pins.d12.into_output(); // miso
     pins.d10.into_pull_up_input(); // cs
                                    // there is some evil magic in here.
-    //comms::SlaveSPI::init(dp.SPI);
+                                   //comms::SlaveSPI::init(dp.SPI);
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
-    serial_println!("Behold steve's minibrain").void_unwrap();
-    
+    serial_println!("Behold Joycontroller").void_unwrap();
+
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
-    
+
     let mut last: u32 = millis();
-    
+
     let (vbg, gnd, tmp) = (
         adc.read_blocking(&adc::channel::Vbg),
         adc.read_blocking(&adc::channel::Gnd),
@@ -66,7 +66,7 @@ fn main() -> ! {
     let a1 = pins.a1.into_analog_input(&mut adc);
     let a2 = pins.a2.into_analog_input(&mut adc);
     //let a3 = pins.a3.into_analog_input(&mut adc);
-    
+
     //u activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };

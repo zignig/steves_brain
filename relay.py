@@ -7,6 +7,7 @@ import hashlib
 app = Flask(__name__)
 import os,time 
 base_path = 'files'
+devices = ['rover','joybox']
 
 key = "xkDoOyC05K6DeKIr/37beQg8YeA0KnYlF98PYG2W6CQ=\\n"
 
@@ -32,18 +33,24 @@ def scanner(path,data):
         else:
             # chop of the base
             if not path.endswith('.swp'):
-                pos = i.path.find('/')
+                
                 # get the sha sums
                 h = hashlib.sha256()
                 h.update(open(i.path,'rb').read())
                 r = h.hexdigest()
-                data[i.path[pos:]] = r 
+                sections = i.path.split('/')
+                target = '/'.join(sections[2:])
+                print('>>'+target)
+                data[target] = r 
     return data
 
-@app.route('/files/<path:path>')
-def files(path):
+@app.route('/files/<device>/<path:path>')
+def files(device,path):
     try:
-        p = base_path+'/'+path
+        if device not in devices:
+            return 'no file', 400 
+            
+        p = base_path = device + '/files/' + path
         print(p)
         os.stat(p)
         return(open(p,'rb').read())
@@ -52,11 +59,13 @@ def files(path):
         return str(path)
     
 
-@app.route('/status')
-def status():
-    data = []
-    data = scanner(base_path,{})
-    return jsonify(data)
+@app.route('/status/<device>')
+def status(device):
+    if device in devices:
+        data = []
+        data = scanner(device+'/files/',{})
+        return jsonify(data)
+    return 'not found' , 400 
 
 @app.route('/uplink')
 def uplink():
