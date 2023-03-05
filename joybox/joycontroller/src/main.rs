@@ -18,7 +18,6 @@ mod joystick;
 use panic_halt as _;
 
 use arduino_hal::prelude::*;
-use arduino_hal::simple_pwm::*;
 use systick::millis;
 
 use arduino_hal::adc;
@@ -62,28 +61,33 @@ fn main() -> ! {
     serial_println!("Ground: {}", gnd).void_unwrap();
     serial_println!("Temperature: {}", tmp).void_unwrap();
 
-    let a0 = pins.a0.into_analog_input(&mut adc);
-    let a1 = pins.a1.into_analog_input(&mut adc);
-    let a2 = pins.a2.into_analog_input(&mut adc);
+    let a0 = pins.a0.into_analog_input(&mut adc).into_channel();
+    let a1 = pins.a1.into_analog_input(&mut adc).into_channel();
+    let a2 = pins.a2.into_analog_input(&mut adc).into_channel();
     //let a3 = pins.a3.into_analog_input(&mut adc);
 
     //u activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };
-
+    let mut the_joystick = joystick::Joy3Axis::new(a0,a1,a2);
     loop {
-        let values = [
-            a0.analog_read(&mut adc),
-            a1.analog_read(&mut adc),
-            a2.analog_read(&mut adc),
-            //a3.analog_read(&mut adc),
-        ];
+        //let x = the_joystick.x.get_value(&mut adc);
+        the_joystick.update(&mut adc);
+        the_joystick.show();
+        //serial_println!("X:{}",the_joystick.x.value).void_unwrap();
 
-        for (i, v) in values.iter().enumerate() {
-            serial_println!("A{}: {} ", i, v).void_unwrap();
-        }
+        // let values = [
+        //     a0.analog_read(&mut adc),
+        //     a1.analog_read(&mut adc),
+        //     a2.analog_read(&mut adc),
+        //     //a3.analog_read(&mut adc),
+        // ];
 
-        serial_println!("").void_unwrap();
+        // for (i, v) in values.iter().enumerate() {
+        //     serial_println!("A{}: {} ", i, v).void_unwrap();
+        // }
+
+        // serial_println!("").void_unwrap();
         arduino_hal::delay_ms(1000);
     }
     // loop {
