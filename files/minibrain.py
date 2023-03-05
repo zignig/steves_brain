@@ -43,7 +43,7 @@ class diff_drive:
         self._rate = 100
         self.accel(5)
         self.timeout(10)
-        self.min(50)
+        self.min(50)       
         # incoming interval
         self.interval = 50
         

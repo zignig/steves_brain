@@ -156,7 +156,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             if target.abs() < min {
                     rate = rate * 4 ;
                     target = min * target.signum();
-                    //self.config.target_speed = min * target.signum();
+                    self.config.target_speed = min * target.signum();
             } 
             // accelerate
             if current < target {
