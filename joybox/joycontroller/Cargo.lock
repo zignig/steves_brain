@@ -108,6 +108,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "hubpack"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf8f3c0e51b49dd73e277f8d157f7248e91b3597e3487884181b259682b715d3"
+dependencies = [
+ "hubpack_derive",
+ "serde",
+]
+
+[[package]]
+name = "hubpack_derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f928320aff16ee8818ef7309180f8b5897057fd79d9dcb8de3ed1ba6dcc125a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "joycontroller"
 version = "0.1.0"
 dependencies = [
@@ -116,6 +137,7 @@ dependencies = [
  "bitflags",
  "byteio",
  "embedded-hal",
+ "hubpack",
  "libm",
  "nb 0.1.3",
  "panic-halt",

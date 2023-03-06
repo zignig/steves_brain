@@ -4,6 +4,7 @@ use arduino_hal::adc::Channel;
 use crate::serial_println;
 // Single axis
 
+//#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
 pub struct Axis {
     channel: Channel,
     zero: i16,
@@ -28,13 +29,23 @@ impl Axis {
 
     pub fn get_value(&mut self,adc: &mut arduino_hal::Adc) -> i16 {
         let mut val = adc.read_blocking(&self.channel) as i16;
-        //val = self.zero_offset - val;
+        val = self.zero - val;
         self.value = val;
         //self.average.feed(val as i16 - self.zero_offset);
         val
     }
 
-    
+    pub fn get_zero(&mut self, adc: &mut arduino_hal::Adc) {
+        let mut val: i16 = adc.read_blocking(&self.channel) as i16;
+        // get a bunch of readings and average
+        for _ in 0..8 {
+            val += adc.read_blocking(&self.channel) as i16;
+            val = val / 2;
+        }
+        self.zero = val;
+    }
+
+
 }
 
 pub struct Joy3Axis {
@@ -64,4 +75,11 @@ impl Joy3Axis {
         serial_println!("Z:{}",self.z.value);
         serial_println!("\n");
     }
+
+    pub fn zero_out(&mut self,adc : &mut arduino_hal::Adc){
+        self.x.get_zero(adc);
+        self.y.get_zero(adc);    
+        self.z.get_zero(adc);
+    }
+    
 }

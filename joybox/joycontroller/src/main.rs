@@ -70,6 +70,9 @@ fn main() -> ! {
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };
     let mut the_joystick = joystick::Joy3Axis::new(a0,a1,a2);
+    the_joystick.zero_out(&mut adc);
+    arduino_hal::delay_ms(500);
+    the_joystick.zero_out(&mut adc);
     loop {
         //let x = the_joystick.x.get_value(&mut adc);
         the_joystick.update(&mut adc);
@@ -88,7 +91,7 @@ fn main() -> ! {
         // }
 
         // serial_println!("").void_unwrap();
-        arduino_hal::delay_ms(1000);
+        arduino_hal::delay_ms(600);
     }
     // loop {
     //     // on the tick ... DO.
