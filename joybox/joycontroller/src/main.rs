@@ -19,7 +19,6 @@ use panic_halt as _;
 
 use arduino_hal::prelude::*;
 use systick::millis;
-
 use arduino_hal::adc;
 
 #[arduino_hal::entry]
@@ -27,13 +26,17 @@ fn main() -> ! {
     // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
 
     serial_println!("Woot it works").void_unwrap();
+
+    // eeprom device
+    //let ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    //let mut data:[u8;100] =  [0;100];
+    //ee.write(0,&data);
 
     // spi slave setup ( experimental )
     pins.d13.into_pull_up_input(); // sclk

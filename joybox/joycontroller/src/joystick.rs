@@ -4,13 +4,22 @@ use arduino_hal::adc::Channel;
 use crate::serial_println;
 // Single axis
 
-//#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
+#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
+pub struct AxisConfig{ 
+    zero: i16,
+    min: i16,
+    max: i16,
+    dead_zone: i16,
+
+}
 pub struct Axis {
     channel: Channel,
     zero: i16,
     pub value: i16,
     min: i16,
     max: i16,
+    
+
     // ? scaling factors
     // ? linearization
     // ?
