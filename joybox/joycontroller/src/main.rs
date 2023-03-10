@@ -21,6 +21,7 @@ use arduino_hal::prelude::*;
 use systick::millis;
 use arduino_hal::adc;
 
+
 #[arduino_hal::entry]
 fn main() -> ! {
     // get the peripherals and pins
@@ -31,12 +32,14 @@ fn main() -> ! {
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
 
-    serial_println!("Woot it works").void_unwrap();
+    serial_println!("Woot it works");
 
     // eeprom device
-    //let ee = arduino_hal::Eeprom::new(dp.EEPROM);
-    //let mut data:[u8;100] =  [0;100];
+    let ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    let mut buf:[u8;100] =  [0;100];
     //ee.write(0,&data);
+    ee.read(0,&mut buf).unwrap();
+    serial_println!("{:?}",buf[..]);
 
     // spi slave setup ( experimental )
     pins.d13.into_pull_up_input(); // sclk
@@ -48,11 +51,11 @@ fn main() -> ! {
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
-    serial_println!("Behold Joycontroller").void_unwrap();
+    serial_println!("Behold Joycontroller");
 
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
 
-    let mut last: u32 = millis();
+    //let mut last: u32 = millis();
 
     let (vbg, gnd, tmp) = (
         adc.read_blocking(&adc::channel::Vbg),
@@ -60,9 +63,9 @@ fn main() -> ! {
         adc.read_blocking(&adc::channel::Temperature),
     );
 
-    serial_println!("Vbandgap: {}", vbg).void_unwrap();
-    serial_println!("Ground: {}", gnd).void_unwrap();
-    serial_println!("Temperature: {}", tmp).void_unwrap();
+    serial_println!("Vbandgap: {}", vbg);
+    serial_println!("Ground: {}", gnd);
+    serial_println!("Temperature: {}", tmp);
 
     let a0 = pins.a0.into_analog_input(&mut adc).into_channel();
     let a1 = pins.a1.into_analog_input(&mut adc).into_channel();

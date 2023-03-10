@@ -2,9 +2,11 @@
 
 use arduino_hal::adc::Channel;
 use crate::serial_println;
+use arduino_hal::prelude::*;
+
 // Single axis
 
-#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
+//#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
 pub struct AxisConfig{ 
     zero: i16,
     min: i16,
