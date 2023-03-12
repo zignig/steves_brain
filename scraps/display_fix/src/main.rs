@@ -92,26 +92,25 @@ fn main() -> ! {
     the_joystick.zero_out(&mut adc);
     let mut the_throttle = joystick::Throttle::new(a3);
     //d.show_number(100);
-    let mut num: i32 = 5000;
+    let mut num: i32 = 0;
     d.power_on();
-    d.brightness(20);
+    d.brightness(10);
     
     loop {
         //display.write_str(0, b"12345678", 0b00000000).unwrap();
         //arduino_hal::delay_ms(600);
         //d.power_on();
-        //d.brightness(255);
         //d.clear();
 
         d.show_number(num);
-        num +=1;
+        num += 1;
         //the_joystick.update(&mut adc);
         //the_joystick.show();
         //the_throttle.update(&mut adc);
         //the_throttle.show();
         //arduino_hal::delay_ms(500);
         //d.power_off();
-        arduino_hal::delay_ms(100);
+        //arduino_hal::delay_ms(10);
     }
     // loop {
     //     // on the tick ... DO.
