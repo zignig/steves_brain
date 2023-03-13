@@ -11,16 +11,16 @@ pub(crate) const TICK_INTERVAL: u32 = 512;
 const PRESCALER: u32 = 1024;
 const MILLIS_INCREMENT: u32 = PRESCALER * 256 / 16000;
 
-enum Status {
-    OnTime,
-    Late,
-}
+// enum Status {
+//     OnTime,
+//     Late,
+// }
 // Wrapped globals ( so ugly )
 static MILLIS_COUNTER: avr_device::interrupt::Mutex<cell::Cell<u32>> =
     avr_device::interrupt::Mutex::new(cell::Cell::new(0));
 
-static PREVIOUS_TICK: avr_device::interrupt::Mutex<cell::Cell<u32>> =
-    avr_device::interrupt::Mutex::new(cell::Cell::new(0));
+// static PREVIOUS_TICK: avr_device::interrupt::Mutex<cell::Cell<u32>> =
+//     avr_device::interrupt::Mutex::new(cell::Cell::new(0));
 
 static TICK_FLAG: avr_device::interrupt::Mutex<cell::Cell<bool>> =
     avr_device::interrupt::Mutex::new(cell::Cell::new(false));

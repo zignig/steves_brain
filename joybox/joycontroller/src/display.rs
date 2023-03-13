@@ -1,13 +1,8 @@
 // seven segment display
 
-use crate::serial_println;
 
 use embedded_hal::digital::v2::OutputPin;
 use max7219;
-use numtoa::NumToA;
-use serde::ser::SerializeMap;
-
-use crate::utils::serial_init;
 
 pub struct Display<DATA, CS, SCK>
 where
@@ -16,7 +11,6 @@ where
     SCK: OutputPin,
 {
     d: max7219::MAX7219<max7219::connectors::PinConnector<DATA, CS, SCK>>,
-    value: [u8; 8],
 }
 
 impl<DATA: OutputPin, CS: OutputPin, SCK: OutputPin> Display<DATA, CS, SCK>
@@ -29,13 +23,13 @@ where
         let display = max7219::MAX7219::from_pins(1, data, cs, sck).unwrap();
         Self {
             d: display,
-            value: [0; 8], 
         }
     }
 
     pub fn power_on(&mut self) {
         self.d.power_on().unwrap();
     }
+    
     pub fn power_off(&mut self){
         self.d.power_off();
     }
@@ -54,7 +48,7 @@ where
     pub fn show_number(&mut self, val: i32) {
         let mut buf = [0u8; 8];
         let mut dis = [0u8; 8];
-        let mut j = base_10_bytes(val, &mut buf);
+        let j = base_10_bytes(val, &mut buf);
         dis = pad_empty(j);
         //serial_println!("val -> {:?}", dis);
         //serial_println!("{:?}",j);
