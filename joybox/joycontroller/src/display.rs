@@ -56,14 +56,19 @@ where
         let mut dis = [0u8; 8];
         let mut j = base_10_bytes(val, &mut buf);
         dis = pad_empty(j);
-        serial_println!("val -> {:?}", dis);
+        //serial_println!("val -> {:?}", dis);
         //serial_println!("{:?}",j);
-        let err  = self.d.write_str(0, &mut dis, 0b00000000);
-        serial_println!("{:?}",err.expect("fail"));
+        let _err  = self.d.write_str(0, &mut dis, 0b00000000);
+        //serial_println!("{:?}",err.expect("fail"));
     }
 }
 
 fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
+    let mut sign :bool = false;
+    if n < 0 { 
+        n = -n;
+        sign = true;
+    }
     if n == 0 {
         return b"0";
     }
@@ -71,6 +76,10 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
     while n > 0 {
         buf[i] = (n % 10) as u8 + b'0';
         n /= 10;
+        i += 1;
+    }
+    if sign { 
+        buf[i] = b'-';
         i += 1;
     }
     let slice = &mut buf[..i];

@@ -94,7 +94,7 @@ fn main() -> ! {
     //d.show_number(100);
     let mut num: i32 = 0;
     d.power_on();
-    d.brightness(10);
+    d.brightness(0);
     
     loop {
         //display.write_str(0, b"12345678", 0b00000000).unwrap();
@@ -104,13 +104,11 @@ fn main() -> ! {
 
         d.show_number(num);
         num += 1;
-        //the_joystick.update(&mut adc);
-        //the_joystick.show();
-        //the_throttle.update(&mut adc);
-        //the_throttle.show();
-        //arduino_hal::delay_ms(500);
-        //d.power_off();
-        //arduino_hal::delay_ms(10);
+        the_joystick.update(&mut adc);
+        the_joystick.show();
+        the_throttle.update(&mut adc);
+        the_throttle.show();
+        arduino_hal::delay_ms(500);
     }
     // loop {
     //     // on the tick ... DO.
