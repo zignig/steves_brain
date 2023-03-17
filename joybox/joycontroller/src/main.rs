@@ -17,7 +17,7 @@ mod joystick;
 //use comms::fetch_command;
 
 use panic_halt as _;
-use arduino_hal::prelude::*;
+//use arduino_hal::prelude::*;
 use arduino_hal::adc;
 use arduino_hal::simple_pwm::*;
 //use arduino_hal::prelude::*;
@@ -48,7 +48,7 @@ fn main() -> ! {
     let sck = pins.d7.into_output();
 
     let mut d = display::Display::new(data, cs, sck);
-    d.power_on();
+    //d.power_off();
 
     // spi slave setup ( experimental )
     pins.d13.into_pull_up_input(); // sclk

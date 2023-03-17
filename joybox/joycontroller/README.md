@@ -13,4 +13,4 @@
 - 5 -> 3.3 bridge 
 - Arduino pro mini
 
-A general robotics controller , mad for the steve bot.
+A general robotics controller , made for the steve bot.

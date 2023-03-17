@@ -31,25 +31,21 @@ where
     }
     
     pub fn power_off(&mut self){
-        self.d.power_off();
+        self.d.power_off().unwrap();
     }
 
-    pub fn show_help(&mut self) {
-        self.d.write_str(0, b"pls help", 0b10101010).unwrap();
-    }
     pub fn clear(&mut self) {
-        self.d.clear_display(0);
+        self.d.clear_display(0).unwrap();
     }
 
     pub fn brightness(&mut self,bright: u8){
-        self.d.set_intensity(0, bright);
+        self.d.set_intensity(0, bright).unwrap();
     }
 
     pub fn show_number(&mut self, val: i32) {
         let mut buf = [0u8; 8];
-        let mut dis = [0u8; 8];
         let j = base_10_bytes(val, &mut buf);
-        dis = pad_empty(j);
+        let mut dis = pad_empty(j);
         //serial_println!("val -> {:?}", dis);
         //serial_println!("{:?}",j);
         let _err  = self.d.write_str(0, &mut dis, 0b00000000);
