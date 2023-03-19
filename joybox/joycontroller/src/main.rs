@@ -12,6 +12,7 @@ mod systick;
 mod utils;
 
 mod joystick;
+mod console;
 
 //use commands::Command;
 //use comms::fetch_command;
@@ -28,9 +29,14 @@ fn main() -> ! {
     // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
+    let serial_reg = &mut dp.USART0.udr0;
+    console::SerialBuffer::init(serial_reg);
+
+
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
+
     utils::serial_init(serial_port);
 
     serial_println!("Woot it works");
@@ -49,10 +55,7 @@ fn main() -> ! {
 
     let mut d = display::Display::new(data, cs, sck);
     //d.power_off();
-<<<<<<< HEAD
-=======
     d.power_on();
->>>>>>> cleanup
 
     // spi slave setup ( experimental )
     pins.d13.into_pull_up_input(); // sclk
@@ -114,10 +117,7 @@ fn main() -> ! {
             the_throttle.show();
 
             //d.show_number(the_throttle.t.value as i32);
-<<<<<<< HEAD
-=======
             //d.show_number(the_joystick.x.value as i32);
->>>>>>> cleanup
             d.show_number(time as i32);
             num = num + 1;
         }
