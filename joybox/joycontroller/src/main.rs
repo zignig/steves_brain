@@ -4,11 +4,9 @@
 
 //mod commands;
 //mod comms;
-
-use max7219;
+//mod ring_buffer;
 
 mod display;
-mod ring_buffer;
 mod shared;
 mod systick;
 mod utils;
@@ -19,10 +17,11 @@ mod joystick;
 //use comms::fetch_command;
 
 use panic_halt as _;
-
+//use arduino_hal::prelude::*;
 use arduino_hal::adc;
-use arduino_hal::prelude::*;
-use systick::millis;
+use arduino_hal::simple_pwm::*;
+//use arduino_hal::prelude::*;
+//use systick::millis;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -36,6 +35,7 @@ fn main() -> ! {
 
     serial_println!("Woot it works");
 
+    
     // eeprom device
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut buf: [u8; 100] = [0; 100];
@@ -48,6 +48,7 @@ fn main() -> ! {
     let sck = pins.d7.into_output();
 
     let mut d = display::Display::new(data, cs, sck);
+    //d.power_off();
     d.power_on();
 
     // spi slave setup ( experimental )
@@ -60,6 +61,8 @@ fn main() -> ! {
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
+    let _timer0 = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);
+    
     serial_println!("Behold Joycontroller");
 
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
@@ -86,38 +89,31 @@ fn main() -> ! {
     //u activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };
+
     let mut the_joystick = joystick::Joy3Axis::new(a0, a1, a2);
     the_joystick.zero_out(&mut adc);
     arduino_hal::delay_ms(500);
     the_joystick.zero_out(&mut adc);
     let mut the_throttle = joystick::Throttle::new(a3);
-    //d.show_number(100);
-    let mut num: i32 = 5000;
+    
+    let mut num: i32 = 1;
     d.power_on();
     d.brightness(20);
-    
-    loop {
-        //display.write_str(0, b"12345678", 0b00000000).unwrap();
-        //arduino_hal::delay_ms(600);
-        //d.power_on();
-        //d.brightness(255);
-        //d.clear();
 
-        d.show_number(num);
-        num +=1;
-        //the_joystick.update(&mut adc);
-        //the_joystick.show();
-        //the_throttle.update(&mut adc);
-        //the_throttle.show();
-        //arduino_hal::delay_ms(500);
-        //d.power_off();
-        arduino_hal::delay_ms(100);
+    loop {
+        // on the tick ... DO.
+        if systick::is_tick() {
+            let time = systick::millis();
+            serial_println!("{}", time);
+            the_joystick.update(&mut adc);
+            the_joystick.show();
+            the_throttle.update(&mut adc);
+            the_throttle.show();
+
+            //d.show_number(the_throttle.t.value as i32);
+            //d.show_number(the_joystick.x.value as i32);
+            d.show_number(time as i32);
+            num = num + 1;
+        }
     }
-    // loop {
-    //     // on the tick ... DO.
-    //     if systick::is_tick() {
-    //         let time = systick::millis();
-    //         serial_println!("bip").void_unwrap();
-    //     }
-    // }
 }

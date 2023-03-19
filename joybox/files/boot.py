@@ -140,10 +140,10 @@ def do_connect():
     try:
         import network
 
-        # disable ap network
-        #    ap = network.WLAN(network.STA_AP)
-        #    ap.active(False)
-        #    ap.disconnect()
+        # disable ap network esp8266
+        #ap = network.WLAN(network.AP_IF)
+        #ap.active(False)
+        #ap.disconnect()
 
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)

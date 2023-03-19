@@ -6,7 +6,7 @@ from serial.tools.miniterm import Miniterm
 import serial
 import time
 
-the_port ="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0"
+the_port ="/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
 
 class Console:
     def __init__(self, port=the_port, baud=115200):
