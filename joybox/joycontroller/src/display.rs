@@ -34,6 +34,13 @@ where
         self.d.power_off().unwrap();
     }
 
+<<<<<<< HEAD
+=======
+    pub fn show_help(&mut self) {
+        self.d.write_str(0, b"pls help", 0b10101010).unwrap();
+    }
+
+>>>>>>> cleanup
     pub fn clear(&mut self) {
         self.d.clear_display(0).unwrap();
     }
@@ -44,12 +51,13 @@ where
 
     pub fn show_number(&mut self, val: i32) {
         let mut buf = [0u8; 8];
-        let j = base_10_bytes(val, &mut buf);
-        let mut dis = pad_empty(j);
+
+        let mut dis = [0u8; 8];
+        let mut j = base_10_bytes(val, &mut buf);
+        dis = pad_empty(j);
         //serial_println!("val -> {:?}", dis);
         //serial_println!("{:?}",j);
-        let _err  = self.d.write_str(0, &mut dis, 0b00000000);
-        //serial_println!("{:?}",err.expect("fail"));
+        self.d.write_str(0, &mut dis, 0b00000000).unwrap();
     }
 }
 

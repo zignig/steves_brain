@@ -49,6 +49,10 @@ fn main() -> ! {
 
     let mut d = display::Display::new(data, cs, sck);
     //d.power_off();
+<<<<<<< HEAD
+=======
+    d.power_on();
+>>>>>>> cleanup
 
     // spi slave setup ( experimental )
     pins.d13.into_pull_up_input(); // sclk
@@ -110,6 +114,10 @@ fn main() -> ! {
             the_throttle.show();
 
             //d.show_number(the_throttle.t.value as i32);
+<<<<<<< HEAD
+=======
+            //d.show_number(the_joystick.x.value as i32);
+>>>>>>> cleanup
             d.show_number(time as i32);
             num = num + 1;
         }

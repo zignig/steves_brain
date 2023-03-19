@@ -5,7 +5,7 @@
 use core::cell;
 
 // This is the global tick counter !!
-pub(crate) const TICK_INTERVAL: u32 = 512;
+pub(crate) const TICK_INTERVAL: u32 = 4096;
 
 // Scaly bits , probably wrong NDC.
 const PRESCALER: u32 = 1024;
