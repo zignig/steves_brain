@@ -34,13 +34,6 @@ where
         self.d.power_off().unwrap();
     }
 
-<<<<<<< HEAD
-=======
-    pub fn show_help(&mut self) {
-        self.d.write_str(0, b"pls help", 0b10101010).unwrap();
-    }
-
->>>>>>> cleanup
     pub fn clear(&mut self) {
         self.d.clear_display(0).unwrap();
     }
