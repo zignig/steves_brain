@@ -13,7 +13,7 @@ fn main() {
     let filename = match (args.next(), args.next()) {
         (Some(filename), None) => filename,
         _ => {
-            eprintln!("Usage: dump-syntax path/to/filename.rs");
+            eprintln!("Usage: pythonator path/to/filename.rs");
             process::exit(1);
         }
     };
@@ -30,7 +30,8 @@ fn main() {
     let mut  vis = FnVisitor::new("testing".to_string());
     
     vis.visit_file(&syntax);
-    println!("{:?}",vis.items);
+    //println!("{:?}",vis.items);
+    vis.show();
     println!("{}",vis.render().unwrap());
 }
 
@@ -59,6 +60,13 @@ impl FnVisitor {
     }
 }
 
+impl FnVisitor { 
+    fn show(&mut self){
+        for item in self.items.iter(){
+            println!("{:?}",item);
+        }
+    }
+}
 impl<'ast> Visit<'ast> for FnVisitor {
 
     fn visit_item_enum(&mut self, i: &'ast ItemEnum) {
