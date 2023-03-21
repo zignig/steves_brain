@@ -1,0 +1,6 @@
+class controller:
+
+    {% for item in items %}
+    def {{ item.name }}({% for val in item.values%}{{val}}{% if loop.last == false %},{% endif %}{% endfor%}):
+        print("hello")
+    {% endfor %}

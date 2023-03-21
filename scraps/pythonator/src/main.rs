@@ -2,10 +2,9 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::process;
-use std::collections::HashMap;
-//use quote::quote;
 use syn::visit::{self, Visit};
 use syn::{ItemEnum };
+use askama::Template;
 
 fn main() {
     let mut args = env::args();
@@ -31,19 +30,31 @@ fn main() {
     let mut  vis = FnVisitor::new("testing".to_string());
     
     vis.visit_file(&syntax);
+    println!("{:?}",vis.items);
+    println!("{}",vis.render().unwrap());
 }
 
-#[derive(Debug)]
+#[derive(Debug,Template,Clone)]
+#[template(path="item.txt")]
+struct Item{ 
+    name: String , 
+    values: Vec<String>
+}
+
+#[derive(Debug,Template)]
+#[template(path="test.txt")]
 struct FnVisitor{
     name: String,
-    items: HashMap<String,String>
+    current: usize,
+    pub items: Vec<Item>
 }
 
 impl FnVisitor { 
     pub fn new(name: String) -> Self{ 
         Self{
             name: name,
-            items: HashMap::new()
+            current: 0,
+            items: vec![]
         }
     }
 }
@@ -57,12 +68,22 @@ impl<'ast> Visit<'ast> for FnVisitor {
     }
     
     fn visit_variant(&mut self, i: &'ast syn::Variant) {
-        println!("\t{:?} - {:?}", i.ident.to_string(),i.discriminant);        
-        println!("{:?}",i)
-        //visit::visit_variant(self, i);
+        let name = i.ident.to_string().clone();
+        //println!("\t{:?} - {:?}",name,i.discriminant);
+        let item = Item{ name : name , values : vec![]};
+        self.items.push(item);
+        //println!("{:?}",i);
+        visit::visit_variant(self, i);
+        self.current  = self.items.len();
     }
 
+    fn visit_item_fn(&mut self,_i: &'ast syn::ItemFn) {
+        
+    }
 
+    fn visit_item_impl(&mut self, _i: &'ast syn::ItemImpl) {
+        
+    }
     // fn visit_fields(&mut self, i: &'ast syn::Fields) {
     //     //println!("\t\t{:?}",i);
     //     visit::visit_fields(self,i);
@@ -81,7 +102,14 @@ impl<'ast> Visit<'ast> for FnVisitor {
     //     println!("\t\t{:?}",i);  
     // }
 
-    // fn visit_path_segment(&mut self, i: &'ast syn::PathSegment) {
-    //     println!("\t\t{:?}",i);          
-    // }
+    fn visit_path_segment(&mut self, i: &'ast syn::PathSegment) {
+        let t = i.ident.to_string();
+        println!("\t\t{:?} -- {:?} ",t,self.current);
+        //let i = self.items.get_mut(self.current).unwrap();
+        //println!("{}",i);
+        if let Some(val)= self.items.get_mut(self.current){
+             println!("bork {}",val);
+             val.values.push(t);
+        }
+    } 
 }
