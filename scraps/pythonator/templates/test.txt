@@ -1,7 +1,9 @@
+{% for item in items %}
+{{ item.name| upper  }} = {{ loop.index - 1 -}}
+{% endfor %}
+
 class controller:
     {% for item in items %}
-    {% endfor %}
-    {% for item in items %}
     def {{ item.name }}(self,{% for val in item.values%}{{val}}{% if loop.last == false %},{% endif %}{% endfor%}):
-        print("hello")
+        self._run({{item.name|upper}})
     {% endfor %}
