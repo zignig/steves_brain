@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
-use std::io::{Error,Write};
+use std::io::{Write};
 use std::process;
 use syn::visit::{self, Visit};
 use syn::{ItemEnum };

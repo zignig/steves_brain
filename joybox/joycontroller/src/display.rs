@@ -1,6 +1,5 @@
 // seven segment display
 
-
 use embedded_hal::digital::v2::OutputPin;
 use max7219;
 
@@ -21,16 +20,14 @@ where
 {
     pub fn new(data: DATA, cs: CS, sck: SCK) -> Self {
         let display = max7219::MAX7219::from_pins(1, data, cs, sck).unwrap();
-        Self {
-            d: display,
-        }
+        Self { d: display }
     }
 
     pub fn power_on(&mut self) {
         self.d.power_on().unwrap();
     }
-    
-    pub fn power_off(&mut self){
+
+    pub fn power_off(&mut self) {
         self.d.power_off().unwrap();
     }
 
@@ -38,7 +35,7 @@ where
         self.d.clear_display(0).unwrap();
     }
 
-    pub fn brightness(&mut self,bright: u8){
+    pub fn brightness(&mut self, bright: u8) {
         self.d.set_intensity(0, bright).unwrap();
     }
 
@@ -55,8 +52,8 @@ where
 }
 
 fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
-    let mut sign :bool = false;
-    if n < 0 { 
+    let mut sign: bool = false;
+    if n < 0 {
         n = -n;
         sign = true;
     }
@@ -69,7 +66,7 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
         n /= 10;
         i += 1;
     }
-    if sign { 
+    if sign {
         buf[i] = b'-';
         i += 1;
     }
@@ -78,20 +75,14 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
     &*slice
 }
 
-pub fn pad_empty(val: &[u8]) -> [u8; 8] {
-    let size: usize = 7;
-    let mut pos: usize = val.len() - 1;
-    let mut cur: usize = 0;
+fn pad_empty(val: &[u8]) -> [u8; 8] {
+    let size: usize = 8;
+    let mut pos: usize = val.len();
+    let mut cur: usize = 1;
     let mut out: [u8; 8] = *b"        ";
     while cur <= pos {
-        //serial_println!("{} {}",pos,cur);
         out[size - cur] = val[pos - cur];
         cur += 1;
     }
-    //while  size > pos  {
-    //    out[pos] = val[cur];
-    //    pos += 1;
-    //    cur += 1;
-    //}
     out
 }

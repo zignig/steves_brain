@@ -1,10 +1,12 @@
 // The various parts of the joystick reader
-
 use crate::serial_println;
 use arduino_hal::adc::Channel;
+use hubpack::SerializedSize;
+use serde_derive::{Deserialize, Serialize};
+use ufmt::derive::uDebug;
 // Single axis
 
-//#[derive(Serialize, Deserialize, PartialEq, SerializedSize)]
+#[derive(Serialize, Deserialize, PartialEq, SerializedSize, uDebug)]
 pub struct AxisConfig {
     zero: i16,
     min: i16,
@@ -12,31 +14,44 @@ pub struct AxisConfig {
     dead_zone: i16,
 }
 
+impl AxisConfig {
+    pub fn new() -> Self {
+        Self {
+            zero: 0,
+            min: -1000,
+            max: 1000,
+            dead_zone: 20,
+        }
+    }
+}
 pub struct Axis {
     channel: Channel,
-    zero: i16,
     pub value: i16,
-    min: i16,
-    max: i16,
-    // ? scaling factors
-    // ? linearization
-    // ?
+    pub config: AxisConfig, // ? scaling factors
+                            // ? linearization
+                            // ?
 }
 
 impl Axis {
     fn new(channel: Channel) -> Self {
         Self {
             channel: channel,
-            zero: 0,
             value: 0,
-            min: -1000,
-            max: 1000,
+            config: AxisConfig::new(),
         }
+    }
+
+    pub fn dump(&mut self) {
+        let mut buf = [0; 20];
+        let length = hubpack::serialize(&mut buf, &self.config).expect("fail");
+        serial_println!("dump - {:#?} > {}", buf, length);
+        let (output,_) = hubpack::deserialize::<AxisConfig>(&buf).expect("fail");
+        serial_println!("{:#?}",output);
     }
 
     pub fn get_value(&mut self, adc: &mut arduino_hal::Adc) -> i16 {
         let mut val = adc.read_blocking(&self.channel) as i16;
-        val = self.zero - val;
+        val = self.config.zero - val;
         self.value = val;
         //self.average.feed(val as i16 - self.zero_offset);
         val
@@ -49,7 +64,7 @@ impl Axis {
             val += adc.read_blocking(&self.channel) as i16;
             val = val / 2;
         }
-        self.zero = val;
+        self.config.zero = val;
     }
 }
 

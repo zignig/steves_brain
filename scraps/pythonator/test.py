@@ -11,11 +11,13 @@ FRAME_START = 1
 FRAME_STOP = 2
 FRAME_JOY = 3
 FRAME_THROTTLE = 4
-FRAME_ONE = 5
-FRAME_TWO = 6
-FRAME_THREE = 7
-FRAME_FIVE = 8
-FRAME_SIZE = 9
+FRAME_CALLIBRATE = 5
+FRAME_DISPLAY = 6
+FRAME_ONE = 7
+FRAME_TWO = 8
+FRAME_THREE = 9
+FRAME_FIVE = 10
+FRAME_SIZE = 11
 
 class controller:
     def __init__(self,speed):
@@ -56,6 +58,14 @@ class controller:
     def throttle(self,d1):
         data = 1 # mapped dataset
         self.send(FRAME_THROTTLE,data)
+    
+    def callibrate(self,d1):
+        data = 1 # mapped dataset
+        self.send(FRAME_CALLIBRATE,data)
+    
+    def display(self,d1,d2):
+        data = 1 # mapped dataset
+        self.send(FRAME_DISPLAY,data)
     
     def one(self,):
         data = 1 # mapped dataset

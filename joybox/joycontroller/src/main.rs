@@ -12,7 +12,7 @@ mod systick;
 mod utils;
 
 mod joystick;
-mod console;
+//mod console;
 
 //use commands::Command;
 //use comms::fetch_command;
@@ -29,9 +29,8 @@ fn main() -> ! {
     // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    let serial_reg = &mut dp.USART0.udr0;
-    console::SerialBuffer::init(serial_reg);
-
+    //let serial_reg = &mut dp.USART0.udr0;
+    //console::SerialBuffer::init(serial_reg);
 
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
@@ -41,7 +40,6 @@ fn main() -> ! {
 
     serial_println!("Woot it works");
 
-    
     // eeprom device
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut buf: [u8; 100] = [0; 100];
@@ -68,7 +66,7 @@ fn main() -> ! {
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
     let _timer0 = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);
-    
+
     serial_println!("Behold Joycontroller");
 
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
@@ -101,20 +99,20 @@ fn main() -> ! {
     arduino_hal::delay_ms(500);
     the_joystick.zero_out(&mut adc);
     let mut the_throttle = joystick::Throttle::new(a3);
-    
+
     let mut num: i32 = 1;
     d.power_on();
     d.brightness(20);
-
+    the_joystick.x.dump();
     loop {
         // on the tick ... DO.
         if systick::is_tick() {
             let time = systick::millis();
-            serial_println!("{}", time);
+            //serial_println!("{}", time);
             the_joystick.update(&mut adc);
-            the_joystick.show();
+            //the_joystick.show();
             the_throttle.update(&mut adc);
-            the_throttle.show();
+            //the_throttle.show();
 
             //d.show_number(the_throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
