@@ -1,0 +1,35 @@
+# generated from rust enum
+
+from machine import Pin, SPI
+import time
+import struct
+
+
+{% for item in items %}
+FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
+{% endfor %}
+
+class controller:
+    def __init__(self,speed):
+        self.ss = Pin({{select_pin}},Pin.OUT)
+        self.ss.on()
+        self.port = SPI({{spi_interface}},speed)
+        self._frame = bytes()
+
+    def _build(self,action,data):
+        self._frame = bytes([SYNC1,SYNC2,action,0])
+        self._frame = self._frame + bytes[data]
+    
+    def _send(self):
+        self.ss.off()
+        self.port.write(self._frame)
+        self.ss.off()
+    
+    def send(self,action,data):
+        self.build(action,data)
+        self._send()
+    {% for item in items %}
+    def {{ item.name|lower }}(self,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%}):
+        data = 1 # mapped dataset
+        self.send(FRAME_{{item.name|upper}},data)
+    {% endfor %}

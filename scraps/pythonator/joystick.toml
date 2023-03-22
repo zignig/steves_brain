@@ -1,0 +1,5 @@
+[settings]
+file = "../../joybox/joycontroller/src/commands.rs"
+output = "joystick.py"
+spi_interface = 1
+select_pin = 27

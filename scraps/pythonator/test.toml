@@ -1,0 +1,5 @@
+[settings]
+file = "comm_test.rs"
+output = "test.py"
+spi_interface = 1
+select_pin = 27

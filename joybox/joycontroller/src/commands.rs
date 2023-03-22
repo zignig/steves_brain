@@ -18,21 +18,10 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
 pub enum Command {
     Hello,
-    Stop,
-    Run(i16, i16),
-    SetAcc(u8),
-    SetJoy(i16, i16),
-    SetTimeout(i16),
-    SetTrigger(i16),
-    SetMinspeed(u8),
-    SetMaxCurrent(u8),
-    Config,
-    Count,
-    Data(u8, u8, u8, u8),
-    // Returns
-    Compass(i16),
-    Millis(u32),
-    // Fail
+    XY(i8,i8),
+    ZT(i8,i8),
+    Callibrate(),
+    Display(i32),
     Fail,
 }
 
