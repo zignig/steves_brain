@@ -9,38 +9,25 @@ use avr_device::interrupt::Mutex;
 use core::cell::RefCell;
 /// Computes a moving average over a ring buffer of numbers.
 #[derive(Clone, Copy)]
-pub struct MovingAverage16 {
-    /// Current history of numbers.
-    hist: [i16; 16],
-    /// Size of the history, as T.
-    size: usize,
-    /// Index in the history vector to replace next.
+pub struct SerialBuffer {
+    cursor: usize,
     pos: usize,
-}
+    flag: bool,
+    data: [u8;32]
+}   
 
-impl MovingAverage16 {
-    /// Create a new `MovingAverage` that averages over the given amount of numbers.
-    pub fn new() -> Self {
-        let hist: [i16; 16] = [0; 16];
-        MovingAverage16 {
-            hist: hist,
-            size: 16,
+// Wrapped globals ( so ugly )
+static BUFFER: avr_device::interrupt::Mutex<RefCell<Option<SerialBuffer>>> =
+    avr_device::interrupt::Mutex::new(RefCell::new(None));
+
+impl SerialBuffer { 
+    pub fn new()-> Self {
+        Self { 
+            cursor: 0,
             pos: 0,
+            flag: false,
+            data: [0;32]
         }
-    }
-
-    /// Add the given number to the history, overwriting the oldest number, and return the
-    /// resulting moving average.
-    pub fn feed(&mut self, num: i16) -> i16 {
-        self.hist[self.pos] = num;
-        self.pos += 1;
-        self.pos %= 16;
-        self.avg()
-    }
-
-    /// Calculate moving average based on the current history.
-    fn avg(&self) -> i16 {
-        self.hist.iter().fold(0, |s, &x| s + x) / (self.size as i16)
     }
 }
 
@@ -50,8 +37,25 @@ pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::ne
 pub fn serial_init(serial: Usart) {
     avr_device::interrupt::free(|cs| {
         GLOBAL_SERIAL.borrow(cs).replace(Some(serial));
+        BUFFER.borrow(cs).replace(Some(SerialBuffer::new()));
     });
 }
+
+
+// interrupts take no arguments , have to yoink globals (bleck!)
+// #[avr_device::interrupt(atmega328p)]
+// fn USART_RX() {
+//     let data: u8 =0;
+//     avr_device::interrupt::free(|cs| {
+//         if let Some(uart) = &mut *GLOBAL_SERIAL.borrow(cs).borrow_mut(){
+//         }
+//         if let Some(sb) = &mut *BUFFER.borrow(cs).borrow_mut(){
+//             sb.data[sb.pos] = data;
+//             sb.pos += 1;
+//             sb.flag = true;
+//         }
+//     })
+// }
 
 #[macro_export]
 macro_rules! serial_println {

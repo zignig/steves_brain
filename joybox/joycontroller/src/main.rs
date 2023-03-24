@@ -29,13 +29,12 @@ fn main() -> ! {
     // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    //let serial_reg = &mut dp.USART0.udr0;
+    let serial_reg = &dp.USART0.udr0;
     //console::SerialBuffer::init(serial_reg);
 
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
-
     utils::serial_init(serial_port);
 
     serial_println!("Woot it works");
@@ -101,7 +100,7 @@ fn main() -> ! {
     d.power_on();
     d.brightness(20);
     the_joystick.show_config();
-    //the_joystick.save(&mut ee);
+    the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
     the_joystick.show_config();
     loop {
