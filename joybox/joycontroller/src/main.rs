@@ -41,12 +41,9 @@ fn main() -> ! {
     serial_println!("Woot it works");
 
     // eeprom device
-    let ee = arduino_hal::Eeprom::new(dp.EEPROM);
-    let mut buf: [u8; 100] = [0; 100];
-    //ee.write(0,&data);
-    ee.read(0, &mut buf).unwrap();
-    serial_println!("{:?}", buf[..]);
+    let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
 
+    // SPI interface 
     let data = pins.d9.into_output();
     let cs = pins.d8.into_output_high();
     let sck = pins.d7.into_output();
@@ -95,15 +92,18 @@ fn main() -> ! {
     unsafe { avr_device::interrupt::enable() };
 
     let mut the_joystick = joystick::Joy3Axis::new(a0, a1, a2);
-    the_joystick.zero_out(&mut adc);
-    arduino_hal::delay_ms(500);
-    the_joystick.zero_out(&mut adc);
+    // the_joystick.zero_out(&mut adc);
+    // arduino_hal::delay_ms(500);
+    // the_joystick.zero_out(&mut adc);
     let mut the_throttle = joystick::Throttle::new(a3);
 
     let mut num: i32 = 1;
     d.power_on();
     d.brightness(20);
-    the_joystick.x.dump();
+    the_joystick.show_config();
+    //the_joystick.save(&mut ee);
+    the_joystick.load(&mut ee);
+    the_joystick.show_config();
     loop {
         // on the tick ... DO.
         if systick::is_tick() {
