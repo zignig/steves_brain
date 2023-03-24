@@ -25,6 +25,7 @@ pub enum Incoming {
     Display(u8,u8)
 }
 
+#[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
 pub enum Outgoing { 
     One,
     Two,

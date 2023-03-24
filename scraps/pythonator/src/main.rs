@@ -121,6 +121,7 @@ fn main() {
     let mut  vis = EnumVisitor::new("testing".to_string());
     
     vis.visit_file(&syntax);
+    println!("{:?}",vis);
     vis.spi_interface = data.settings.spi_interface;
     vis.select_pin = data.settings.select_pin;
     vis.scan();
