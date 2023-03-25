@@ -19,9 +19,9 @@ impl AxisConfig {
     pub fn new() -> Self {
         Self {
             zero: 128,
-            min: -255,
-            max: 255,
-            dead_zone: 5,
+            min: -512,
+            max: 512,
+            dead_zone: 25,
         }
     }
 }

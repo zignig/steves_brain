@@ -41,6 +41,9 @@ fn main() -> ! {
 
     // eeprom device
     let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    // let mut buf: [u8;100] = [0;100];
+    // ee.read(0,&mut buf).unwrap();
+    // serial_println!("{:?}",buf[..]);
 
     // SPI interface 
     let data = pins.d9.into_output();
@@ -100,7 +103,7 @@ fn main() -> ! {
     d.power_on();
     d.brightness(20);
     the_joystick.show_config();
-    the_joystick.save(&mut ee);
+    //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
     the_joystick.show_config();
     loop {
