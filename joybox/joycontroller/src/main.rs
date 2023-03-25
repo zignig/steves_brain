@@ -96,10 +96,12 @@ fn main() -> ! {
     d.brightness(1);
 
     the_joystick.show_config();
+    //the_joystick.zero_out(&mut adc);
     //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
     the_joystick.show_config();
-    the_joystick.mode  = joystick::Mode::RunCallibrate;
+    the_joystick.mode  = joystick::Mode::Running;
+
     //activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() }
@@ -109,7 +111,7 @@ fn main() -> ! {
             let time = systick::millis();
             //serial_println!("{}", time);
             the_joystick.update(&mut adc);
-            the_joystick.show();
+            //the_joystick.show();
             the_throttle.update(&mut adc);
             //the_throttle.show();
 
