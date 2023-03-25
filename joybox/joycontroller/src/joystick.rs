@@ -7,6 +7,11 @@ use serde_derive::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
 // Single axis
 
+pub enum Mode {
+    Running,
+    RunCallibrate,
+}
+
 #[derive(Serialize, Deserialize, PartialEq, SerializedSize, uDebug)]
 pub struct AxisConfig {
     pub zero: i16,
@@ -19,20 +24,19 @@ impl AxisConfig {
     pub fn new() -> Self {
         Self {
             zero: 128,
-            min: -512,
-            max: 512,
-            dead_zone: 25,
+            min: -1,
+            max: 1,
+            dead_zone: 5,
         }
     }
 }
 pub struct Axis {
     channel: Channel,
     pub value: i16,
-    pub config: AxisConfig, 
+    pub config: AxisConfig,
 }
 
 impl Axis {
-
     const CONFIG_SIZE: u16 = AxisConfig::MAX_SIZE as u16;
 
     fn new(channel: Channel) -> Self {
@@ -43,18 +47,18 @@ impl Axis {
         }
     }
 
-    pub fn save(&mut self, ee: &mut Eeprom,slot: u16){
+    pub fn save(&mut self, ee: &mut Eeprom, slot: u16) {
         let offset = slot * Axis::CONFIG_SIZE;
-        let mut buf: [u8;Axis::CONFIG_SIZE as usize] = [0;Axis::CONFIG_SIZE as usize];
+        let mut buf: [u8; Axis::CONFIG_SIZE as usize] = [0; Axis::CONFIG_SIZE as usize];
         let _ = hubpack::serialize(&mut buf, &self.config);
-        ee.write(offset,&buf).unwrap();
+        ee.write(offset, &buf).unwrap();
     }
 
-    pub fn load(&mut self, ee: &mut Eeprom,slot: u16){
+    pub fn load(&mut self, ee: &mut Eeprom, slot: u16) {
         let offset = slot * Axis::CONFIG_SIZE;
-        let mut buf: [u8;Axis::CONFIG_SIZE as usize] = [0;Axis::CONFIG_SIZE as usize];
+        let mut buf: [u8; Axis::CONFIG_SIZE as usize] = [0; Axis::CONFIG_SIZE as usize];
         ee.read(offset, &mut buf).unwrap();
-        let (config,_) = hubpack::deserialize::<AxisConfig>(&buf).unwrap();
+        let (config, _) = hubpack::deserialize::<AxisConfig>(&buf).unwrap();
         self.config = config;
     }
 
@@ -62,7 +66,6 @@ impl Axis {
         let mut val = adc.read_blocking(&self.channel) as i16;
         val = self.config.zero - val;
         self.value = val;
-        //self.average.feed(val as i16 - self.zero_offset);
         val
     }
 
@@ -75,12 +78,23 @@ impl Axis {
         }
         self.config.zero = val;
     }
+
+    pub fn callibrate(&mut self, adc: &mut arduino_hal::Adc) {
+        self.get_value(adc);
+        if self.config.min > self.value {
+            self.config.min = self.value;
+        }
+        if self.config.max < self.value {
+            self.config.max = self.value;
+        }
+    }
 }
 
 pub struct Joy3Axis {
     pub x: Axis,
     pub y: Axis,
     pub z: Axis,
+    pub mode: Mode,
 }
 
 impl Joy3Axis {
@@ -89,24 +103,35 @@ impl Joy3Axis {
             x: Axis::new(chx),
             y: Axis::new(chy),
             z: Axis::new(chz),
+            mode: Mode::Running,
         }
     }
 
-    pub fn load(&mut self,ee: &mut Eeprom){
-        self.x.load(ee, 1);
-        self.y.load(ee,2);
-        self.z.load(ee,3);
+    pub fn load(&mut self, ee: &mut Eeprom) {
+        self.x.load(ee, 0);
+        self.y.load(ee, 1);
+        self.z.load(ee, 2);
     }
 
-    pub fn save(&mut self,ee: &mut Eeprom){
-        self.x.save(ee, 1);
-        self.y.save(ee,2);
-        self.z.save(ee,3);
+    pub fn save(&mut self, ee: &mut Eeprom) {
+        self.x.save(ee, 0);
+        self.y.save(ee, 1);
+        self.z.save(ee, 2);
     }
+
     pub fn update(&mut self, adc: &mut arduino_hal::Adc) {
-        self.x.get_value(adc);
-        self.y.get_value(adc);
-        self.z.get_value(adc);
+        match self.mode {
+            Mode::Running => {
+                self.x.get_value(adc);
+                self.y.get_value(adc);
+                self.z.get_value(adc);
+            }
+            Mode::RunCallibrate => {
+                self.x.callibrate(adc);
+                self.y.callibrate(adc);
+                self.z.callibrate(adc);
+            }
+        }
     }
 
     pub fn show(&mut self) {
@@ -116,12 +141,11 @@ impl Joy3Axis {
         serial_println!("\n");
     }
 
-    pub fn show_config(&mut self){
+    pub fn show_config(&mut self) {
         serial_println!("X:{:#?}", self.x.config);
         serial_println!("Y:{:#?}", self.y.config);
         serial_println!("Z:{:#?}", self.z.config);
         serial_println!("\n");
-
     }
 
     pub fn zero_out(&mut self, adc: &mut arduino_hal::Adc) {

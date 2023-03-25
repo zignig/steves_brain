@@ -13,20 +13,20 @@ pub struct SerialBuffer {
     cursor: usize,
     pos: usize,
     flag: bool,
-    data: [u8;32]
-}   
+    data: [u8; 32],
+}
 
 // Wrapped globals ( so ugly )
 static BUFFER: avr_device::interrupt::Mutex<RefCell<Option<SerialBuffer>>> =
     avr_device::interrupt::Mutex::new(RefCell::new(None));
 
-impl SerialBuffer { 
-    pub fn new()-> Self {
-        Self { 
+impl SerialBuffer {
+    pub fn new() -> Self {
+        Self {
             cursor: 0,
             pos: 0,
             flag: false,
-            data: [0;32]
+            data: [0; 32],
         }
     }
 }
@@ -40,7 +40,6 @@ pub fn serial_init(serial: Usart) {
         BUFFER.borrow(cs).replace(Some(SerialBuffer::new()));
     });
 }
-
 
 // interrupts take no arguments , have to yoink globals (bleck!)
 // #[avr_device::interrupt(atmega328p)]

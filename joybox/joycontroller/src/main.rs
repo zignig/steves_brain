@@ -45,7 +45,7 @@ fn main() -> ! {
     // ee.read(0,&mut buf).unwrap();
     // serial_println!("{:?}",buf[..]);
 
-    // SPI interface 
+    // SPI interface
     let data = pins.d9.into_output();
     let cs = pins.d8.into_output_high();
     let sck = pins.d7.into_output();
@@ -59,8 +59,9 @@ fn main() -> ! {
     pins.d11.into_floating_input(); // mosi
     pins.d12.into_output(); // miso
     pins.d10.into_pull_up_input(); // cs
-                                   // there is some evil magic in here.
-                                   //comms::SlaveSPI::init(dp.SPI);
+
+    // there is some evil magic in here.
+    //comms::SlaveSPI::init(dp.SPI);
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
@@ -69,8 +70,6 @@ fn main() -> ! {
     serial_println!("Behold Joycontroller");
 
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
-
-    //let mut last: u32 = millis();
 
     let (vbg, gnd, tmp) = (
         adc.read_blocking(&adc::channel::Vbg),
@@ -82,37 +81,35 @@ fn main() -> ! {
     serial_println!("Ground: {}", gnd);
     serial_println!("Temperature: {}", tmp);
 
+    // joy stick and throttle ananlog pins.
     let a0 = pins.a0.into_analog_input(&mut adc).into_channel();
     let a1 = pins.a1.into_analog_input(&mut adc).into_channel();
     let a2 = pins.a2.into_analog_input(&mut adc).into_channel();
     let a3 = pins.a3.into_analog_input(&mut adc).into_channel();
 
-    //let a3 = pins.a3.into_analog_input(&mut adc);
-
-    //u activate the interrupts
-    // !! DRAGONS , beware the unsafe code !!
-    unsafe { avr_device::interrupt::enable() };
-
     let mut the_joystick = joystick::Joy3Axis::new(a0, a1, a2);
-    // the_joystick.zero_out(&mut adc);
-    // arduino_hal::delay_ms(500);
-    // the_joystick.zero_out(&mut adc);
     let mut the_throttle = joystick::Throttle::new(a3);
 
     let mut num: i32 = 1;
+    // activate the display
     d.power_on();
-    d.brightness(20);
+    d.brightness(1);
+
     the_joystick.show_config();
     //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
     the_joystick.show_config();
+    the_joystick.mode  = joystick::Mode::RunCallibrate;
+    //activate the interrupts
+    // !! DRAGONS , beware the unsafe code !!
+    unsafe { avr_device::interrupt::enable() }
     loop {
         // on the tick ... DO.
         if systick::is_tick() {
             let time = systick::millis();
             //serial_println!("{}", time);
             the_joystick.update(&mut adc);
-            //the_joystick.show();
+            the_joystick.show();
             the_throttle.update(&mut adc);
             //the_throttle.show();
 
