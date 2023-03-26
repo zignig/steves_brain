@@ -179,6 +179,10 @@ def do_connect():
 
 wlan = do_connect()
 
+if reg.id is None:
+    name = input("name>")
+    reg.set("id",name)
+
 try:
     if reg.uplink is None:
         print("enter status url")
