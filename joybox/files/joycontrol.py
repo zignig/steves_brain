@@ -14,7 +14,9 @@ FRAME_XY = 1
 FRAME_ZT = 2
 FRAME_CALLIBRATE = 3
 FRAME_DISPLAY = 4
-FRAME_FAIL = 5
+FRAME_BRIGHTNESS = 5
+FRAME_CLEAR = 6
+FRAME_FAIL = 7
 
 class controller:
     def __init__(self,speed=5000):
@@ -22,6 +24,7 @@ class controller:
         self.ss.on()
         self.port = SPI(1,speed)
         self._frame = bytes([0]*FRAME_SIZE)
+        self._data = bytearray([0,0,0,0])
 
     def _build(self,action,data):
         self._frame = bytes([SYNC1,SYNC2,0,action])
@@ -37,26 +40,50 @@ class controller:
         self._send()
     
     def hello(self,):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_HELLO,data)
     
     def xy(self,d1,d2):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_XY,data)
     
     def zt(self,d1,d2):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_ZT,data)
     
     def callibrate(self,):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_CALLIBRATE,data)
     
     def display(self,d1):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_DISPLAY,data)
     
+    def brightness(self,d1):
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
+        self.send(FRAME_BRIGHTNESS,data)
+    
+    def clear(self,):
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
+        self.send(FRAME_CLEAR,data)
+    
     def fail(self,):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_FAIL,data)
     

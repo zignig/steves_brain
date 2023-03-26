@@ -18,6 +18,7 @@ class controller:
         self.ss.on()
         self.port = SPI({{spi_interface}},speed)
         self._frame = bytes([0]*FRAME_SIZE)
+        self._data = bytearray([0,0,0,0])
 
     def _build(self,action,data):
         self._frame = bytes([SYNC1,SYNC2,0,action])
@@ -33,6 +34,8 @@ class controller:
         self._send()
     {% for item in items %}
     def {{ item.name|lower }}(self,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%}):
-        data = 1 # mapped dataset
+        data = 1 
+        # mapped dataset
+        # struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_{{item.name|upper}},data)
     {% endfor %}

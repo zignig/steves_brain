@@ -5,11 +5,20 @@
 import struct 
 
 import joycontrol
-js = joycontrol.controller(5888)
+js = joycontrol.controller(10000)
+
+def num(val=0):
+    js.send(joycontrol.FRAME_DISPLAY,struct.pack('i',val))
+
+def brightness(val=0):
+    js.send(joycontrol.FRAME_BRIGHTNESS,[val,0,0,0])
+
+def clear():
+    js.send(joycontrol.FRAME_CLEAR,[0,0,0,0])
 
 def count(val=200):
     for i in range(val):
-        js.send(joycontrol.FRAME_DISPLAY,struct.pack('i',i))
+        js.send(joycontrol.FRAME_DISPLAY,struct.pack('i',i+1))
 
 # Run the telnet server
 def run_telnet():

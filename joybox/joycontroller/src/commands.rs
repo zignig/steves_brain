@@ -21,6 +21,8 @@ pub enum Command {
     ZT(i8, i8),
     Callibrate(),
     Display(i32),
+    Brightness(u8),
+    Clear(),
     Fail,
 }
 

@@ -114,6 +114,12 @@ fn main() -> ! {
               Command::Display(val) => { 
                 d.show_number(val);
               }
+              Command::Brightness(bright) => {
+                d.brightness(bright);
+              }
+              Command::Clear() =>{ 
+                d.clear();
+              }
                 _ => serial_println!("unbound {:#?}", comm),
             }
         }
