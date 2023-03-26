@@ -2,9 +2,9 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
-//mod commands;
-//mod comms;
-//mod ring_buffer;
+mod commands;
+mod comms;
+mod ring_buffer;
 
 mod display;
 mod shared;
@@ -26,13 +26,18 @@ use arduino_hal::simple_pwm::*;
 
 #[arduino_hal::entry]
 fn main() -> ! {
-    // get the peripherals and pins
+    // get thcomms::SlaveSPI::init(dp.SPI);e peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    let serial_reg = &dp.USART0.udr0;
-    //console::SerialBuffer::init(serial_reg);
+    
+    // SPI interface
+    pins.d13.into_pull_up_input(); // sclk
+    pins.d11.into_floating_input(); // mosi
+    pins.d12.into_output(); // miso
+    pins.d10.into_pull_up_input(); // cs
 
-    // serial port
+    comms::SlaveSPI::init(dp.SPI);    // serial port
+
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
@@ -41,11 +46,12 @@ fn main() -> ! {
 
     // eeprom device
     let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
+
     // let mut buf: [u8;100] = [0;100];
     // ee.read(0,&mut buf).unwrap();
     // serial_println!("{:?}",buf[..]);
 
-    // SPI interface
+    // 8 - 7 digit disaplay
     let data = pins.d9.into_output();
     let cs = pins.d8.into_output_high();
     let sck = pins.d7.into_output();
@@ -54,17 +60,10 @@ fn main() -> ! {
     //d.power_off();
     d.power_on();
 
-    // spi slave setup ( experimental )
-    pins.d13.into_pull_up_input(); // sclk
-    pins.d11.into_floating_input(); // mosi
-    pins.d12.into_output(); // miso
-    pins.d10.into_pull_up_input(); // cs
-
-    // there is some evil magic in here.
-    //comms::SlaveSPI::init(dp.SPI);
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
+    // start the timer ( for pwm , but not )
     let _timer0 = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);
 
     serial_println!("Behold Joycontroller");
@@ -99,7 +98,7 @@ fn main() -> ! {
     //the_joystick.zero_out(&mut adc);
     //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
-    the_joystick.show_config();
+    //the_joystick.show_config();
     the_joystick.mode  = joystick::Mode::Running;
 
     //activate the interrupts

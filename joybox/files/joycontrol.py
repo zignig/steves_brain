@@ -4,6 +4,9 @@ from machine import Pin, SPI
 import time
 import struct
 
+SYNC1 = 0xF
+SYNC2 = 0xE
+FRAME_SIZE = 8 
 
 
 FRAME_HELLO = 0
@@ -18,19 +21,19 @@ class controller:
         self.ss = Pin(16,Pin.OUT)
         self.ss.on()
         self.port = SPI(1,speed)
-        self._frame = bytes()
+        self._frame = bytes([0]*FRAME_SIZE)
 
     def _build(self,action,data):
         self._frame = bytes([SYNC1,SYNC2,action,0])
-        self._frame = self._frame + bytes[data]
+        self._frame = self._frame + bytes(data)
     
     def _send(self):
         self.ss.off()
         self.port.write(self._frame)
-        self.ss.off()
+        self.ss.on()
     
     def send(self,action,data):
-        self.build(action,data)
+        self._build(action,data)
         self._send()
     
     def hello(self,):

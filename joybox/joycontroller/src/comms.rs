@@ -98,15 +98,15 @@ impl SlaveSPI {
         // put the spi , ring buffer and packetbuffer  into a protected globals
         avr_device::interrupt::free(|cs| {
             // data incoming
-            SPI_INT.borrow(&cs).replace(Some(s));
-            DATA_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
+            SPI_INT.borrow(cs).replace(Some(s));
+            DATA_FRAME.borrow(cs).replace(Some(FrameBuffer::new()));
             COMMAND_RING
-                .borrow(&cs)
+                .borrow(cs)
                 .replace(Some(Ring::<Command, RING_SIZE>::new()));
             // data outgoing
-            OUT_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
+            OUT_FRAME.borrow(cs).replace(Some(FrameBuffer::new()));
             OUT_RING
-                .borrow(&cs)
+                .borrow(cs)
                 .replace(Some(Ring::<FrameBuffer, RING_SIZE>::new()));
         });
     }
@@ -118,28 +118,29 @@ fn SPI_STC() {
         // Incoming Data
         // get the data byte from the SPI bus
         let mut data: u8 = 0;
-        if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
+        if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
             data = s.spdr.read().bits();
         }
+        serial_println!("{}",data);
         // put the data into the buffer
-        if let Some(pb) = &mut *DATA_FRAME.borrow(&cs).borrow_mut() {
+        if let Some(pb) = &mut *DATA_FRAME.borrow(cs).borrow_mut() {
             // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
                 //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
                 // deserialize the command part of the packet
-                let comm = Command::deserialize(&the_packet);
-                // chuck the command into a ring buffer
-                if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
-                    cr.append(comm);
-                }
+                // let comm = Command::deserialize(&the_packet);
+                // // chuck the command into a ring buffer
+                // if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
+                //     cr.append(comm);
+                // }
             }
         }
         // Outgoing data
         // When the interface is ready , spool out a frame
         // Deserialize into the SPI interface.
-        if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
-            if let Some(pb) = &mut *OUT_FRAME.borrow(&cs).borrow_mut() {
+        if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+            if let Some(pb) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
                 // OH NOES unsafitude !!DRAGONS!!
                 unsafe {
                     s.spdr.write(|w| w.bits(pb.data[pb.pos]));
@@ -210,7 +211,7 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
 pub fn fetch_command() -> Option<Command> {
     let mut comm = None;
     avr_device::interrupt::free(|cs| {
-        if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
+        if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
             //serial_println!("len: {} ",cr.len()).void_unwrap();
             if let Some(val) = cr.pop() {
                 //serial_println!("value: {:#?} ",val).void_unwrap();

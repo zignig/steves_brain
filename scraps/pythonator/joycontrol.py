@@ -27,7 +27,7 @@ class controller:
     def _send(self):
         self.ss.off()
         self.port.write(self._frame)
-        self.ss.off()
+        self.ss.on()
     
     def send(self,action,data):
         self.build(action,data)

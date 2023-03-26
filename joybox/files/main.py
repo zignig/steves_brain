@@ -3,6 +3,9 @@
 #import uasyncio
 #import _thread
 
+import joycontrol
+js = joycontrol.controller(5888)
+
 # Run the telnet server
 def run_telnet():
     if reg.telnet:
