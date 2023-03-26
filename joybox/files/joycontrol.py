@@ -17,14 +17,14 @@ FRAME_DISPLAY = 4
 FRAME_FAIL = 5
 
 class controller:
-    def __init__(self,speed):
+    def __init__(self,speed=5000):
         self.ss = Pin(16,Pin.OUT)
         self.ss.on()
         self.port = SPI(1,speed)
         self._frame = bytes([0]*FRAME_SIZE)
 
     def _build(self,action,data):
-        self._frame = bytes([SYNC1,SYNC2,action,0])
+        self._frame = bytes([SYNC1,SYNC2,0,action])
         self._frame = self._frame + bytes(data)
     
     def _send(self):

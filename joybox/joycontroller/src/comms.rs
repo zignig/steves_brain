@@ -8,6 +8,8 @@
 
 use crate::serial_println;
 use arduino_hal::prelude::*;
+use hubpack;
+use hubpack::SerializedSize;
 
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
@@ -121,19 +123,23 @@ fn SPI_STC() {
         if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
             data = s.spdr.read().bits();
         }
-        serial_println!("{}",data);
+        //serial_println!("{}",data);
         // put the data into the buffer
         if let Some(pb) = &mut *DATA_FRAME.borrow(cs).borrow_mut() {
             // push the byte into the packet checker
             if let Some(the_packet) = process_packet(data, pb) {
                 // the packet is well formed
-                //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
+                //const SIZE : usize = Command::MAX_SIZE;
+                //serial_println!("{:#?}", the_packet.data[3..FRAME_SIZE]);
                 // deserialize the command part of the packet
-                // let comm = Command::deserialize(&the_packet);
-                // // chuck the command into a ring buffer
-                // if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
-                //     cr.append(comm);
-                // }
+                let (comm, _) =
+                    hubpack::deserialize::<Command>(&the_packet.data[3..FRAME_SIZE]).unwrap();
+                // chuck the command into a ring buffer
+                //serial_println!("extra = {:#?}",extra);
+                //serial_println!("command = {:#?}",comm);
+                if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
+                    cr.append(comm);
+                }
             }
         }
         // Outgoing data

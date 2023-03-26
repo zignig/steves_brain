@@ -12,32 +12,31 @@ mod systick;
 mod utils;
 
 mod joystick;
-//mod console;
 
 //use commands::Command;
-//use comms::fetch_command;
+use comms::fetch_command;
 
-use panic_halt as _;
-//use arduino_hal::prelude::*;
 use arduino_hal::adc;
 use arduino_hal::simple_pwm::*;
-//use arduino_hal::prelude::*;
-//use systick::millis;
+use commands::Command;
+use panic_halt as _;
 
 #[arduino_hal::entry]
 fn main() -> ! {
-    // get thcomms::SlaveSPI::init(dp.SPI);e peripherals and pins
+    // get the peripherals and pins
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    
+
     // SPI interface
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
     pins.d12.into_output(); // miso
     pins.d10.into_pull_up_input(); // cs
 
-    comms::SlaveSPI::init(dp.SPI);    // serial port
+    // Attach the slave spi interface
+    comms::SlaveSPI::init(dp.SPI);
 
+    // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
@@ -59,7 +58,6 @@ fn main() -> ! {
     let mut d = display::Display::new(data, cs, sck);
     //d.power_off();
     d.power_on();
-
 
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
@@ -94,17 +92,31 @@ fn main() -> ! {
     d.power_on();
     d.brightness(1);
 
-    the_joystick.show_config();
+    //the_joystick.show_config();
     //the_joystick.zero_out(&mut adc);
     //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
-    //the_joystick.show_config();
-    the_joystick.mode  = joystick::Mode::Running;
+    the_joystick.show_config();
+
+    //the_joystick.mode  = joystick::Mode::Running;
 
     //activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() }
+
+    let c = Command::XY(10, 10);
+    commands::show(c);
     loop {
+        if let Some(comm) = fetch_command() {
+            //serial_println!("{:#?}", comm);
+            match comm {
+              Command::Hello => serial_println!("hello"),
+              Command::Display(val) => { 
+                d.show_number(val);
+              }
+                _ => serial_println!("unbound {:#?}", comm),
+            }
+        }
         // on the tick ... DO.
         if systick::is_tick() {
             let time = systick::millis();
@@ -116,8 +128,9 @@ fn main() -> ! {
 
             //d.show_number(the_throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
-            d.show_number(time as i32);
+            //d.show_number(time as i32);
             num = num + 1;
+
         }
     }
 }

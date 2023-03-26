@@ -13,14 +13,14 @@ FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
 {% endfor %}
 
 class controller:
-    def __init__(self,speed):
+    def __init__(self,speed=5000):
         self.ss = Pin({{select_pin}},Pin.OUT)
         self.ss.on()
         self.port = SPI({{spi_interface}},speed)
         self._frame = bytes([0]*FRAME_SIZE)
 
     def _build(self,action,data):
-        self._frame = bytes([SYNC1,SYNC2,action,0])
+        self._frame = bytes([SYNC1,SYNC2,0,action])
         self._frame = self._frame + bytes(data)
     
     def _send(self):
