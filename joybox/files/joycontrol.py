@@ -40,50 +40,34 @@ class controller:
         self._send()
     
     def hello(self,):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('',self._data,0,)
         self.send(FRAME_HELLO,data)
     
     def xy(self,d1,d2):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('bb',self._data,0,d1,d2)
         self.send(FRAME_XY,data)
     
     def zt(self,d1,d2):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('bb',self._data,0,d1,d2)
         self.send(FRAME_ZT,data)
     
     def callibrate(self,):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('',self._data,0,)
         self.send(FRAME_CALLIBRATE,data)
     
     def display(self,d1):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('i',self._data,0,d1)
         self.send(FRAME_DISPLAY,data)
     
     def brightness(self,d1):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_BRIGHTNESS,data)
     
     def clear(self,):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('',self._data,0,)
         self.send(FRAME_CLEAR,data)
     
     def fail(self,):
-        data = 1 
-        # mapped dataset
-        # struct.pack_into('B',self._data,0,d1)
+        data  = struct.pack_into('',self._data,0,)
         self.send(FRAME_FAIL,data)
     

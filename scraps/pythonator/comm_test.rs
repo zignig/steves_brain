@@ -22,14 +22,8 @@ pub enum Incoming {
     Joy(i8,i8,i8),
     Throttle(i8),
     Callibrate(i8),
-    Display(u8,u8)
+    Display(u8,u8),
+    Fnord(i32),
+    Cross(u8,i16,i8),
 }
 
-#[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
-pub enum Outgoing { 
-    One,
-    Two,
-    Three(i8,i8,i8),
-    Five([u8;10]),
-    Size(i32,i32)
-}
