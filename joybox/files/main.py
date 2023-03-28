@@ -20,6 +20,15 @@ def count(val=200):
     for i in range(val):
         js.send(joycontrol.FRAME_DISPLAY,struct.pack('i',i+1))
 
+def startcal():
+    js.send(joycontrol.FRAME_STARTCAL,[0,0,0,0])
+
+def endcal():
+    js.send(joycontrol.FRAME_ENDCAL,[0,0,0,0])
+
+def resetcal():
+    js.send(joycontrol.FRAME_RESETCAL,[0,0,0,0])
+
 # Run the telnet server
 def run_telnet():
     if reg.telnet:

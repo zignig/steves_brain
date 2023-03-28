@@ -21,6 +21,13 @@ use arduino_hal::simple_pwm::*;
 use commands::Command;
 use panic_halt as _;
 
+enum State { 
+  Running,
+  Sleeping,
+  StartCallibration,
+  EndCallibration,
+}
+
 #[arduino_hal::entry]
 fn main() -> ! {
     // get the peripherals and pins
@@ -104,11 +111,13 @@ fn main() -> ! {
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() }
 
-    let c = Command::XY(10, 10);
-    commands::show(c);
+    //let c = Command::XY(10, 10);
+    //commands::show(c);
+    let mut state = State::Running;
     loop {
         if let Some(comm) = fetch_command() {
             //serial_println!("{:#?}", comm);
+            commands::show(comm);
             match comm {
               Command::Hello => serial_println!("hello"),
               Command::Display(val) => { 
@@ -116,6 +125,19 @@ fn main() -> ! {
               }
               Command::Brightness(bright) => {
                 d.brightness(bright);
+              }
+              Command::StartCal() => {
+                the_joystick.mode = joystick::Mode::RunCallibrate;
+                the_joystick.zero_out(&mut adc);
+                state = State::StartCallibration;
+              }
+              Command::EndCal() => { 
+                the_joystick.mode = joystick::Mode::Running;
+                state = State::EndCallibration;
+              }
+              Command::ResetCal() => { 
+                the_joystick.resetcal();
+                the_joystick.zero_out(&mut adc);
               }
               Command::Clear() =>{ 
                 d.clear();
@@ -131,7 +153,22 @@ fn main() -> ! {
             //the_joystick.show();
             the_throttle.update(&mut adc);
             //the_throttle.show();
+            match state { 
+              State::Running => {
+                //the_joystick.show();
+              }
+              State::Sleeping => { 
 
+              }
+              State::StartCallibration => { 
+                the_joystick.show_config();
+              }
+              State::EndCallibration => {
+                the_joystick.mode = joystick::Mode::Running;
+                the_joystick.save(&mut ee);
+                state = State::Running;
+              }
+            }
             //d.show_number(the_throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
             //d.show_number(time as i32);

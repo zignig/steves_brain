@@ -23,9 +23,9 @@ pub struct AxisConfig {
 impl AxisConfig {
     pub fn new() -> Self {
         Self {
-            zero: 128,
-            min: -1,
-            max: 1,
+            zero: 0,
+            min: 0,
+            max: 0,
             dead_zone: 5,
         }
     }
@@ -152,6 +152,12 @@ impl Joy3Axis {
         self.x.get_zero(adc);
         self.y.get_zero(adc);
         self.z.get_zero(adc);
+    }
+
+    pub fn resetcal(&mut self) { 
+        self.x.config = AxisConfig::new();
+        self.y.config = AxisConfig::new();
+        self.z.config = AxisConfig::new();
     }
 }
 
