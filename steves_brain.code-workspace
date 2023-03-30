@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "joybox/joycontroller"
+		},
+		{
+			"path": "scraps/pythonator"
+		},
+		{
+			"path": "rover/newdrive"
+		}
+	],
+	"settings": {}
+}
