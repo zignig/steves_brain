@@ -6,10 +6,8 @@
 //! This is a frame based slave SPI interface
 //!
 
-use crate::serial_println;
-use arduino_hal::prelude::*;
+//use crate::serial_println;
 use hubpack;
-use hubpack::SerializedSize;
 
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
