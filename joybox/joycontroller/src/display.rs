@@ -60,6 +60,10 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
     if n == 0 {
         return b"0";
     }
+    // don't overflow the display
+    if n > 99999999 || n < -9999999 { 
+        return b"Err";
+    }
     let mut i = 0;
     while n > 0 {
         buf[i] = (n % 10) as u8 + b'0';
