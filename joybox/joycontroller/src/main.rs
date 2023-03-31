@@ -99,12 +99,11 @@ fn main() -> ! {
     d.power_on();
     d.brightness(1);
 
-    the_joystick.show_config();
-    //the_joystick.zero_out(&mut adc);
-    //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
     the_joystick.show_config();
 
+    the_throttle.load(&mut  ee);
+    the_throttle.show_config();
     //the_joystick.mode  = joystick::Mode::Running;
 
     //activate the interrupts
@@ -116,7 +115,7 @@ fn main() -> ! {
     let mut state = State::Running;
     loop {
         if let Some(comm) = fetch_command() {
-            //serial_println!("{:#?}", comm);
+            serial_println!("{:#?}", comm);
             //commands::show(comm);
             match comm {
               Command::Hello => serial_println!("hello"),
@@ -128,19 +127,22 @@ fn main() -> ! {
               }
               Command::StartCal() => {
                 the_joystick.mode = joystick::Mode::RunCallibrate;
-                the_joystick.zero_out(&mut adc);
+                the_throttle.mode = joystick::Mode::RunCallibrate;
+                the_throttle.zero_out(&mut adc);
                 state = State::StartCallibration;
               }
               Command::EndCal() => { 
-                the_joystick.mode = joystick::Mode::Running;
                 state = State::EndCallibration;
               }
               Command::ResetCal() => { 
                 the_joystick.resetcal();
                 the_joystick.zero_out(&mut adc);
+                the_throttle.resetcal();
+                the_throttle.zero_out(&mut adc);
               }
               Command::ShowCal() => { 
                 the_joystick.show_config();
+                the_throttle.show_config();
               }
               Command::Clear() =>{ 
                 d.clear();
@@ -165,14 +167,17 @@ fn main() -> ! {
               }
               State::StartCallibration => { 
                 the_joystick.show_config();
+                the_throttle.show_config();
               }
               State::EndCallibration => {
                 the_joystick.mode = joystick::Mode::Running;
                 the_joystick.save(&mut ee);
+                the_throttle.mode = joystick::Mode::Running;
+                the_throttle.save(&mut ee);
                 state = State::Running;
               }
             }
-            //d.show_number(the_throttle.t.value as i32);
+            d.show_number(the_throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
             //d.show_number(time as i32);
             num = num + 1;

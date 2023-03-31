@@ -163,19 +163,51 @@ impl Joy3Axis {
 
 pub struct Throttle {
     pub t: Axis,
+    pub mode: Mode,
 }
 
 impl Throttle {
     pub fn new(t: Channel) -> Self {
-        Self { t: Axis::new(t) }
+        let mut throt = Axis::new(t);
+        // the zeroing on the throttle is different
+        throt.config.min = 0;
+        throt.config.max = -900;
+        Self { t: throt, mode: Mode::Running}
     }
 
-    pub fn update(&mut self, adc: &mut arduino_hal::Adc) {
-        self.t.get_value(adc);
+    pub fn load(&mut self, ee: &mut Eeprom) {
+        self.t.load(ee, 4);
+    }
+
+    pub fn save(&mut self,ee: &mut Eeprom){
+        self.t.save(ee,4);
     }
 
     pub fn show(&mut self) {
         serial_println!("T:{}", self.t.value);
         serial_println!("\n");
+    }
+
+    pub fn update(&mut self, adc: &mut arduino_hal::Adc) {
+        match self.mode {
+            Mode::Running => {
+                self.t.get_value(adc);
+            }
+            Mode::RunCallibrate => {
+                self.t.callibrate(adc);
+            }
+        }
+    }
+    pub fn show_config(&mut self) {
+        serial_println!("T:{:#?}", self.t.config);
+        serial_println!("\n");
+    }
+    pub fn zero_out(&mut self, adc: &mut arduino_hal::Adc) {
+        self.t.config.min = 0;
+        self.t.config.max = 0;
+        self.t.get_zero(adc);
+    }
+    pub fn resetcal(&mut self) { 
+        self.t.config = AxisConfig::new();
     }
 }
