@@ -99,7 +99,7 @@ fn main() -> ! {
     d.power_on();
     d.brightness(1);
 
-    //the_joystick.show_config();
+    the_joystick.show_config();
     //the_joystick.zero_out(&mut adc);
     //the_joystick.save(&mut ee);
     the_joystick.load(&mut ee);
@@ -117,7 +117,7 @@ fn main() -> ! {
     loop {
         if let Some(comm) = fetch_command() {
             //serial_println!("{:#?}", comm);
-            commands::show(comm);
+            //commands::show(comm);
             match comm {
               Command::Hello => serial_println!("hello"),
               Command::Display(val) => { 
@@ -138,6 +138,9 @@ fn main() -> ! {
               Command::ResetCal() => { 
                 the_joystick.resetcal();
                 the_joystick.zero_out(&mut adc);
+              }
+              Command::ShowCal() => { 
+                the_joystick.show_config();
               }
               Command::Clear() =>{ 
                 d.clear();

@@ -19,6 +19,7 @@ pub enum Command {
     Hello,
     XY(i8, i8),
     ZT(i8, i8),
+    ShowCal(),
     StartCal(),
     EndCal(),
     ResetCal(),

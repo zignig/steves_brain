@@ -108,15 +108,15 @@ impl Joy3Axis {
     }
 
     pub fn load(&mut self, ee: &mut Eeprom) {
-        self.x.load(ee, 0);
-        self.y.load(ee, 1);
-        self.z.load(ee, 2);
+        self.x.load(ee, 1);
+        self.y.load(ee, 2);
+        self.z.load(ee, 3);
     }
 
     pub fn save(&mut self, ee: &mut Eeprom) {
-        self.x.save(ee, 0);
-        self.y.save(ee, 1);
-        self.z.save(ee, 2);
+        self.x.save(ee, 1);
+        self.y.save(ee, 2);
+        self.z.save(ee, 3);
     }
 
     pub fn update(&mut self, adc: &mut arduino_hal::Adc) {

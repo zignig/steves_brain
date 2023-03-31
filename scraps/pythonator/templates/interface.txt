@@ -34,6 +34,6 @@ class controller:
         self._send()
     {% for item in items %}
     def {{ item.name|lower }}(self,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%}):
-        data  = struct.pack_into('{{item.format_string}}',self._data,0,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%})
-        self.send(FRAME_{{item.name|upper}},data)
+        struct.pack_into('{{item.format_string}}',self._data,0,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%})
+        self.send(FRAME_{{item.name|upper}},self._data)
     {% endfor %}
