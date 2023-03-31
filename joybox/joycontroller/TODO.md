@@ -1,16 +1,12 @@
 # TODO 
-- add joystick input to diff drive
-- state machine for robot control 
-- fix change of timeout
+- Combine into single struct with trait 
+    - joystick
+    - throttle
+    - buttons
+    - switches
 
-- comms
-    - outgoing frames
-    - template the python interface from ser/des
-    
+- Do calculations in floats and then covert to i8 for tranmission
+
 
 # DONE 
-
-- split out Command enum (tick)
-- join the two drives into a single diff drive (tick)
-- change max current remotely (tick)
-
+- Eeprom load/save 

@@ -19,7 +19,10 @@ FRAME_RESETCAL = 6
 FRAME_DISPLAY = 7
 FRAME_BRIGHTNESS = 8
 FRAME_CLEAR = 9
-FRAME_FAIL = 10
+FRAME_OUTCONTROL = 10
+FRAME_OUTSWITCHES = 11
+FRAME_LOGGER = 12
+FRAME_FAIL = 13
 
 class controller:
     def __init__(self,speed=5000):
@@ -81,6 +84,18 @@ class controller:
     def clear(self,):
         struct.pack_into('',self._data,0,)
         self.send(FRAME_CLEAR,self._data)
+    
+    def outcontrol(self,d1,d2,d3,d4):
+        struct.pack_into('bbbb',self._data,0,d1,d2,d3,d4)
+        self.send(FRAME_OUTCONTROL,self._data)
+    
+    def outswitches(self,d1):
+        struct.pack_into('b',self._data,0,d1)
+        self.send(FRAME_OUTSWITCHES,self._data)
+    
+    def logger(self,):
+        struct.pack_into('',self._data,0,)
+        self.send(FRAME_LOGGER,self._data)
     
     def fail(self,):
         struct.pack_into('',self._data,0,)

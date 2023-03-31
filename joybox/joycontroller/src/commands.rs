@@ -25,6 +25,9 @@ pub enum Command {
     Display(i32),
     Brightness(u8),
     Clear(),
+    OutControl(i8,i8,i8,i8),
+    OutSwitches(i8),
+    Logger,
     Fail,
 }
 
