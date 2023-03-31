@@ -5,7 +5,6 @@
 
 use crate::serial_println;
 //use arduino_hal::prelude::*;
-use crate::comms::{FrameBuffer, SYNC1, SYNC2};
 use hubpack::SerializedSize;
 use serde_derive::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
