@@ -10,6 +10,23 @@ use avr_device;
 
 use avr_device::interrupt::Mutex;
 
+// Until the eeprom is fixed use a fixed callibration 
+impl Controls {
+pub fn load_fixed(&mut self){
+    self.joystick.x.config = AxisConfig{ 
+        zero: 499, min: -129, max: 129, dead_zone: -20
+    };
+    self.joystick.y.config = AxisConfig{ 
+        zero: 519, min: -129, max: 125, dead_zone: -20
+    };
+    self.joystick.z.config = AxisConfig{ 
+        zero: 553, min: -203, max: 226, dead_zone: -20
+    };
+    self.throttle.t.config = AxisConfig{ 
+        zero: 642, min: 0, max: 250, dead_zone: -20
+    };
+}
+}
 // Single axis
 #[derive(uDebug)]
 pub enum Mode {
@@ -70,7 +87,7 @@ impl Axis {
     fn save(&mut self, ee: &mut Eeprom, slot: u16) {
         let offset = slot * Axis::CONFIG_SIZE;
         let mut buf: [u8; Axis::CONFIG_SIZE as usize] = [0; Axis::CONFIG_SIZE as usize];
-        //ee.erase(offset, offset+Axis::CONFIG_SIZE).unwrap();
+        ee.erase(offset, offset+Axis::CONFIG_SIZE).unwrap();
         let _ = hubpack::serialize(&mut buf, &self.config);
         serial_println!("> {:?}", buf[..]);
         let err = ee.write(offset, &buf);

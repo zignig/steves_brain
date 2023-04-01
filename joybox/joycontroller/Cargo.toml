@@ -29,9 +29,11 @@ max7219 = "0.3.1"
 
 
 [dependencies.arduino-hal]
-git = "https://github.com/rahix/avr-hal"
-rev = "4c9c44c314eb061ee20556ef10d45dea36e75ee4"
+path = "/opt/avr-hal/arduino-hal/"
+#git = "https://github.com/rahix/avr-hal"
+#rev = "4c9c44c314eb061ee20556ef10d45dea36e75ee4"
 #rev = "3b8f39fa2ec5e3359c7bedc33d982e75e8cc3700"
+#rev = "c6a3d997561722f01fef9b62baeccab425b178a9"
 features = ["arduino-nano"]
 
 [dependencies.avr-device]

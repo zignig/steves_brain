@@ -16,15 +16,16 @@ FRAME_SHOWCAL = 3
 FRAME_STARTCAL = 4
 FRAME_ENDCAL = 5
 FRAME_RESETCAL = 6
-FRAME_DISPLAY = 7
-FRAME_BRIGHTNESS = 8
-FRAME_CLEAR = 9
-FRAME_OUTCONTROL = 10
-FRAME_OUTSWITCHES = 11
-FRAME_DUMPEEPROM = 12
-FRAME_ERASEEEPROM = 13
-FRAME_LOGGER = 14
-FRAME_FAIL = 15
+FRAME_LOADCAL = 7
+FRAME_DISPLAY = 8
+FRAME_BRIGHTNESS = 9
+FRAME_CLEAR = 10
+FRAME_OUTCONTROL = 11
+FRAME_OUTSWITCHES = 12
+FRAME_DUMPEEPROM = 13
+FRAME_ERASEEEPROM = 14
+FRAME_LOGGER = 15
+FRAME_FAIL = 16
 
 class controller:
     def __init__(self,speed=5000):
@@ -75,6 +76,10 @@ class controller:
         struct.pack_into('',self._data,0,)
         self.send(FRAME_RESETCAL,self._data)
     
+    def loadcal(self,):
+        struct.pack_into('',self._data,0,)
+        self.send(FRAME_LOADCAL,self._data)
+    
     def display(self,d1):
         struct.pack_into('i',self._data,0,d1)
         self.send(FRAME_DISPLAY,self._data)
@@ -99,8 +104,8 @@ class controller:
         struct.pack_into('',self._data,0,)
         self.send(FRAME_DUMPEEPROM,self._data)
     
-    def eraseeeprom(self,d1):
-        struct.pack_into('B',self._data,0,d1)
+    def eraseeeprom(self,):
+        struct.pack_into('',self._data,0,)
         self.send(FRAME_ERASEEEPROM,self._data)
     
     def logger(self,):

@@ -24,3 +24,8 @@ avr-objcopy -O ihex  target/avr-atmega328p/debug/joycontroller.elf  data.hex
 # grab eeprom
 
 avrdude -c arduino  -P /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A700eCR5-if00-port0 -p atmega328p  -b 57600 -U eeprom:r:eeprom.hex:i
+
+
+# eeprom fail code.
+
+avr-hal-f3855d5807fdfd57/d191b57/avr-hal-generic/src/eeprom.rs#L181

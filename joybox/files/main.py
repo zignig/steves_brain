@@ -5,7 +5,7 @@
 import struct 
 
 import joycontrol
-js = joycontrol.controller(10000)
+js = joycontrol.controller(5000)
 
 
 def count(val=200):

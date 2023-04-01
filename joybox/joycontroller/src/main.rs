@@ -108,6 +108,7 @@ fn main() -> ! {
     d.brightness(1);
 
     the_controls.load(&mut ee);
+    //the_controls.load_fixed();
     the_controls.show_config();
     //the_joystick.mode  = joystick::Mode::Running;
 
@@ -147,6 +148,9 @@ fn main() -> ! {
                     Command::ShowCal => {
                         the_controls.show_config();
                     }
+                    Command::LoadCal => { 
+                        the_controls.load(&mut ee);
+                    }
                     Command::Clear => {
                         d.clear();
                     }
@@ -158,13 +162,9 @@ fn main() -> ! {
                         ee.read(0, &mut buf).unwrap();
                         serial_println!("{:?}", buf[..]);
                     }
-                    Command::EraseEeprom(val) => {
+                    Command::EraseEeprom => {
                       avr_device::interrupt::free(|cs| {
-                        //let _ = ee.erase(0,100);
-                        for i in 0..100 {
-                            ee.write_byte(i,val);
-
-                        }
+                        let _ = ee.erase(0,100);
                       });
                     }
                     _ => serial_println!("unbound {:#?}", comm),
@@ -191,10 +191,15 @@ fn main() -> ! {
                     state = State::Running;
                 }
             }
-            d.show_number(the_controls.throttle.t.value as i32);
+            //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
             //d.show_number(time as i32);
             num = num + 1;
         }
     }
+}
+
+#[avr_device::interrupt(atmega328p)]
+fn WDT(){
+
 }

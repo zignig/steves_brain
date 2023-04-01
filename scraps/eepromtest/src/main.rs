@@ -19,10 +19,12 @@ fn main() -> ! {
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
+
     dump(&ee);
     serial_println!("Woot it works");
     for i in 0..1024 {
-        ee.write_byte(i,255);
+        ee.write_byte(i,(i % 256) as u8 );
+        serial_println!("{:?}",i);
       }
     loop {
         arduino_hal::delay_ms(1000);
