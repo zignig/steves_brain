@@ -24,13 +24,12 @@ use arduino_hal::hal::wdt;
 use commands::Command;
 use panic_halt as _;
 
-enum State { 
-  Running,
-  Sleeping,
-  StartCallibration,
-  EndCallibration,
+enum State {
+    Running,
+    Sleeping,
+    StartCallibration,
+    EndCallibration,
 }
-
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -38,7 +37,7 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
     // Watch dog timer ( for reboots )
-    let mut watchdog  = wdt::Wdt::new(dp.WDT,&dp.CPU.mcusr);
+    let mut watchdog = wdt::Wdt::new(dp.WDT, &dp.CPU.mcusr);
     // SPI interface
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
@@ -100,7 +99,7 @@ fn main() -> ! {
     let mut the_throttle = joystick::Throttle::new(a3);
 
     // Put them into a single structure
-    let mut the_controls = joystick::Controls::new(the_joystick,the_throttle);
+    let mut the_controls = joystick::Controls::new(the_joystick, the_throttle);
 
     let mut the_mode = joystick::Mode::Running;
     let mut num: i32 = 1;
@@ -121,69 +120,81 @@ fn main() -> ! {
     let mut logging: bool = false;
     let mut state = State::Running;
     loop {
-        if let Some(comm) = fetch_command() {
-            serial_println!("{:#?}", comm);
-            //commands::show(comm);
-            match comm {
-              Command::Hello => serial_println!("hello"),
-              Command::Display(val) => { 
-                d.show_number(val);
-              }
-              Command::Brightness(bright) => {
-                d.brightness(bright);
-              }
-              Command::StartCal() => {
-                the_mode = joystick::Mode::RunCallibrate;
-                state = State::StartCallibration;
-              }
-              Command::EndCal() => { 
-                state = State::EndCallibration;
-              }
-              Command::ResetCal() => { 
-                the_controls.resetcal();
-                the_controls.zero_out(&mut adc);
-              }
-              Command::ShowCal() => { 
-                the_controls.show_config();
-              }
-              Command::Clear() =>{ 
-                d.clear();
-              }
-              Command::Logger =>{
-                logging = !logging;
-              }
-                _ => serial_println!("unbound {:#?}", comm),
-            }
-        }
         // on the tick ... DO.
         if systick::is_tick() {
+            if let Some(comm) = fetch_command() {
+                serial_println!("{:#?}", comm);
+                //commands::show(comm);
+                match comm {
+                    Command::Hello => serial_println!("hello"),
+                    Command::Display(val) => {
+                        d.show_number(val);
+                    }
+                    Command::Brightness(bright) => {
+                        d.brightness(bright);
+                    }
+                    Command::StartCal => {
+                        the_mode = joystick::Mode::RunCallibrate;
+                        state = State::StartCallibration;
+                    }
+                    Command::EndCal => {
+                        state = State::EndCallibration;
+                    }
+                    Command::ResetCal => {
+                        the_controls.resetcal();
+                        the_controls.zero_out(&mut adc);
+                    }
+                    Command::ShowCal => {
+                        the_controls.show_config();
+                    }
+                    Command::Clear => {
+                        d.clear();
+                    }
+                    Command::Logger => {
+                        logging = !logging;
+                    }
+                    Command::DumpEeprom => {
+                        let mut buf: [u8; 100] = [0; 100];
+                        ee.read(0, &mut buf).unwrap();
+                        serial_println!("{:?}", buf[..]);
+                    }
+                    Command::EraseEeprom(val) => {
+                      avr_device::interrupt::free(|cs| {
+                        //let _ = ee.erase(0,100);
+                        for i in 0..100 {
+                            ee.write_byte(i,val);
+
+                        }
+                      });
+                    }
+                    _ => serial_println!("unbound {:#?}", comm),
+                }
+            }
             //let time = systick::millis();
             //serial_println!("{:?}", &the_mode);
-            the_controls.update(&the_mode,&mut adc);
+            the_controls.update(&the_mode, &mut adc);
 
-            match state { 
-              State::Running => {
-                if logging { 
-                  the_controls.show();
+            match state {
+                State::Running => {
+                    if logging {
+                        the_controls.show();
+                    }
                 }
-              }
-              State::Sleeping => { 
-
-              }
-              State::StartCallibration => { 
-                the_controls.show_config();
-              }
-              State::EndCallibration => {
-                the_controls.save(&mut ee);
-                the_mode = joystick::Mode::Running;
-                state = State::Running;
-              }
+                State::Sleeping => {}
+                State::StartCallibration => {
+                    the_controls.show_config();
+                }
+                State::EndCallibration => {
+                    the_controls.save(&mut ee);
+                    //the_controls.joystick.save(&mut ee);
+                    the_mode = joystick::Mode::Running;
+                    state = State::Running;
+                }
             }
             d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_joystick.x.value as i32);
             //d.show_number(time as i32);
             num = num + 1;
-
         }
     }
 }

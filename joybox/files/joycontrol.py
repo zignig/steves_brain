@@ -21,8 +21,10 @@ FRAME_BRIGHTNESS = 8
 FRAME_CLEAR = 9
 FRAME_OUTCONTROL = 10
 FRAME_OUTSWITCHES = 11
-FRAME_LOGGER = 12
-FRAME_FAIL = 13
+FRAME_DUMPEEPROM = 12
+FRAME_ERASEEEPROM = 13
+FRAME_LOGGER = 14
+FRAME_FAIL = 15
 
 class controller:
     def __init__(self,speed=5000):
@@ -92,6 +94,14 @@ class controller:
     def outswitches(self,d1):
         struct.pack_into('b',self._data,0,d1)
         self.send(FRAME_OUTSWITCHES,self._data)
+    
+    def dumpeeprom(self,):
+        struct.pack_into('',self._data,0,)
+        self.send(FRAME_DUMPEEPROM,self._data)
+    
+    def eraseeeprom(self,d1):
+        struct.pack_into('B',self._data,0,d1)
+        self.send(FRAME_ERASEEEPROM,self._data)
     
     def logger(self,):
         struct.pack_into('',self._data,0,)
