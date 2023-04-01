@@ -121,55 +121,61 @@ fn main() -> ! {
     let mut logging: bool = false;
     let mut state = State::Running;
     loop {
+        if let Some(comm) = fetch_command() {
+            serial_println!("{:?}", comm);
+            //commands::show(comm);
+            match comm {
+                Command::Hello => serial_println!("hello"),
+                Command::Display(val) => {
+                    d.show_number(val);
+                }
+                Command::Brightness(bright) => {
+                    d.brightness(bright);
+                }
+                Command::StartCal => {
+                    the_mode = joystick::Mode::RunCallibrate;
+                    state = State::StartCallibration;
+                }
+                Command::EndCal => {
+                    state = State::EndCallibration;
+                }
+                Command::ResetCal => {
+                    the_controls.resetcal();
+                    the_controls.zero_out(&mut adc);
+                }
+                Command::ShowCal => {
+                    the_controls.show_config();
+                }
+                Command::LoadCal => {
+                    the_controls.load(&mut ee);
+                }
+                Command::LoadDefault => {
+                    the_controls.load_fixed();
+                }
+                Command::Clear => {
+                    d.clear();
+                }
+                Command::Logger => {
+                    logging = !logging;
+                }
+                Command::DumpEeprom => {
+                    let mut buf: [u8; 100] = [0; 100];
+                    ee.read(0, &mut buf).unwrap();
+                    serial_println!("{:?}", buf[..]);
+                }
+                Command::EraseEeprom(val) => {
+                    avr_device::interrupt::free(|cs| {
+                        for i in 0..1024 {
+                            ee.write_byte(i, val);
+                        }
+                    });
+                    serial_println!("finshed erase");
+                }
+                _ => serial_println!("unbound {:#?}", comm),
+            }
+        }
         // on the tick ... DO.
         if systick::is_tick() {
-            if let Some(comm) = fetch_command() {
-                serial_println!("{:#?}", comm);
-                //commands::show(comm);
-                match comm {
-                    Command::Hello => serial_println!("hello"),
-                    Command::Display(val) => {
-                        d.show_number(val);
-                    }
-                    Command::Brightness(bright) => {
-                        d.brightness(bright);
-                    }
-                    Command::StartCal => {
-                        the_mode = joystick::Mode::RunCallibrate;
-                        state = State::StartCallibration;
-                    }
-                    Command::EndCal => {
-                        state = State::EndCallibration;
-                    }
-                    Command::ResetCal => {
-                        the_controls.resetcal();
-                        the_controls.zero_out(&mut adc);
-                    }
-                    Command::ShowCal => {
-                        the_controls.show_config();
-                    }
-                    Command::LoadCal => { 
-                        the_controls.load(&mut ee);
-                    }
-                    Command::Clear => {
-                        d.clear();
-                    }
-                    Command::Logger => {
-                        logging = !logging;
-                    }
-                    Command::DumpEeprom => {
-                        let mut buf: [u8; 100] = [0; 100];
-                        ee.read(0, &mut buf).unwrap();
-                        serial_println!("{:?}", buf[..]);
-                    }
-                    Command::EraseEeprom => {
-                      avr_device::interrupt::free(|cs| {
-                        let _ = ee.erase(0,100);
-                      });
-                    }
-                    _ => serial_println!("unbound {:#?}", comm),
-                }
-            }
             //let time = systick::millis();
             //serial_println!("{:?}", &the_mode);
             the_controls.update(&the_mode, &mut adc);
@@ -200,6 +206,4 @@ fn main() -> ! {
 }
 
 #[avr_device::interrupt(atmega328p)]
-fn WDT(){
-
-}
+fn WDT() {}

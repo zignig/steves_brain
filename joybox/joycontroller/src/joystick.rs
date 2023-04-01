@@ -10,22 +10,34 @@ use avr_device;
 
 use avr_device::interrupt::Mutex;
 
-// Until the eeprom is fixed use a fixed callibration 
+// Until the eeprom is fixed use a fixed callibration
 impl Controls {
-pub fn load_fixed(&mut self){
-    self.joystick.x.config = AxisConfig{ 
-        zero: 499, min: -129, max: 129, dead_zone: -20
-    };
-    self.joystick.y.config = AxisConfig{ 
-        zero: 519, min: -129, max: 125, dead_zone: -20
-    };
-    self.joystick.z.config = AxisConfig{ 
-        zero: 553, min: -203, max: 226, dead_zone: -20
-    };
-    self.throttle.t.config = AxisConfig{ 
-        zero: 642, min: 0, max: 250, dead_zone: -20
-    };
-}
+    pub fn load_fixed(&mut self) {
+        self.joystick.x.config = AxisConfig {
+            zero: 499,
+            min: -129,
+            max: 129,
+            dead_zone: -20,
+        };
+        self.joystick.y.config = AxisConfig {
+            zero: 519,
+            min: -129,
+            max: 125,
+            dead_zone: -20,
+        };
+        self.joystick.z.config = AxisConfig {
+            zero: 553,
+            min: -203,
+            max: 226,
+            dead_zone: -20,
+        };
+        self.throttle.t.config = AxisConfig {
+            zero: 642,
+            min: 0,
+            max: 250,
+            dead_zone: -20,
+        };
+    }
 }
 // Single axis
 #[derive(uDebug)]
@@ -87,17 +99,17 @@ impl Axis {
     fn save(&mut self, ee: &mut Eeprom, slot: u16) {
         let offset = slot * Axis::CONFIG_SIZE;
         let mut buf: [u8; Axis::CONFIG_SIZE as usize] = [0; Axis::CONFIG_SIZE as usize];
-        ee.erase(offset, offset+Axis::CONFIG_SIZE).unwrap();
+        ee.erase(offset, offset + Axis::CONFIG_SIZE).unwrap();
         let _ = hubpack::serialize(&mut buf, &self.config);
-        serial_println!("> {:?}", buf[..]);
+        //serial_println!("> {:?}", buf[..]);
         let err = ee.write(offset, &buf);
         match err {
             Ok(_) => {}
             Err(e) => serial_println!("{:?}", e),
         }
         // read back
-        ee.read(offset, &mut buf).unwrap();
-        serial_println!("< {:?}", buf[..]);
+        //ee.read(offset, &mut buf).unwrap();
+        //serial_println!("< {:?}", buf[..]);
     }
 
     fn load(&mut self, ee: &mut Eeprom, slot: u16) {
@@ -154,15 +166,15 @@ impl Joy3Axis {
 
 impl AnalogController for Joy3Axis {
     fn load(&mut self, ee: &mut Eeprom) {
-        self.x.load(ee, 1);
-        self.y.load(ee, 2);
-        self.z.load(ee, 3);
+        self.x.load(ee, 0);
+        self.y.load(ee, 1);
+        self.z.load(ee, 2);
     }
 
     fn save(&mut self, ee: &mut Eeprom) {
-        self.x.save(ee, 1);
-        self.y.save(ee, 2);
-        self.z.save(ee, 3);
+        self.x.save(ee, 0);
+        self.y.save(ee, 1);
+        self.z.save(ee, 2);
     }
 
     fn update(&mut self, mode: &Mode, adc: &mut arduino_hal::Adc) {
@@ -222,11 +234,11 @@ impl Throttle {
 
 impl AnalogController for Throttle {
     fn load(&mut self, ee: &mut Eeprom) {
-        self.t.load(ee, 4);
+        self.t.load(ee, 3);
     }
 
     fn save(&mut self, ee: &mut Eeprom) {
-        self.t.save(ee, 4);
+        self.t.save(ee, 3);
     }
 
     fn show(&mut self) {
@@ -286,14 +298,21 @@ impl AnalogController for Controls {
     }
 
     fn show(&mut self) {
-        self.joystick.show();
-        self.throttle.show();
+        serial_println!(
+            "X : {:?} , Y : {:?} , Z : {:?} , T : {:?}",
+            self.joystick.x.value,
+            self.joystick.y.value,
+            self.joystick.z.value,
+            self.throttle.t.value
+        );
+        //self.joystick.show();
+        //self.throttle.show();
     }
 
     fn show_config(&mut self) {
         self.joystick.show_config();
         self.throttle.show_config();
-        serial_println!("\n");
+        //serial_println!("\n");
     }
 
     fn zero_out(&mut self, adc: &mut arduino_hal::Adc) {

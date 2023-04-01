@@ -13,7 +13,7 @@ FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
 {% endfor %}
 
 class controller:
-    def __init__(self,speed=5000):
+    def __init__(self,speed=10000):
         self.ss = Pin({{select_pin}},Pin.OUT)
         self.ss.on()
         self.port = SPI({{spi_interface}},speed)

@@ -17,18 +17,19 @@ FRAME_STARTCAL = 4
 FRAME_ENDCAL = 5
 FRAME_RESETCAL = 6
 FRAME_LOADCAL = 7
-FRAME_DISPLAY = 8
-FRAME_BRIGHTNESS = 9
-FRAME_CLEAR = 10
-FRAME_OUTCONTROL = 11
-FRAME_OUTSWITCHES = 12
-FRAME_DUMPEEPROM = 13
-FRAME_ERASEEEPROM = 14
-FRAME_LOGGER = 15
-FRAME_FAIL = 16
+FRAME_LOADDEFAULT = 8
+FRAME_DISPLAY = 9
+FRAME_BRIGHTNESS = 10
+FRAME_CLEAR = 11
+FRAME_OUTCONTROL = 12
+FRAME_OUTSWITCHES = 13
+FRAME_DUMPEEPROM = 14
+FRAME_ERASEEEPROM = 15
+FRAME_LOGGER = 16
+FRAME_FAIL = 17
 
 class controller:
-    def __init__(self,speed=5000):
+    def __init__(self,speed=10000):
         self.ss = Pin(16,Pin.OUT)
         self.ss.on()
         self.port = SPI(1,speed)
@@ -80,6 +81,10 @@ class controller:
         struct.pack_into('',self._data,0,)
         self.send(FRAME_LOADCAL,self._data)
     
+    def loaddefault(self,):
+        struct.pack_into('',self._data,0,)
+        self.send(FRAME_LOADDEFAULT,self._data)
+    
     def display(self,d1):
         struct.pack_into('i',self._data,0,d1)
         self.send(FRAME_DISPLAY,self._data)
@@ -104,8 +109,8 @@ class controller:
         struct.pack_into('',self._data,0,)
         self.send(FRAME_DUMPEEPROM,self._data)
     
-    def eraseeeprom(self,):
-        struct.pack_into('',self._data,0,)
+    def eraseeeprom(self,d1):
+        struct.pack_into('B',self._data,0,d1)
         self.send(FRAME_ERASEEEPROM,self._data)
     
     def logger(self,):
