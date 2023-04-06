@@ -1,0 +1,36 @@
+https://github.com/Rahix/avr-hal/issues/406
+
+Unable to write 0xFF to the eeprom on atmega32p.
+
+I was attempting to save some configurations onto eeprom that loads on boot so I can keep a callibration.
+
+https://github.com/zignig/steves_brain/blob/c84cc40a48b77447823c9748c828ccb39eae7bd4/joybox/joycontroller/src/joystick.rs#L98
+
+Serializing with hubpack. I noticed that the negative numbers were not reloading correctly.
+
+Overwriting with an 0xFF left the cell unchanged, so i16's were wrong.
+After chasing through the hal and the I found the folowing code. 
+
+https://github.com/Rahix/avr-hal/blob/d191b577df5430cc8bf01aee60f801942be56a6c/avr-hal-generic/src/eeprom.rs#L167
+
+when the byte is FF is does not appear to write correctly. 
+
+I took out the 'if' with a bare write
+
+https://github.com/zignig/avr-hal/commit/898ab158884f786eecb672afb433caa4488c988b
+
+and it worked for write but the erase function is borked.
+
+I have tried this on other boards same result, so I think it's a bug. 
+
+I am running 
+ - rustc 1.70.0-nightly (5e1d3299a 2023-03-31)
+ - promini
+ - ubuntu
+
+ Simplified example: 
+
+ https://github.com/zignig/steves_brain/tree/main/scraps/eepromtest
+
+ There appears to be a bit overwrite strategy for eeprom , I am reading the AVR documentation to grok it.
+

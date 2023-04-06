@@ -39,15 +39,16 @@ where
         self.d.set_intensity(0, bright).unwrap();
     }
 
-    pub fn show_number(&mut self, val: i32) {
-        let mut buf = [0u8; 8];
+    pub fn show_number(&mut self, value: i32) {
+        self.d.write_integer(0, value);
+        // let mut buf = [0u8; 8];
 
-        let mut dis = [0u8; 8];
-        let mut j = base_10_bytes(val, &mut buf);
-        dis = pad_empty(j);
-        //serial_println!("val -> {:?}", dis);
-        //serial_println!("{:?}",j);
-        self.d.write_str(0, &mut dis, 0b00000000).unwrap();
+        // let mut dis = [0u8; 8];
+        // let mut j = base_10_bytes(val, &mut buf);
+        // dis = pad_empty(j);
+        // //serial_println!("val -> {:?}", dis);
+        // //serial_println!("{:?}",j);
+        // self.d.write_str(0, &mut dis, 0b00000000).unwrap();
     }
 }
 

@@ -30,7 +30,7 @@ fn main() -> ! {
         arduino_hal::delay_ms(1000);
         dump(&ee);
     }
-}
+} 
 
 fn dump(ee: &Eeprom) {
     let mut buf: [u8;1024] = [0;1024];

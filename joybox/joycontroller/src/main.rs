@@ -176,7 +176,7 @@ fn main() -> ! {
         }
         // on the tick ... DO.
         if systick::is_tick() {
-            //let time = systick::millis();
+            let time = systick::millis();
             //serial_println!("{:?}", &the_mode);
             the_controls.update(&the_mode, &mut adc);
 
@@ -198,9 +198,9 @@ fn main() -> ! {
                 }
             }
             //d.show_number(the_controls.throttle.t.value as i32);
-            //d.show_number(the_joystick.x.value as i32);
-            //d.show_number(time as i32);
-            num = num + 1;
+            d.show_number(the_controls.joystick.x.value as i32);
+            //d.show_number((num )  as i32);
+            num = num + 0xFFFF;
         }
     }
 }

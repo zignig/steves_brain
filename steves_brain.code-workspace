@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "rover/newdrive"
+		},
+		{
+			"path": "../max7219"
 		}
 	],
 	"settings": {}
