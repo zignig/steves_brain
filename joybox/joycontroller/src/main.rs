@@ -198,7 +198,7 @@ fn main() -> ! {
                 }
             }
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number(the_controls.joystick.x.value as i32);
+            d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number((num )  as i32);
             num = num + 0xFFFF;
         }
