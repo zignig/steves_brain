@@ -2,6 +2,7 @@
 
 in no particular order.
 
+- swap missile and emergency stop , wiper clashes.
 - missle switch
 - emergency stop 
 - left and right buttons 
@@ -16,7 +17,8 @@ in no particular order.
 
 # Code cleanup
 
-- Break out the omms system 
+- Break out the comms system 
+- set serial_println! into a normal mutex rather than critical section
 - make the console ( split the uart)
 - update the rover to the new comms and rebuild the control
 - update the boot.py
