@@ -19,14 +19,15 @@ FRAME_RESETCAL = 6
 FRAME_LOADCAL = 7
 FRAME_LOADDEFAULT = 8
 FRAME_DISPLAY = 9
-FRAME_BRIGHTNESS = 10
-FRAME_CLEAR = 11
-FRAME_OUTCONTROL = 12
-FRAME_OUTSWITCHES = 13
-FRAME_DUMPEEPROM = 14
-FRAME_ERASEEEPROM = 15
-FRAME_LOGGER = 16
-FRAME_FAIL = 17
+FRAME_HEXDISPLAY = 10
+FRAME_BRIGHTNESS = 11
+FRAME_CLEAR = 12
+FRAME_OUTCONTROL = 13
+FRAME_OUTSWITCHES = 14
+FRAME_DUMPEEPROM = 15
+FRAME_ERASEEEPROM = 16
+FRAME_LOGGER = 17
+FRAME_FAIL = 18
 
 class controller:
     def __init__(self,speed=10000):
@@ -88,6 +89,10 @@ class controller:
     def display(self,d1):
         struct.pack_into('i',self._data,0,d1)
         self.send(FRAME_DISPLAY,self._data)
+    
+    def hexdisplay(self,d1):
+        struct.pack_into('I',self._data,0,d1)
+        self.send(FRAME_HEXDISPLAY,self._data)
     
     def brightness(self,d1):
         struct.pack_into('B',self._data,0,d1)

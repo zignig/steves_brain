@@ -1,5 +1,5 @@
 // The various parts of the joystick reader
-use crate::{commands::Command, serial_println};
+use crate::{serial_println};
 use arduino_hal::adc::Channel;
 use arduino_hal::Eeprom;
 use hubpack::SerializedSize;
@@ -8,7 +8,6 @@ use ufmt::derive::uDebug;
 
 use avr_device;
 
-use avr_device::interrupt::Mutex;
 
 // Until the eeprom is fixed use a fixed callibration
 impl Controls {

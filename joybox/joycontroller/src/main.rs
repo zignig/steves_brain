@@ -10,10 +10,11 @@ mod display;
 mod shared;
 mod systick;
 mod utils;
+mod buttons;
 
 mod joystick;
 use joystick::AnalogController;
-//use commands::Command;
+
 use comms::fetch_command;
 
 use arduino_hal::adc;
@@ -70,6 +71,18 @@ fn main() -> ! {
     //d.power_off();
     d.power_on();
 
+    // buttons and switches 
+    let stop_button_pin  = pins.d6.into_floating_input();
+    let right_button_pin = pins.d5.into_floating_input();
+    let left_button_pin = pins.d4.into_floating_input();
+    let missile_switch_pin = pins.d3.into_floating_input();
+
+    let stop_button = buttons::Button::new(stop_button_pin);
+    let right_button = buttons::Button::new(right_button_pin);
+    let left_button = buttons::Button::new(left_button_pin);
+    let mut missile_switch = buttons::Button::new(missile_switch_pin);
+
+    //let the_buttons = buttons::Buttons::new((stop_button,right_button,left_button,missile_switch));
     // set the overflow interrupt flag for the systick timer
     dp.TC0.timsk0.write(|w| w.toie0().set_bit());
     // start the timer ( for pwm , but not )
@@ -129,6 +142,9 @@ fn main() -> ! {
                 Command::Display(val) => {
                     d.show_number(val);
                 }
+                Command::HexDisplay(val) => {
+                    d.show_hex(val as u32);
+                }
                 Command::Brightness(bright) => {
                     d.brightness(bright);
                 }
@@ -183,7 +199,8 @@ fn main() -> ! {
             match state {
                 State::Running => {
                     if logging {
-                        the_controls.show();
+                        //the_controls.show();
+                        serial_println!("Missile = {:?}",missile_switch.read());
                     }
                 }
                 State::Sleeping => {}
@@ -198,9 +215,10 @@ fn main() -> ! {
                 }
             }
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number(the_controls.throttle.t.value as i32);
-            //d.show_number((num )  as i32);
-            num = num + 0xFFFF;
+            //d.show_number(the_controls.throttle.t.value as i32);
+            d.show_number((time )  as i32);
+            //d.show_hex(num as u32);
+            num = num + 1;
         }
     }
 }

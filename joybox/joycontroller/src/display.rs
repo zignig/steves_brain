@@ -39,8 +39,12 @@ where
         self.d.set_intensity(0, bright).unwrap();
     }
 
+    pub fn show_hex(&mut self, value: u32){
+        self.d.write_hex(0, value).expect("");
+    }
+
     pub fn show_number(&mut self, value: i32) {
-        self.d.write_integer(0, value);
+        self.d.write_integer(0, value).expect("");
         // let mut buf = [0u8; 8];
 
         // let mut dis = [0u8; 8];
@@ -78,7 +82,7 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
     let slice = &mut buf[..i];
     slice.reverse();
     &*slice
-}
+} 
 
 fn pad_empty(val: &[u8]) -> [u8; 8] {
     let size: usize = 8;

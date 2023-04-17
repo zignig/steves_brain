@@ -25,6 +25,7 @@ pub enum Command {
     LoadCal,
     LoadDefault,
     Display(i32),
+    HexDisplay(u32),
     Brightness(u8),
     Clear,
     OutControl(i8, i8, i8, i8),
