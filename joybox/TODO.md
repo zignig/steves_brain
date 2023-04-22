@@ -2,6 +2,8 @@
 
 in no particular order.
 
+- code for buttons , generate events.
+  - 
 - swap missile and emergency stop , wiper clashes.
 - top switches and top leds. ( one switch broken , esp pinout...)
 - update the code to move frames back to the esp
@@ -11,13 +13,14 @@ in no particular order.
 - cut the box carefully and mount the electronics 
 - power supply for the box ( 4 x AA )
 ## Done
- - fix the display overflow issue
- - missle switch
- - emergency stop 
- - left and right buttons
+- fix the display overflow issue
+- missle switch
+- emergency stop 
+- left and right buttons
 
 # Code cleanup
-- Break out the comms system 
+- Break out the comms system
+  - have a generic frame
 - set serial_println! into a normal mutex rather than critical section
 - update the rover to the new comms and rebuild the control
 - update the boot.py

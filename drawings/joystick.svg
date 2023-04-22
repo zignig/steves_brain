@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:lc="https://librecad.org" xmlns:xlink="http://www.w3.org/1999/xlink" width="170mm" height="120mm" viewBox="0 0 170 120">
+    <defs>
+        <g id="1558" lc:blockname="joystick">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <circle cx="-21.75" cy="98.25" r="1.5"/>
+                <circle cx="21.75" cy="98.25" r="1.5"/>
+                <circle cx="21.75" cy="141.75" r="1.5"/>
+                <circle cx="-21.75" cy="141.75" r="1.5"/>
+                <line x1="-0" y1="103.5" x2="15.5" y2="103.5"/>
+                <line x1="16.5" y1="120" x2="16.5" y2="104.5"/>
+                <path d="M15.5,103.5 A1,1 0 0,1 16.5,104.5 "/>
+                <line x1="16.5" y1="120" x2="16.5" y2="135.5"/>
+                <line x1="-0" y1="136.5" x2="15.5" y2="136.5"/>
+                <path d="M16.5,135.5 A1,1 0 0,1 15.5,136.5 "/>
+                <line x1="-0" y1="136.5" x2="-15.5" y2="136.5"/>
+                <line x1="-16.5" y1="120" x2="-16.5" y2="135.5"/>
+                <path d="M-15.5,136.5 A1,1 0 0,1 -16.5,135.5 "/>
+                <line x1="-16.5" y1="120" x2="-16.5" y2="104.5"/>
+                <line x1="-0" y1="103.5" x2="-15.5" y2="103.5"/>
+                <path d="M-16.5,104.5 A1,1 0 0,1 -15.5,103.5 "/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="2753" lc:blockname="display">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <circle cx="-40.45" cy="115.5" r="1.5"/>
+                <circle cx="-40.45" cy="124.5" r="1.5"/>
+                <circle cx="36.55" cy="115.5" r="1.5"/>
+                <circle cx="36.55" cy="124.5" r="1.5"/>
+                <line x1="-30.3" y1="127.5" x2="30.3" y2="127.5"/>
+                <line x1="30.3" y1="127.5" x2="30.3" y2="112.5"/>
+                <line x1="30.3" y1="112.5" x2="-30.3" y2="112.5"/>
+                <line x1="-30.3" y1="112.5" x2="-30.3" y2="127.5"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="5014" lc:blockname="throttle">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <circle cx="-15.25" cy="89.3" r="1.75"/>
+                <circle cx="15.25" cy="89.3" r="1.75"/>
+                <circle cx="-15.25" cy="150.7" r="1.75"/>
+                <circle cx="15.25" cy="150.7" r="1.75"/>
+                <line x1="1.85" y1="89.3" x2="6.85" y2="89.3"/>
+                <line x1="6.85" y1="150.7" x2="1.85" y2="150.7"/>
+                <line x1="6.85" y1="89.3" x2="9.19029034" y2="99.1952137"/>
+                <line x1="9.19029034" y1="140.7281812" x2="11.2" y2="130.67963289"/>
+                <line x1="11.2" y1="109.24376201" x2="11.2" y2="130.67963289"/>
+                <line x1="11.2" y1="109.24376201" x2="9.19029034" y2="99.1952137"/>
+                <line x1="6.85" y1="150.7" x2="9.19029034" y2="140.7281812"/>
+                <line x1="-0.89029034" y1="140.7281812" x2="-2.9" y2="130.67963289"/>
+                <line x1="-0.89029034" y1="99.1952137" x2="-2.9" y2="109.24376201"/>
+                <line x1="-2.9" y1="130.67963289" x2="-2.9" y2="109.24376201"/>
+                <line x1="-0.89029034" y1="99.1952137" x2="1.85" y2="89.3"/>
+                <line x1="-0.89029034" y1="140.7281812" x2="1.85" y2="150.7"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="5044" lc:blockname="cmark">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <circle cx="-0" cy="120" r="0.2"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="5046" lc:blockname="screw">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <line x1="0.43413" y1="119.6535" x2="2" y2="119.6535"/>
+                <line x1="0.425681" y1="120.3465" x2="2" y2="120.3465"/>
+                <line x1="-0" y1="119" x2="-0" y2="121"/>
+                <line x1="-0.7" y1="119.061242" x2="-0" y2="119"/>
+                <line x1="-0.7" y1="120.938758" x2="-0" y2="121"/>
+                <line x1="-0.4" y1="119.875" x2="-0.4" y2="120.125"/>
+                <line x1="-0.7" y1="120.125" x2="-0.4" y2="120.125"/>
+                <line x1="-0.7" y1="119.875" x2="-0.4" y2="119.875"/>
+                <line x1="-0.7" y1="119.061242" x2="-0.7" y2="119.875"/>
+                <line x1="-0.7" y1="120.125" x2="-0.7" y2="120.938758"/>
+                <path d="M-0,119.58 A0.12,0.12 0 0,0 0.12,119.7 "/>
+                <line x1="0.12" y1="119.7" x2="0.321436" y2="119.7"/>
+                <path d="M0.321436,119.7 A0.12,0.12 0 0,0 0.39026517,119.67829825 "/>
+                <line x1="0.390265" y1="119.678298" x2="0.644901" y2="119.5"/>
+                <line x1="0.644901" y1="119.5" x2="0.644901" y2="120.5"/>
+                <path d="M0.12,120.3 A0.12,0.12 0 0,0 -0,120.42 "/>
+                <line x1="0.12" y1="120.3" x2="0.321436" y2="120.3"/>
+                <path d="M0.39026517,120.32170175 A0.12,0.12 0 0,0 0.321436,120.3 "/>
+                <line x1="0.390265" y1="120.321702" x2="0.644901" y2="120.5"/>
+                <line x1="1.8465" y1="120.5" x2="0.644901" y2="120.5"/>
+                <line x1="1.8465" y1="120.5" x2="2" y2="120.3465"/>
+                <line x1="2" y1="119.6535" x2="2" y2="120.3465"/>
+                <line x1="1.8465" y1="119.5" x2="2" y2="119.6535"/>
+                <line x1="0.644901" y1="119.5" x2="1.8465" y2="119.5"/>
+                <line x1="1.8465" y1="119.5" x2="1.8465" y2="120.5"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="5072" lc:blockname="a3">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="8334" lc:blockname="throttle_handle">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <line x1="-0" y1="140.85" x2="-0" y2="99.15"/>
+                <line x1="-4.55" y1="99.29327177" x2="4.55" y2="99.29327177"/>
+                <line x1="-4.55" y1="140.63012313" x2="4.55" y2="140.63012313"/>
+                <line x1="-6.55" y1="109.29327177" x2="6.55" y2="109.29327177"/>
+                <line x1="-6.55" y1="130.63012313" x2="6.55" y2="130.63012313"/>
+                <line x1="6.55" y1="109.29327177" x2="4.55" y2="99.29327177"/>
+                <line x1="-4.55" y1="99.29327177" x2="-6.55" y2="109.29327177"/>
+                <line x1="-4.55" y1="140.63012313" x2="-6.55" y2="130.63012313"/>
+                <line x1="4.55" y1="140.63012313" x2="6.55" y2="130.63012313"/>
+                <line x1="-6.55" y1="113.29327177" x2="6.55" y2="113.29327177"/>
+                <line x1="-6.55" y1="126.63012313" x2="6.55" y2="126.63012313"/>
+                <line x1="-5.75" y1="120" x2="5.75" y2="120"/>
+                <line x1="-6.55" y1="126.63012313" x2="-5.75" y2="120"/>
+                <line x1="5.75" y1="120" x2="6.55" y2="126.63012313"/>
+                <line x1="5.75" y1="120" x2="6.55" y2="113.29327177"/>
+                <line x1="-5.75" y1="120" x2="-6.55" y2="113.29327177"/>
+                <line x1="-6.55" y1="113.29327177" x2="-6.55" y2="109.29327177"/>
+                <line x1="6.55" y1="109.29327177" x2="6.55" y2="113.29327177"/>
+                <line x1="-6.55" y1="126.63012313" x2="-6.55" y2="130.63012313"/>
+                <line x1="6.55" y1="126.63012313" x2="6.55" y2="130.63012313"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+        <g id="192546" lc:blockname="switches">
+            <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+                <circle cx="-0" cy="120" r="2.5"/>
+                <circle cx="-10" cy="120" r="2.5"/>
+                <circle cx="10" cy="120" r="2.5"/>
+                <use x="10" y="0" xlink:href="#5044"/>
+                <use x="-0" y="0" xlink:href="#5044"/>
+                <use x="-10" y="0" xlink:href="#5044"/>
+            </g>
+            <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1"/>
+        </g>
+    </defs>
+    <g lc:layername="0" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+        <circle cx="5.3" cy="5.8" r="3.8"/>
+        <circle cx="164.7" cy="5.8" r="3.8"/>
+        <circle cx="164.7" cy="114.2" r="3.8"/>
+        <circle cx="5.3" cy="114.2" r="3.8"/>
+        <path d="M4.8,0 L165.2,0 A4.8,4.8 0 0,1 170,4.8 L170,115.2 A4.8,4.8 0 0,1 165.2,120 L4.8,120 A4.8,4.8 0 0,1 0,115.2 L0,4.8 A4.8,4.8 0 0,1 4.8,0 Z "/>
+        <use x="164.7" y="-114.2" xlink:href="#5044"/>
+        <use x="164.7" y="-5.8" xlink:href="#5044"/>
+        <use x="5.3" y="-5.8" xlink:href="#5044"/>
+        <use x="5.3" y="-114.2" xlink:href="#5044"/>
+        <use x="20.75" y="-81.75" xlink:href="#5044"/>
+        <use x="44.55" y="-109.7" xlink:href="#5044"/>
+        <use x="44.55" y="-100.7" xlink:href="#5044"/>
+        <use x="64.25" y="-81.75" xlink:href="#5044"/>
+        <use x="112.25" y="-90.7" xlink:href="#5044"/>
+        <use x="121.55" y="-109.7" xlink:href="#5044"/>
+        <use x="121.55" y="-100.7" xlink:href="#5044"/>
+        <use x="142.75" y="-90.7" xlink:href="#5044"/>
+        <use x="64.25" y="-38.25" xlink:href="#5044"/>
+        <use x="112.25" y="-29.3" xlink:href="#5044"/>
+        <use x="142.75" y="-29.3" xlink:href="#5044"/>
+        <use x="20.75" y="-38.25" xlink:href="#5044"/>
+        <use x="85" y="-10" xlink:href="#192546"/>
+    </g>
+    <g lc:layername="blocks" lc:is_locked="false" lc:is_construction="false" fill="none" stroke="black" stroke-width="0.1">
+        <use x="85" y="-105.2" xlink:href="#2753"/>
+        <use x="42.5" y="-60" xlink:href="#1558"/>
+        <use x="127.5" y="-60" xlink:href="#5014"/>
+    </g>
+</svg>

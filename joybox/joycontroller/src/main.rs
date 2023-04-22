@@ -134,6 +134,7 @@ fn main() -> ! {
     let mut logging: bool = false;
     let mut state = State::Running;
     loop {
+        // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
             serial_println!("{:?}", comm);
             //commands::show(comm);
@@ -216,7 +217,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number((time )  as i32);
+            d.show_hex((time )  as u32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

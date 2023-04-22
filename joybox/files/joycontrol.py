@@ -18,16 +18,17 @@ FRAME_ENDCAL = 5
 FRAME_RESETCAL = 6
 FRAME_LOADCAL = 7
 FRAME_LOADDEFAULT = 8
-FRAME_DISPLAY = 9
-FRAME_HEXDISPLAY = 10
-FRAME_BRIGHTNESS = 11
-FRAME_CLEAR = 12
-FRAME_OUTCONTROL = 13
-FRAME_OUTSWITCHES = 14
-FRAME_DUMPEEPROM = 15
-FRAME_ERASEEEPROM = 16
-FRAME_LOGGER = 17
-FRAME_FAIL = 18
+FRAME_GETMILLIS = 9
+FRAME_DISPLAY = 10
+FRAME_HEXDISPLAY = 11
+FRAME_BRIGHTNESS = 12
+FRAME_CLEAR = 13
+FRAME_OUTCONTROL = 14
+FRAME_OUTSWITCHES = 15
+FRAME_DUMPEEPROM = 16
+FRAME_ERASEEEPROM = 17
+FRAME_LOGGER = 18
+FRAME_FAIL = 19
 
 class controller:
     def __init__(self,speed=10000):
@@ -85,6 +86,10 @@ class controller:
     def loaddefault(self,):
         struct.pack_into('',self._data,0,)
         self.send(FRAME_LOADDEFAULT,self._data)
+    
+    def getmillis(self,d1):
+        struct.pack_into('I',self._data,0,d1)
+        self.send(FRAME_GETMILLIS,self._data)
     
     def display(self,d1):
         struct.pack_into('i',self._data,0,d1)

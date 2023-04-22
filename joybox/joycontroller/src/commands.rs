@@ -24,6 +24,7 @@ pub enum Command {
     ResetCal,
     LoadCal,
     LoadDefault,
+    GetMillis(u32),
     Display(i32),
     HexDisplay(u32),
     Brightness(u8),
