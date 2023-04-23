@@ -207,7 +207,7 @@ def update():
             else:
                 print("hash is different")
             print("Fetch file ", i)
-            #upip._makedirs(i)
+            upip._makedirs("/"+i)
             upip.save_file(i, upip.url_open(reg.uplink + '/files/' + reg.id +'/'+ i))
             print("Update registry")
             reg.set("f_" + i, data[i])

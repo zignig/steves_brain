@@ -58,7 +58,7 @@ def files(device,path):
         print("FAIL",e)
         return str(path)
     
-
+   
 @app.route('/status/<device>')
 def status(device):
     if device in devices:

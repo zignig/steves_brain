@@ -140,10 +140,10 @@ def do_connect():
     try:
         import network
 
-        # disable ap network
-        #    ap = network.WLAN(network.STA_AP)
-        #    ap.active(False)
-        #    ap.disconnect()
+        # disable ap network esp8266
+        #ap = network.WLAN(network.AP_IF)
+        #ap.active(False)
+        #ap.disconnect()
 
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
@@ -179,6 +179,10 @@ def do_connect():
 
 wlan = do_connect()
 
+if reg.id is None:
+    name = input("name>")
+    reg.set("id",name)
+
 try:
     if reg.uplink is None:
         print("enter status url")
@@ -192,10 +196,11 @@ except OSError as e:
 def update():
     "Get the updates"
     import upip
-    data = json.load(upip.url_open(reg.uplink + "/status"))
+    data = json.load(upip.url_open(reg.uplink + "/status/"+reg.id))
     for i in data:
         local = reg.get("f_" + i)
         remote = data[i]
+        print('>',local,"<>",remote)
         print(i)
         if local != remote:
             if local is None:
@@ -203,13 +208,13 @@ def update():
             else:
                 print("hash is different")
             print("Fetch file ", i)
-            upip._makedirs(i)
-            upip.save_file(i, upip.url_open(reg.uplink + "/files" + i))
+            upip._makedirs("/"+i)
+            upip.save_file(i, upip.url_open(reg.uplink + '/files/' + reg.id +'/'+ i))
             print("Update registry")
             reg.set("f_" + i, data[i])
             # wait for the flash to catch up
             gc.collect()
-            time.sleep(2)
+            time.sleep(1)
 
 
 def format_drive():
@@ -218,7 +223,7 @@ def format_drive():
     # low level drive format
     print("collecting stuff.")
     b = open("boot.py").read()
-    v = ["wifi", "uplink", "ws", "web", "telnet"]
+    v = ["wifi", "uplink", "ws", "web", "telnet","id"]
     d = {}
     for i in v:
         d[i] = reg.get(i)
@@ -250,7 +255,7 @@ def set_time():
     # esp32 rtc has a weird format
     # weekday in the middle
     val = (t[0],t[1],t[2],0,t[3],t[4],t[5],0)
-    rtc.init(val)
+    rtc.datetime(val)
     reg.set('last_timeset',time.localtime())
     return time.localtime()
 

@@ -72,14 +72,14 @@ fn main() -> ! {
     d.power_on();
 
     // buttons and switches 
-    let stop_button_pin  = pins.d6.into_floating_input();
-    let right_button_pin = pins.d5.into_floating_input();
-    let left_button_pin = pins.d4.into_floating_input();
-    let missile_switch_pin = pins.d3.into_floating_input();
+    let stop_button_pin  = pins.d4.into_floating_input();
+    let right_button_pin = pins.d3.into_floating_input();
+    let left_button_pin = pins.d6.into_floating_input();
+    let missile_switch_pin = pins.d5.into_floating_input();
 
-    let stop_button = buttons::Button::new(stop_button_pin);
-    let right_button = buttons::Button::new(right_button_pin);
-    let left_button = buttons::Button::new(left_button_pin);
+    let mut stop_button = buttons::Button::new(stop_button_pin);
+    let mut right_button = buttons::Button::new(right_button_pin);
+    let mut left_button = buttons::Button::new(left_button_pin);
     let mut missile_switch = buttons::Button::new(missile_switch_pin);
 
     //let the_buttons = buttons::Buttons::new((stop_button,right_button,left_button,missile_switch));
@@ -200,8 +200,11 @@ fn main() -> ! {
             match state {
                 State::Running => {
                     if logging {
-                        //the_controls.show();
+                        the_controls.show();
                         serial_println!("Missile = {:?}",missile_switch.read());
+                        serial_println!("Left = {:?}",left_button.read());
+                        serial_println!("Right = {:?}",right_button.read());
+                        serial_println!("EStop = {:?}",stop_button.read());
                     }
                 }
                 State::Sleeping => {}

@@ -5,9 +5,9 @@
 
 import struct 
 
-led = machine.Pin(5,machine.Pin.OUT)
+led = machine.Pin(0,machine.Pin.OUT)
 switch1 = machine.Pin(4,machine.Pin.IN)
-switch2 = machine.Pin(2  ,machine.Pin.IN)
+switch2 = machine.Pin(5  ,machine.Pin.IN)
 
 # Joy control is templated with the pythonator.
  
