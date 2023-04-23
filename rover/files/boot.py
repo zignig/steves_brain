@@ -200,7 +200,7 @@ def update():
     for i in data:
         local = reg.get("f_" + i)
         remote = data[i]
-        print('>',local,"<>",remote)
+        #print('>',local,"<>",remote)
         print(i)
         if local != remote:
             if local is None:

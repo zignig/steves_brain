@@ -25,7 +25,6 @@ def watch_buttons():
         print("switch2 - ",switch2.value())
         time.sleep_ms(100)
               
-
 def startcal():
     js.send(joycontrol.FRAME_STARTCAL,[0,0,0,0])
 
@@ -35,7 +34,7 @@ def endcal():
 def resetcal():
     js.send(joycontrol.FRAME_RESETCAL,[0,0,0,0])
 
-
+## udp server testing.
 
 # Run the telnet server
 def run_telnet():
@@ -46,3 +45,13 @@ def run_telnet():
 
 print(reg.id + " Running")
 run_telnet()
+
+import uasyncio , socket
+
+class data:
+    def __init__(self,destination):
+        self.destination = destination
+        self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+    def send(self,mess):
+        self.sock.sendto(mess,self.destination)

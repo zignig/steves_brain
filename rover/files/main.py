@@ -41,10 +41,15 @@ def main_runner(reg, app, ws, mb):
         app.log = log
         app.init()
         loop.create_task(uasyncio.start_server(app._handle, "0.0.0.0", 80))
+    if reg.udp:
+        print("UDP server starting")
+        ud = udpserver.UDPServer()
+        loop.create_task(ud.serve(udpserver.cb,'0.0.0.0',12345))
     loop.run_forever()
 
 import _thread
 import ws
+import udpserver
 
 # Run all the async in this thread
 # otherwise bad things happen
