@@ -73,67 +73,6 @@ reg = Registry()
 # file checkers
 import os
 
-
-def file_sha(path):
-    BLOCK_SIZE = 16
-    import os
-    import hashlib
-    import binascii
-
-    data = bytearray(BLOCK_SIZE)
-    stat = os.stat(path)
-    file_size = stat[6]
-    block_count = file_size // BLOCK_SIZE
-    residual = file_size - (block_count * BLOCK_SIZE)
-    # print('blocks ',block_count,' | residual ',residual)
-    f = open(path, "rb")
-    h = hashlib.sha256()
-    for i in range(block_count):
-        f.readinto(data)
-        h.update(data)
-    # last partial chunk
-    data = f.read(residual)
-    h.update(data)
-    dig = h.digest()
-    # print(dig)
-    sha_hex = binascii.hexlify(dig)
-    print(path, sha_hex)
-    reg.set("f_" + path, sha_hex)
-    return sha_hex
-
-
-class scanner:
-    FILE_PREFIX = "f_"
-
-    def __init__(self, path=""):
-        self._file_list = []
-        self.scan(path)
-
-    def scan(self, path):
-        for i in os.ilistdir(path):
-            file_name = path + "/" + i[0]
-            if i[3] != 0:
-                print("as file:", file_name)
-                self._file_list.append(file_name)
-            else:
-                print("as folder:", file_name)
-                self.scan(file_name)
-
-    def update(self):
-        for i in self._file_list:
-            data = reg.get(scanner.FILE_PREFIX + i)
-            if data is None:
-                print("file ", i, " missing")
-            hash = file_sha(i)
-            reg.set(scanner.FILE_PREFIX + i, hash)
-
-    def __repr__(self):
-        st = ""
-        for i in self._file_list:
-            st = str(i) + "\n"
-        return st
-
-
 # connect to the network
 def do_connect():
     # TODO better fallback
@@ -147,14 +86,14 @@ def do_connect():
 
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
-        info = reg.wifi
+        info = reg._wifi
         if info is None:
             nets = wlan.scan()
             for i in nets:
                 print(i[0].decode())
             ssid = input("ssid>")
             password = input("password>")
-            reg.set("wifi", [ssid, password])
+            reg.set("_wifi", [ssid, password])
         outer = 0
         if not wlan.isconnected():
             print("connecting to network...")
@@ -168,7 +107,7 @@ def do_connect():
                     outer += 1
                     if outer == 60:
                         break
-        reg.set("network", wlan.ifconfig())
+        reg.set("_network", wlan.ifconfig())
         print(reg.network)
     except:
         wlan = None
@@ -198,7 +137,7 @@ def update():
     import upip
     data = json.load(upip.url_open(reg.uplink + "/status/"+reg.id))
     for i in data:
-        local = reg.get("f_" + i)
+        local = reg.get("_f_" + i)
         remote = data[i]
         print(i)
         if local != remote:
@@ -210,7 +149,7 @@ def update():
             upip._makedirs("/"+i)
             upip.save_file(i, upip.url_open(reg.uplink + '/files/' + reg.id +'/'+ i))
             print("Update registry")
-            reg.set("f_" + i, data[i])
+            reg.set("_f_" + i, data[i])
             # wait for the flash to catch up
             gc.collect()
             time.sleep(2)

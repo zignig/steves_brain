@@ -86,52 +86,18 @@ class controller:
     
 
     def _callbacks(self):
-        self.cb_hello = None
-        self.cb_start = None
-        self.cb_stop = None
-        self.cb_one = None
-        self.cb_two = None
-        self.cb_three = None
-        self.cb_four = None
-        self.cb_stuff = None
-        self.cb_other = None
+        self.names = ["hello","start","stop","one","two","three","four","stuff","other",]
+        self.functions = [None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","","B","BB","bbb","i","i","I",]
 
+    def bind(self,name,func):
+        for i in enumerate(self.names):
+            if self.names[i[0]] == name:
+                self.functions[i[0]] = func
+    
     def _process(self):
         command = self._return_frame[3]
         data = self._return_frame[4:]
-        if command  == FRAME_HELLO:
-            up = struct.unpack_from('',data,0)
-            if self.cb_hello != None:
-                self.cb_hello(*up)
-        elif command  == FRAME_START:
-            up = struct.unpack_from('',data,0)
-            if self.cb_start != None:
-                self.cb_start(*up)
-        elif command  == FRAME_STOP:
-            up = struct.unpack_from('',data,0)
-            if self.cb_stop != None:
-                self.cb_stop(*up)
-        elif command  == FRAME_ONE:
-            up = struct.unpack_from('B',data,0)
-            if self.cb_one != None:
-                self.cb_one(*up)
-        elif command  == FRAME_TWO:
-            up = struct.unpack_from('BB',data,0)
-            if self.cb_two != None:
-                self.cb_two(*up)
-        elif command  == FRAME_THREE:
-            up = struct.unpack_from('bbb',data,0)
-            if self.cb_three != None:
-                self.cb_three(*up)
-        elif command  == FRAME_FOUR:
-            up = struct.unpack_from('i',data,0)
-            if self.cb_four != None:
-                self.cb_four(*up)
-        elif command  == FRAME_STUFF:
-            up = struct.unpack_from('i',data,0)
-            if self.cb_stuff != None:
-                self.cb_stuff(*up)
-        elif command  == FRAME_OTHER:
-            up = struct.unpack_from('I',data,0)
-            if self.cb_other != None:
-                self.cb_other(*up)
+        if self.functions[command] != None:
+            up = struct.unpack_from(self.data_format[command],data,0)
+            self.functions[command](*up)

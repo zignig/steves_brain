@@ -16,6 +16,7 @@ use ufmt::derive::uDebug;
 #[derive(uDebug, Clone, Copy, Deserialize, Serialize, SerializedSize)]
 pub enum Command {
     Hello,
+    RunOn,
     XY(i8, i8),
     ZT(i8, i8),
     ShowCal,

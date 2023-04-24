@@ -15,7 +15,7 @@ mod buttons;
 mod joystick;
 use joystick::AnalogController;
 
-use comms::fetch_command;
+use comms::{fetch_command,send_command};
 
 use arduino_hal::adc;
 use arduino_hal::simple_pwm::*;
@@ -122,7 +122,7 @@ fn main() -> ! {
 
     the_controls.load(&mut ee);
     //the_controls.load_fixed();
-    the_controls.show_config();
+    //the_controls.show_config();
     //the_joystick.mode  = joystick::Mode::Running;
 
     //activate the interrupts
@@ -137,10 +137,13 @@ fn main() -> ! {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
             serial_println!("{:?}", comm);
-            //commands::show(comm);
             match comm {
                 Command::Hello => serial_println!("hello"),
+                Command::RunOn => {
+                    send_command(Command::GetMillis(systick::millis()));
+                }
                 Command::Display(val) => {
+                    send_command(Command::XY(50,50));
                     d.show_number(val);
                 }
                 Command::HexDisplay(val) => {
@@ -220,7 +223,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_hex((time )  as u32);
+            d.show_number(time as i32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

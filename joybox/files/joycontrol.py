@@ -13,25 +13,26 @@ FRAME_SIZE = 8
 
 
 FRAME_HELLO = 0
-FRAME_XY = 1
-FRAME_ZT = 2
-FRAME_SHOWCAL = 3
-FRAME_STARTCAL = 4
-FRAME_ENDCAL = 5
-FRAME_RESETCAL = 6
-FRAME_LOADCAL = 7
-FRAME_LOADDEFAULT = 8
-FRAME_GETMILLIS = 9
-FRAME_DISPLAY = 10
-FRAME_HEXDISPLAY = 11
-FRAME_BRIGHTNESS = 12
-FRAME_CLEAR = 13
-FRAME_OUTCONTROL = 14
-FRAME_OUTSWITCHES = 15
-FRAME_DUMPEEPROM = 16
-FRAME_ERASEEEPROM = 17
-FRAME_LOGGER = 18
-FRAME_FAIL = 19
+FRAME_RUNON = 1
+FRAME_XY = 2
+FRAME_ZT = 3
+FRAME_SHOWCAL = 4
+FRAME_STARTCAL = 5
+FRAME_ENDCAL = 6
+FRAME_RESETCAL = 7
+FRAME_LOADCAL = 8
+FRAME_LOADDEFAULT = 9
+FRAME_GETMILLIS = 10
+FRAME_DISPLAY = 11
+FRAME_HEXDISPLAY = 12
+FRAME_BRIGHTNESS = 13
+FRAME_CLEAR = 14
+FRAME_OUTCONTROL = 15
+FRAME_OUTSWITCHES = 16
+FRAME_DUMPEEPROM = 17
+FRAME_ERASEEEPROM = 18
+FRAME_LOGGER = 19
+FRAME_FAIL = 20
 
 # create the controller device
 class controller:
@@ -62,6 +63,10 @@ class controller:
     def hello(self,):
         struct.pack_into('',self._data,0,)
         self._send(FRAME_HELLO,self._data)
+    
+    def runon(self,):
+        struct.pack_into('',self._data,0,)
+        self._send(FRAME_RUNON,self._data)
     
     def xy(self,d1,d2):
         struct.pack_into('bb',self._data,0,d1,d2)
@@ -96,15 +101,15 @@ class controller:
         self._send(FRAME_LOADDEFAULT,self._data)
     
     def getmillis(self,d1):
-        struct.pack_into('I',self._data,0,d1)
+        struct.pack_into('i',self._data,0,d1)
         self._send(FRAME_GETMILLIS,self._data)
     
     def display(self,d1):
-        struct.pack_into('i',self._data,0,d1)
+        struct.pack_into('I',self._data,0,d1)
         self._send(FRAME_DISPLAY,self._data)
     
     def hexdisplay(self,d1):
-        struct.pack_into('I',self._data,0,d1)
+        struct.pack_into('i',self._data,0,d1)
         self._send(FRAME_HEXDISPLAY,self._data)
     
     def brightness(self,d1):
@@ -141,107 +146,19 @@ class controller:
     
 
     def _callbacks(self):
-        self.cb_hello = None
-        self.cb_xy = None
-        self.cb_zt = None
-        self.cb_showcal = None
-        self.cb_startcal = None
-        self.cb_endcal = None
-        self.cb_resetcal = None
-        self.cb_loadcal = None
-        self.cb_loaddefault = None
-        self.cb_getmillis = None
-        self.cb_display = None
-        self.cb_hexdisplay = None
-        self.cb_brightness = None
-        self.cb_clear = None
-        self.cb_outcontrol = None
-        self.cb_outswitches = None
-        self.cb_dumpeeprom = None
-        self.cb_eraseeeprom = None
-        self.cb_logger = None
-        self.cb_fail = None
+        self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","fail",]
+        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","bb","bb","","","","","","","i","I","i","B","","bbbb","b","","B","","",]
 
+    def bind(self,name,func):
+        for i in enumerate(self.names):
+            if self.names[i[0]] == name:
+                self.functions[i[0]] = func
+    
     def _process(self):
         command = self._return_frame[3]
         data = self._return_frame[4:]
-        if command  == FRAME_HELLO:
-            up = struct.unpack_from('',data,0)
-            if self.cb_hello != None:
-                self.cb_hello(*up)
-        elif command  == FRAME_XY:
-            up = struct.unpack_from('bb',data,0)
-            if self.cb_xy != None:
-                self.cb_xy(*up)
-        elif command  == FRAME_ZT:
-            up = struct.unpack_from('bb',data,0)
-            if self.cb_zt != None:
-                self.cb_zt(*up)
-        elif command  == FRAME_SHOWCAL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_showcal != None:
-                self.cb_showcal(*up)
-        elif command  == FRAME_STARTCAL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_startcal != None:
-                self.cb_startcal(*up)
-        elif command  == FRAME_ENDCAL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_endcal != None:
-                self.cb_endcal(*up)
-        elif command  == FRAME_RESETCAL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_resetcal != None:
-                self.cb_resetcal(*up)
-        elif command  == FRAME_LOADCAL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_loadcal != None:
-                self.cb_loadcal(*up)
-        elif command  == FRAME_LOADDEFAULT:
-            up = struct.unpack_from('',data,0)
-            if self.cb_loaddefault != None:
-                self.cb_loaddefault(*up)
-        elif command  == FRAME_GETMILLIS:
-            up = struct.unpack_from('I',data,0)
-            if self.cb_getmillis != None:
-                self.cb_getmillis(*up)
-        elif command  == FRAME_DISPLAY:
-            up = struct.unpack_from('i',data,0)
-            if self.cb_display != None:
-                self.cb_display(*up)
-        elif command  == FRAME_HEXDISPLAY:
-            up = struct.unpack_from('I',data,0)
-            if self.cb_hexdisplay != None:
-                self.cb_hexdisplay(*up)
-        elif command  == FRAME_BRIGHTNESS:
-            up = struct.unpack_from('B',data,0)
-            if self.cb_brightness != None:
-                self.cb_brightness(*up)
-        elif command  == FRAME_CLEAR:
-            up = struct.unpack_from('',data,0)
-            if self.cb_clear != None:
-                self.cb_clear(*up)
-        elif command  == FRAME_OUTCONTROL:
-            up = struct.unpack_from('bbbb',data,0)
-            if self.cb_outcontrol != None:
-                self.cb_outcontrol(*up)
-        elif command  == FRAME_OUTSWITCHES:
-            up = struct.unpack_from('b',data,0)
-            if self.cb_outswitches != None:
-                self.cb_outswitches(*up)
-        elif command  == FRAME_DUMPEEPROM:
-            up = struct.unpack_from('',data,0)
-            if self.cb_dumpeeprom != None:
-                self.cb_dumpeeprom(*up)
-        elif command  == FRAME_ERASEEEPROM:
-            up = struct.unpack_from('B',data,0)
-            if self.cb_eraseeeprom != None:
-                self.cb_eraseeeprom(*up)
-        elif command  == FRAME_LOGGER:
-            up = struct.unpack_from('',data,0)
-            if self.cb_logger != None:
-                self.cb_logger(*up)
-        elif command  == FRAME_FAIL:
-            up = struct.unpack_from('',data,0)
-            if self.cb_fail != None:
-                self.cb_fail(*up)
+        print(list(self._return_frame))
+        if self.functions[command] != None:
+            up = struct.unpack_from(self.data_format[command],data,0)
+            self.functions[command](*up)

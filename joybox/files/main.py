@@ -5,14 +5,12 @@
 
 import struct 
 
+def reset():
+    machine.reset()
+
 led = machine.Pin(0,machine.Pin.OUT)
 switch1 = machine.Pin(4,machine.Pin.IN)
 switch2 = machine.Pin(5  ,machine.Pin.IN)
-
-# Joy control is templated with the pythonator.
- 
-import joycontrol
-js = joycontrol.controller(5000)
 
 
 def count(val=200):
@@ -24,16 +22,7 @@ def watch_buttons():
         print("switch1 - ",switch1.value())
         print("switch2 - ",switch2.value())
         time.sleep_ms(100)
-              
-def startcal():
-    js.send(joycontrol.FRAME_STARTCAL,[0,0,0,0])
-
-def endcal():
-    js.send(joycontrol.FRAME_ENDCAL,[0,0,0,0])
-
-def resetcal():
-    js.send(joycontrol.FRAME_RESETCAL,[0,0,0,0])
-
+            
 ## udp server testing.
 
 # Run the telnet server
@@ -55,3 +44,23 @@ class data:
 
     def send(self,mess):
         self.sock.sendto(mess,self.destination)
+
+import joycontrol
+js = joycontrol.controller(20000)
+
+def hello():
+    print("hello reply")
+
+def mil(a):
+    print('millis ->',a)
+
+def two(a,b):
+    print('two ->',a,b)
+
+def outer(a,b,c,d):
+    print(" out |",a,b,c,d)
+
+js.bind('xy',two)
+js.bind('outcontrol',outer)
+js.bind('getmillis',mil)
+js.bind('hello',hello)

@@ -6,7 +6,7 @@
 //! This is a frame based slave SPI interface
 //!
 
-//use crate::serial_println;
+use crate::serial_println;
 use hubpack;
 
 use crate::commands::Command;
@@ -117,6 +117,7 @@ fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
         // Incoming Data
         // get the data byte from the SPI bus
+        let mut flag: bool = false;
         let mut data: u8 = 0;
         if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
             data = s.spdr.read().bits();
@@ -138,22 +139,40 @@ fn SPI_STC() {
                 if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
                     cr.append(comm);
                 }
+                flag = true;
             }
         }
+
         // Outgoing data
         // When the interface is ready , spool out a frame
         // Deserialize into the SPI interface.
-        if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
-            if let Some(pb) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
-                // OH NOES unsafitude !!DRAGONS!!
+        if let Some(pb) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
+            if flag {
+                // get new frame
+                pb.pos = 0;
+                if let Some(frame) = fetch_frame() {
+                    pb.data = frame.data;
+                //     pb.pos = 0;
+                } else {
+                    *pb = FrameBuffer::new();
+                }
+                // pb.pos = 0;
+                // pb.data[0] = SYNC1;
+                // pb.data[1] = SYNC2;
+                // hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &Command::GetMillis(1234356));
+                // serial_println!("{:#?}", pb.data[..]);
+                flag = false;
+            }
+            // OH NOES unsafitude !!DRAGONS!!
+            if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+                //serial_println!("{:#?}", pb.data[pb.pos]);
+                //serial_println!("{:#?} -> {:#?}", pb.pos, pb.data[pb.pos]);
+                //serial_println!("{:#?}",s.spsr.read().bits());
                 unsafe {
                     s.spdr.write(|w| w.bits(pb.data[pb.pos]));
+                    //s.spdr.write(|w| w.bits(pb.pos as u8));
                 }
                 pb.pos += 1;
-                if pb.pos == FRAME_SIZE {
-                    pb.pos = 0;
-                    // get new frame
-                }
             }
         }
     });
@@ -224,4 +243,36 @@ pub fn fetch_command() -> Option<Command> {
         }
     });
     comm
+}
+
+fn fetch_frame() -> Option<FrameBuffer> {
+    let mut frame = None;
+    avr_device::interrupt::free(|cs| {
+        if let Some(cr) = &mut *OUT_RING.borrow(cs).borrow_mut() {
+            //serial_println!("len: {} ",cr.len()).void_unwrap();
+            if let Some(val) = cr.pop() {
+                //serial_println!("value: {:#?} ",val).void_unwrap();
+                // get new frame
+                serial_println!("{:?}", val.data[..]);
+
+                frame = Some(val);
+            }
+        }
+    });
+    frame
+}
+
+pub fn send_command(comm: Command) {
+    serial_println!("{:#?}", comm);
+    avr_device::interrupt::free(|cs| {
+        if let Some(cr) = &mut *OUT_RING.borrow(cs).borrow_mut() {
+            let mut pb = FrameBuffer::new();
+            pb.pos = 0;
+            pb.data[0] = SYNC1;
+            pb.data[1] = SYNC2;
+            hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
+            //serial_println!("{:#?}",pb.data[..]);
+            cr.append(pb);
+        }
+    });
 }
