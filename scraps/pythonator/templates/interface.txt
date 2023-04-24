@@ -1,8 +1,13 @@
 # generated from rust enum
 
+
 from machine import Pin, SPI
 import time
 import struct
+
+{% macro parameters(arg) -%}
+,{%- for val in arg.values -%}d{{loop.index}}{% if loop.last == false %},{% endif %}{%- endfor -%}
+{%- endmacro %}
 
 SYNC1 = 0xF
 SYNC2 = 0xE
@@ -12,28 +17,48 @@ FRAME_SIZE = 8
 FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
 {% endfor %}
 
+# create the controller device
 class controller:
     def __init__(self,speed=10000):
         self.ss = Pin({{select_pin}},Pin.OUT)
         self.ss.on()
         self.port = SPI({{spi_interface}},speed)
-        self._frame = bytes([0]*FRAME_SIZE)
+        self._frame = bytearray([0]*FRAME_SIZE)
+        self._return_frame = bytearray([0]*FRAME_SIZE)
         self._data = bytearray([0,0,0,0])
+        self._callbacks()
 
     def _build(self,action,data):
-        self._frame = bytes([SYNC1,SYNC2,0,action])
+        self._frame = bytearray([SYNC1,SYNC2,0,action])
         self._frame = self._frame + bytes(data)
     
-    def _send(self):
+    def _send_to_port(self):
         self.ss.off()
-        self.port.write(self._frame)
+        # self.port.write(self._frame)
+        self.port.write_readinto(self._frame,self._return_frame)
         self.ss.on()
     
-    def send(self,action,data):
+    def _send(self,action,data):
         self._build(action,data)
-        self._send()
+        self._send_to_port()
+        self._process()
     {% for item in items %}
-    def {{ item.name|lower }}(self,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%}):
-        struct.pack_into('{{item.format_string}}',self._data,0,{% for val in item.values%}d{{loop.index}}{% if loop.last == false %},{% endif %}{% endfor%})
-        self.send(FRAME_{{item.name|upper}},self._data)
+    def {{ item.name|lower }}(self{%- call parameters(item) -%}):
+        struct.pack_into('{{item.format_string}}',self._data,0{%- call parameters(item) -%})
+        self._send(FRAME_{{item.name|upper}},self._data)
     {% endfor %}
+
+    def _callbacks(self):
+    {%- for item in items %}
+        self.cb_{{ item.name| lower }} = None
+    {%- endfor %}
+
+    def _process(self):
+        command = self._return_frame[3]
+        data = self._return_frame[4:]
+    {%- for item in items %}
+        {% if loop.first %}if{% else %}elif{% endif %} command  == FRAME_{{ item.name| upper -}}:
+            up = struct.unpack_from('{{item.format_string}}',data,0)
+            if self.cb_{{ item.name| lower }} != None:
+                self.cb_{{ item.name| lower }}(*up)
+    {%- endfor %}

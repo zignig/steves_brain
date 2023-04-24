@@ -19,11 +19,11 @@ pub enum Incoming {
     Hello,
     Start,
     Stop,
-    Joy(i8,i8,i8),
-    Throttle(i8),
-    Callibrate(i8),
-    Display(u8,u8),
-    Fnord(i32),
-    Cross(u8,i16,i8),
+    One(u8),
+    Two(u8,u8),
+    Three(i8,i8,i8),
+    Four(i32),
+    Stuff(i32),
+    Other(u32),
 }
 
