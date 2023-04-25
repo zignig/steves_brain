@@ -6,16 +6,16 @@ mod commands;
 mod comms;
 mod ring_buffer;
 
+mod buttons;
 mod display;
 mod shared;
 mod systick;
 mod utils;
-mod buttons;
 
 mod joystick;
 use joystick::AnalogController;
 
-use comms::{fetch_command,send_command};
+use comms::{fetch_command, send_command};
 
 use arduino_hal::adc;
 use arduino_hal::simple_pwm::*;
@@ -71,8 +71,8 @@ fn main() -> ! {
     //d.power_off();
     d.power_on();
 
-    // buttons and switches 
-    let stop_button_pin  = pins.d4.into_floating_input();
+    // buttons and switches
+    let stop_button_pin = pins.d4.into_floating_input();
     let right_button_pin = pins.d3.into_floating_input();
     let left_button_pin = pins.d6.into_floating_input();
     let missile_switch_pin = pins.d5.into_floating_input();
@@ -136,14 +136,17 @@ fn main() -> ! {
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            serial_println!("{:?}", comm);
+            //serial_println!("{:?}", comm);
             match comm {
-                Command::Hello => serial_println!("hello"),
+                Command::Hello => {
+                    send_command(Command::GetMillis(systick::millis()));
+                    serial_println!("hello");
+                }
                 Command::RunOn => {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
-                    send_command(Command::XY(50,50));
+                    send_command(Command::XY(50, 50));
                     d.show_number(val);
                 }
                 Command::HexDisplay(val) => {
@@ -191,6 +194,9 @@ fn main() -> ! {
                     });
                     serial_println!("finshed erase");
                 }
+                Command::XY(x, y) => {
+                    send_command(Command::XY(x, y));
+                }
                 _ => serial_println!("unbound {:#?}", comm),
             }
         }
@@ -204,10 +210,10 @@ fn main() -> ! {
                 State::Running => {
                     if logging {
                         the_controls.show();
-                        serial_println!("Missile = {:?}",missile_switch.read());
-                        serial_println!("Left = {:?}",left_button.read());
-                        serial_println!("Right = {:?}",right_button.read());
-                        serial_println!("EStop = {:?}",stop_button.read());
+                        serial_println!("Missile = {:?}", missile_switch.read());
+                        serial_println!("Left = {:?}", left_button.read());
+                        serial_println!("Right = {:?}", right_button.read());
+                        serial_println!("EStop = {:?}", stop_button.read());
                     }
                 }
                 State::Sleeping => {}
@@ -223,7 +229,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number(time as i32);
+            //d.show_number(time as i32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

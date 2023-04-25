@@ -35,9 +35,12 @@ class controller:
     def _send_to_port(self):
         self.ss.off()
         # self.port.write(self._frame)
-        self.port.write_readinto(self._frame,self._return_frame)
+        self.port.write(self._frame)
         self.ss.on()
-    
+        self.ss.off()
+        self.port.readinto(self._return_frame)
+        self.ss.on()
+        
     def _send(self,action,data):
         self._build(action,data)
         self._send_to_port()

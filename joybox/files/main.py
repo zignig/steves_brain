@@ -26,14 +26,14 @@ def watch_buttons():
 ## udp server testing.
 
 # Run the telnet server
-def run_telnet():
-    if reg.telnet:
-        print("Starting telnet server")
-        import utelnetserver
-        utelnetserver.start()
+# def run_telnet():
+#     if reg.telnet:
+#         print("Starting telnet server")
+#         import utelnetserver
+#         utelnetserver.start()
 
-print(reg.id + " Running")
-run_telnet()
+# print(reg.id + " Running")
+# run_telnet()
 
 import uasyncio , socket
 
@@ -46,10 +46,18 @@ class data:
         self.sock.sendto(mess,self.destination)
 
 import joycontrol
-js = joycontrol.controller(20000)
+js = joycontrol.controller(10000)
+
+js.hexdisplay(0xDEADBEEF)
+
+def read(size=8):
+    js.ss.off()
+    data = js.port.read(size)
+    js.ss.on()
+    return list(data) 
 
 def hello():
-    print("hello reply")
+    print("hello reply")  
 
 def mil(a):
     print('millis ->',a)
@@ -63,4 +71,4 @@ def outer(a,b,c,d):
 js.bind('xy',two)
 js.bind('outcontrol',outer)
 js.bind('getmillis',mil)
-js.bind('hello',hello)
+#js.bind('hello',hello)

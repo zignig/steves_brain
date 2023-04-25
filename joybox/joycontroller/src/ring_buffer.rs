@@ -54,4 +54,8 @@ impl<T: Copy + Default, const N: usize> Ring<T, N> {
         self.increment_head();
         Some(result)
     }
+
+    pub fn size(&mut self) -> usize {
+        self.tail - self.head
+    }
 }

@@ -67,6 +67,26 @@ impl Default for FrameBuffer {
 // TODO use phantom data to consume the pins
 pub struct SlaveSPI {}
 
+pub struct DataComms {
+    in_frame: FrameBuffer,
+    in_comm: Ring<Command,RING_SIZE>,
+    out_frame: FrameBuffer,
+    out_comm: Ring<FrameBuffer,RING_SIZE>
+}
+
+impl DataComms { 
+    pub fn new() -> Self { 
+        Self { 
+            in_frame: FrameBuffer::new(),
+            in_comm: Ring::<Command, RING_SIZE>::new(),
+            out_frame: FrameBuffer::new(),
+            out_comm: Ring::<FrameBuffer, RING_SIZE>::new()
+        }
+    }
+}
+
+static COMMS: Mutex<RefCell<Option<DataComms>>> = Mutex::new(RefCell::new(None));
+
 // Incoming data
 
 // guarded access to the SPI object
@@ -98,7 +118,10 @@ impl SlaveSPI {
         // put the spi , ring buffer and packetbuffer  into a protected globals
         avr_device::interrupt::free(|cs| {
             // data incoming
+            COMMS.borrow(cs).replace(Some(DataComms::new()));
             SPI_INT.borrow(cs).replace(Some(s));
+
+            // Old contstruct
             DATA_FRAME.borrow(cs).replace(Some(FrameBuffer::new()));
             COMMAND_RING
                 .borrow(cs)
@@ -116,11 +139,18 @@ impl SlaveSPI {
 fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
         // Incoming Data
-        // get the data byte from the SPI bus
         let mut flag: bool = false;
         let mut data: u8 = 0;
+
+        // get the data byte from the SPI bus
         if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+
+            //let val = s.spsr.read().spif().bit();
             data = s.spdr.read().bits();
+            while (s.spsr.read().spif().bit_is_set()) {
+                serial_println!("doot!");
+            }
+            //serial_println!("{:#?} --> {:#?}",val,data);
         }
         //serial_println!("{}",data);
         // put the data into the buffer
@@ -137,44 +167,54 @@ fn SPI_STC() {
                 //serial_println!("extra = {:#?}",extra);
                 //serial_println!("command = {:#?}",comm);
                 if let Some(cr) = &mut *COMMAND_RING.borrow(cs).borrow_mut() {
+                    serial_println!("{:?}",cr.size());
                     cr.append(comm);
                 }
                 flag = true;
             }
         }
 
-        // Outgoing data
-        // When the interface is ready , spool out a frame
-        // Deserialize into the SPI interface.
-        if let Some(pb) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
-            if flag {
-                // get new frame
-                pb.pos = 0;
-                if let Some(frame) = fetch_frame() {
-                    pb.data = frame.data;
-                //     pb.pos = 0;
-                } else {
-                    *pb = FrameBuffer::new();
-                }
-                // pb.pos = 0;
-                // pb.data[0] = SYNC1;
-                // pb.data[1] = SYNC2;
-                // hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &Command::GetMillis(1234356));
-                // serial_println!("{:#?}", pb.data[..]);
-                flag = false;
-            }
-            // OH NOES unsafitude !!DRAGONS!!
-            if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
-                //serial_println!("{:#?}", pb.data[pb.pos]);
-                //serial_println!("{:#?} -> {:#?}", pb.pos, pb.data[pb.pos]);
-                //serial_println!("{:#?}",s.spsr.read().bits());
-                unsafe {
-                    s.spdr.write(|w| w.bits(pb.data[pb.pos]));
-                    //s.spdr.write(|w| w.bits(pb.pos as u8));
-                }
-                pb.pos += 1;
-            }
-        }
+        // // Outgoing data
+        // // When the interface is ready , spool out a frame
+        // // serialize into the SPI interface.
+
+        // if let Some(pb) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
+        //     if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+        //         let val = s.spsr.read().spif().bit();
+        //         //serial_println!("--> {:#?}",val);
+        //         //serial_println!("{:#?}", pb.data[pb.pos]);
+        //         //serial_println!("{:#?}",s.spsr.read().bits());
+        //         pb.pos += 1;
+        //         // get new frame
+        //         if (pb.pos == FRAME_SIZE) || flag {
+        //             // get new frame
+        //             if let Some(frame) = fetch_frame() {
+        //                 pb.data = frame.data;
+        //                 serial_println!("out frame: {:?}", frame.data);
+        //                 // Load the first byte
+        //                 //     pb.pos = 0;
+        //             } else {
+        //                 *pb = FrameBuffer::new();
+        //                 serial_println!("empty frame");
+        //             }
+        //             pb.pos = 0;
+        //             // pb.pos = 0;
+        //             // pb.data[0] = SYNC1;
+        //             // pb.data[1] = SYNC2;
+        //             // hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &Command::GetMillis(1234356));
+        //             // serial_println!("{:#?}", pb.data[..]);
+
+        //             flag = false;
+        //         }
+        //         //let val = s.spsr.read().wcol().bit();
+        //         // wait for the transaction to finish
+        //         //serial_println!("{:#?} --> {:#?}",val,pb.data[pb.pos]);
+        //         unsafe {
+        //             s.spdr.write(|w| w.bits(pb.data[pb.pos]));
+        //             //s.spdr.write(|w| w.bits(pb.pos as u8));
+        //         }
+        //     }
+        // }
     });
 }
 
@@ -253,7 +293,7 @@ fn fetch_frame() -> Option<FrameBuffer> {
             if let Some(val) = cr.pop() {
                 //serial_println!("value: {:#?} ",val).void_unwrap();
                 // get new frame
-                serial_println!("{:?}", val.data[..]);
+                // serial_println!("{:?}", val.data[..]);
 
                 frame = Some(val);
             }
@@ -263,7 +303,7 @@ fn fetch_frame() -> Option<FrameBuffer> {
 }
 
 pub fn send_command(comm: Command) {
-    serial_println!("{:#?}", comm);
+    //serial_println!("{:#?}", comm);
     avr_device::interrupt::free(|cs| {
         if let Some(cr) = &mut *OUT_RING.borrow(cs).borrow_mut() {
             let mut pb = FrameBuffer::new();
@@ -271,7 +311,16 @@ pub fn send_command(comm: Command) {
             pb.data[0] = SYNC1;
             pb.data[1] = SYNC2;
             hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
-            //serial_println!("{:#?}",pb.data[..]);
+
+            //serial_println!("{:?}", pb.data[..]);
+
+            // // if the ring is empty put it straight into the buffer
+            // if cr.is_empty() {
+            //     if let Some(out_frame) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
+            //         out_frame.data = pb.data;
+            //     }
+            //     return;
+            // }
             cr.append(pb);
         }
     });
