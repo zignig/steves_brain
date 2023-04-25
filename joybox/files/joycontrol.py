@@ -37,6 +37,7 @@ FRAME_FAIL = 20
 # create the controller device
 class controller:
     def __init__(self, speed=10000):
+        self.interval = 20
         self.ss = Pin(16, Pin.OUT)
         self.ss.on()
         self.port = SPI(1, speed)
@@ -60,14 +61,16 @@ class controller:
     def _read(self):
         #print("read")
         self.ss.off()
-        self._return_frame = self.port.read(8)
+        data = self.port.read(8)
+        print(list(data))
         self.ss.on()
+        self._return_frame = data 
         self._process()
 
     def _send(self, action, data):
         self._build(action, data)
         self._send_to_port()
-        #time.sleep_ms(90)
+        time.sleep_ms(self.interval)
         self._read()
         # read ??
 

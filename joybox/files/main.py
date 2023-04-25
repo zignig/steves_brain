@@ -17,6 +17,13 @@ def count(val=200):
     for i in range(val):
         js.display(i+1)
 
+def check(val=200):
+    start = time.time_ns()
+    count(val)
+    finish = time.time_ns()
+    delta = (finish - start)
+    print(delta,val)
+
 def watch_buttons():
     while True:
         print("switch1 - ",switch1.value())
@@ -46,7 +53,7 @@ class data:
         self.sock.sendto(mess,self.destination)
 
 import joycontrol
-js = joycontrol.controller(10000)
+js = joycontrol.controller(800000)
 
 js.hexdisplay(0xDEADBEEF)
 

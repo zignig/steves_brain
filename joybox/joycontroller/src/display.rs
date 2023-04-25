@@ -86,7 +86,7 @@ fn base_10_bytes(mut n: i32, buf: &mut [u8]) -> &[u8] {
 
 fn pad_empty(val: &[u8]) -> [u8; 8] {
     let size: usize = 8;
-    let mut pos: usize = val.len();
+    let pos: usize = val.len();
     let mut cur: usize = 1;
     let mut out: [u8; 8] = *b"        ";
     while cur <= pos {

@@ -20,7 +20,7 @@ use comms::{fetch_command, send_command};
 use arduino_hal::adc;
 use arduino_hal::simple_pwm::*;
 
-use arduino_hal::hal::wdt;
+//use arduino_hal::hal::wdt;
 
 use commands::Command;
 use panic_halt as _;
@@ -38,7 +38,8 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
     // Watch dog timer ( for reboots )
-    let mut watchdog = wdt::Wdt::new(dp.WDT, &dp.CPU.mcusr);
+    //let mut watchdog = wdt::Wdt::new(dp.WDT, &dp.CPU.mcusr);
+
     // SPI interface
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
@@ -108,8 +109,8 @@ fn main() -> ! {
     let a2 = pins.a2.into_analog_input(&mut adc).into_channel();
     let a3 = pins.a3.into_analog_input(&mut adc).into_channel();
 
-    let mut the_joystick = joystick::Joy3Axis::new(a0, a1, a2);
-    let mut the_throttle = joystick::Throttle::new(a3);
+    let the_joystick = joystick::Joy3Axis::new(a0, a1, a2);
+    let the_throttle = joystick::Throttle::new(a3);
 
     // Put them into a single structure
     let mut the_controls = joystick::Controls::new(the_joystick, the_throttle);
@@ -136,7 +137,7 @@ fn main() -> ! {
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            //serial_println!("{:?}", comm);
+            serial_println!("{:?}", comm);
             match comm {
                 Command::Hello => {
                     send_command(Command::GetMillis(systick::millis()));
@@ -187,7 +188,7 @@ fn main() -> ! {
                     serial_println!("{:?}", buf[..]);
                 }
                 Command::EraseEeprom(val) => {
-                    avr_device::interrupt::free(|cs| {
+                    avr_device::interrupt::free(|_cs| {
                         for i in 0..1024 {
                             ee.write_byte(i, val);
                         }
@@ -202,7 +203,7 @@ fn main() -> ! {
         }
         // on the tick ... DO.
         if systick::is_tick() {
-            let time = systick::millis();
+            let _time = systick::millis();
             //serial_println!("{:?}", &the_mode);
             the_controls.update(&the_mode, &mut adc);
 
