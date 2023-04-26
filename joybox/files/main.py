@@ -55,7 +55,7 @@ class data:
 import joycontrol
 js = joycontrol.controller(800000)
 
-js.hexdisplay(0xDEADBEEF)
+js.hexdisplay(0x010101010)
 
 def read(size=8):
     js.ss.off()
