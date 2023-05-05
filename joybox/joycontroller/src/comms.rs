@@ -32,9 +32,8 @@ pub const RING_SIZE: usize = 8;
 // status of the frame
 #[derive(Clone, Copy)]
 pub enum FrameStatus {
-    Start,
-    Inside,
-    Finished,
+    Running,
+    Idle,
 }
 
 pub trait Buffer {}
@@ -61,7 +60,7 @@ impl Default for FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
-            status: FrameStatus::Finished,
+            status: FrameStatus::Idle,
         }
     }
 }
@@ -73,7 +72,7 @@ pub struct DataComms {
     counter: u8,
     in_frame: FrameBuffer,
     in_comm: Ring<Command, RING_SIZE>,
-    data: u8,
+    out_data: u8,
     out_frame: FrameBuffer,
     out_comm: Ring<FrameBuffer, RING_SIZE>,
 }
@@ -84,7 +83,7 @@ impl DataComms {
             counter: 0,
             in_frame: FrameBuffer::new(),
             in_comm: Ring::<Command, RING_SIZE>::new(),
-            data: 0,
+            out_data: 0,
             out_frame: FrameBuffer::new(),
             out_comm: Ring::<FrameBuffer, RING_SIZE>::new(),
         }
@@ -138,23 +137,18 @@ fn SPI_STC() {
         let mut flag: bool = false;
         let mut data: u8 = 0;
 
-        // put some data in the buffer
+        // Open the comms struct.
         if let Some(comm_data) = &mut *COMMS.borrow(cs).borrow_mut() {
-            // get the data byte from the SPI bus
+            // get the data byte from the SPI bus and put a new byte in.
             if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
-                //let val = s.spsr.read().spif().bit();
                 data = s.spdr.read().bits();
-                // while s.spsr.read().spif().bit_is_set() {
-                //     serial_println!("doot!");
-                // }
-                // //serial_println!("{:#?} --> {:#?}",val,data);
                 // write the out going data
                 unsafe {
                     s.spdr.write(|w| w.bits(comm_data.data));
-                    //s.spdr.write(|w| w.bits(pb.pos as u8));
                 }
             }
-            // push the byte into the packet checker
+
+            // push the incoming byte into the packet checker
             if let Some(the_packet) = process_packet(data, &mut comm_data.in_frame) {
                 // the_packet is good
                 let (comm, _) =
@@ -182,6 +176,10 @@ fn SPI_STC() {
             //     flag = false;
             //     comm_data.data = comm_data.out_frame.data[comm_data.out_frame.pos];
             // }
+
+            // increment the frame pos and load the outgoing dat for the _next_ write / read
+            comm_data.out_data = comm_data.out_frame.data[com_data.out_frame.pos];
+            comm_data.out_frame.pos += 1;
         }
     });
 }
@@ -218,11 +216,11 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         //serial_println!("{:?}",data).void_unwrap();
         pb.data[pb.pos] = data;
         pb.pos += 1;
-        pb.status = FrameStatus::Inside;
+        pb.status = FrameStatus::Running;
         // end of the frame
         if pb.pos == FRAME_SIZE {
             pb.pos = 0;
-            pb.status = FrameStatus::Finished;
+            pb.status = FrameStatus::Idle;
             //Packet Buffer Full ready to go
             return Some(pb.clone());
         }
@@ -232,7 +230,7 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         // bad packet data
         // reset
         pb.pos = 0;
-        pb.status = FrameStatus::Start;
+        pb.status = FrameStatus::Idle;
         // not ready
         None
     }
@@ -253,15 +251,13 @@ pub fn fetch_command() -> Option<Command> {
     comm
 }
 
-
 // Fetch a frame from the ring out
-fn fetch_frame() -> Option<FrameBuffer>{
+fn fetch_frame() -> Option<FrameBuffer> {
     let mut frame = None;
     avr_device::interrupt::free(|cs| {
         if let Some(comm_data) = &mut *COMMS.borrow(cs).borrow_mut() {
-            if let Some(val) = comm_data.out_comm.pop(){
-                fra
-                me = Some(val);
+            if let Some(val) = comm_data.out_comm.pop() {
+                frame = Some(val);
             }
         }
     });
@@ -277,17 +273,26 @@ pub fn send_command(comm: Command) {
             pb.data[0] = SYNC1;
             pb.data[1] = SYNC2;
             hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
+            // CHECK IF THE INCOMING BUFFER IS BUSY.
+            if cd.in_frame.status == FrameStatus::Idle {
+                // and there are no waiting packets
+                if cd.out_comm.is_empty() {
+                    // Put the frame straight into the outgoing buffer.
+                    //serial_println!("{:?}", pb.data[..]);
+                    // // if the ring is empty put it straight into the buffer
+                    // if cr.is_empty() {
+                    //     if let Some(out_frame) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
+                    //         out_frame.data = pb.data;
+                    //     }
+                    //     return;
+                    // }
+                }
+            } else {
+                // Chuck it into the ring buffer
+                cd.out_comm.append(pb);
+            }
 
-            //serial_println!("{:?}", pb.data[..]);
-            // CHECK IF THE BUFFER IS BUSY.
-            // // if the ring is empty put it straight into the buffer
-            // if cr.is_empty() {
-            //     if let Some(out_frame) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
-            //         out_frame.data = pb.data;
-            //     }
-            //     return;
-            // }
-            cd.out_comm.append(pb);
+
         }
     });
 }

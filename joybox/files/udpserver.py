@@ -46,3 +46,4 @@ def go():
     s = UDPServer()
     l = uasyncio.get_event_loop()
     l.run_until_complete(s.serve(cb, '0.0.0.0', port))
+    return s

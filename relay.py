@@ -7,7 +7,7 @@ import hashlib
 app = Flask(__name__)
 import os,time 
 base_path = 'files'
-devices = ['rover','joybox']
+devices = ['rover','joybox','rpcore']
 
 key = "xkDoOyC05K6DeKIr/37beQg8YeA0KnYlF98PYG2W6CQ=\\n"
 
@@ -66,6 +66,12 @@ def status(device):
         data = scanner(device+'/files/',{})
         return jsonify(data)
     return 'not found' , 400 
+
+@app.route('/packages/<name>/json')
+def package_json(name):
+    data = {'info':{'name':'test'},'last_serial':5,'urls':'','releases':{'0.5.0':''},'deps':['test']}
+    return jsonify(data)
+
 
 @app.route('/uplink')
 def uplink():

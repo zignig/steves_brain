@@ -3,7 +3,9 @@
 # Warning this is auto updated
 import web_interface
 
+import upip
 
+upip.index_urls = [reg.uplink + '/packages']
 
 import os
 

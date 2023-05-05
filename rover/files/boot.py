@@ -225,7 +225,7 @@ def format_drive():
     b = open("boot.py").read()
     v = ["wifi", "uplink", "ws", "web", "telnet","id"]
     d = {}
-    for i in v:
+    for i in v: 
         d[i] = reg.get(i)
     # format the drive
     reg._db.close()
