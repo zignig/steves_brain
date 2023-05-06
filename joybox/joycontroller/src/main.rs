@@ -137,17 +137,16 @@ fn main() -> ! {
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            serial_println!("{:?}", comm);
+            //serial_println!("{:?}", comm);
             match comm {
                 Command::Hello => {
-                    send_command(Command::GetMillis(systick::millis()));
                     serial_println!("hello");
+                    send_command(Command::RunOn);
                 }
                 Command::RunOn => {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
-                    send_command(Command::XY(50, 50));
                     d.show_number(val);
                 }
                 Command::HexDisplay(val) => {
@@ -198,7 +197,7 @@ fn main() -> ! {
                 Command::XY(x, y) => {
                     send_command(Command::XY(x, y));
                 }
-                _ => serial_println!("unbound {:#?}", comm),
+                _ => {serial_println!("unbound {:#?}", comm)}
             }
         }
         // on the tick ... DO.
@@ -230,7 +229,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            //d.show_number(time as i32);
+            d.show_number(_time as i32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

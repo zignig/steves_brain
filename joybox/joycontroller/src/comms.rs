@@ -30,7 +30,7 @@ pub const RING_SIZE: usize = 8;
 
 // Need to structure the outgoing
 // status of the frame
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FrameStatus {
     Running,
     Idle,
@@ -50,7 +50,7 @@ impl FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
-            status: FrameStatus::Finished,
+            status: FrameStatus::Idle,
         }
     }
 }
@@ -111,25 +111,6 @@ impl SlaveSPI {
     }
 }
 
-// //#[avr_device::interrupt(atmega328p)]
-// fn test_SPI_STC() {
-//     avr_device::interrupt::free(|cs| {
-//         // Incoming Data
-//         //let mut flag: bool = false;
-//         let mut data: u8 = 0;
-//         if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
-//             data = s.spdr.read().bits();
-//             let counter = COUNTER.borrow(cs);
-//             unsafe {
-//                 s.spdr.write(|w| w.bits(counter.get()));
-//                 //s.spdr.write(|w| w.bits(pb.pos as u8));
-//             }
-//             counter.set((counter.get() + 1) % 255);
-//             //serial_println!("{:#?}",s.spsr.read().wcol().bit_is_set());
-//         }
-//     });
-// }
-
 #[avr_device::interrupt(atmega328p)]
 fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
@@ -139,15 +120,22 @@ fn SPI_STC() {
 
         // Open the comms struct.
         if let Some(comm_data) = &mut *COMMS.borrow(cs).borrow_mut() {
-            // get the data byte from the SPI bus and put a new byte in.
-            if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
-                data = s.spdr.read().bits();
-                // write the out going data
-                unsafe {
-                    s.spdr.write(|w| w.bits(comm_data.data));
-                }
+            // move the outgoing data into place
+            comm_data.out_data = comm_data.out_frame.data[comm_data.out_frame.pos];
+            comm_data.out_frame.pos += 1;
+            if comm_data.out_frame.pos == FRAME_SIZE {
+                comm_data.out_frame.pos = 0;
             }
 
+            // get the data byte from the SPI bus and put a new byte in.
+            if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+                // write the out going data
+                unsafe {
+                    s.spdr.write(|w| w.bits(comm_data.out_data));
+                    //s.spdr.write(|w| w.bits(comm_data.out_frame.pos as u8));
+                }
+                data = s.spdr.read().bits();
+            }
             // push the incoming byte into the packet checker
             if let Some(the_packet) = process_packet(data, &mut comm_data.in_frame) {
                 // the_packet is good
@@ -159,7 +147,6 @@ fn SPI_STC() {
             }
 
             // Outgoing Frames
-            broken
             // Outgoing data
             // When the interface is ready , spool out a frame
             // serialize into the SPI interface.
@@ -174,12 +161,10 @@ fn SPI_STC() {
             //     }
             //     comm_data.out_frame.pos = 0;
             //     flag = false;
-            //     comm_data.data = comm_data.out_frame.data[comm_data.out_frame.pos];
-            // }
+            // } else {
+            //     // increment the frame pos and load the outgoing dat for the _next_ write / read
 
-            // increment the frame pos and load the outgoing dat for the _next_ write / read
-            comm_data.out_data = comm_data.out_frame.data[com_data.out_frame.pos];
-            comm_data.out_frame.pos += 1;
+            // }
         }
     });
 }
@@ -265,34 +250,32 @@ fn fetch_frame() -> Option<FrameBuffer> {
 }
 
 pub fn send_command(comm: Command) {
-    //serial_println!("{:#?}", comm);
+    //serial_println!("> {:?}", comm);
+    let mut pb = FrameBuffer::new();
+    pb.pos = 0;
+    pb.data[0] = SYNC1;
+    pb.data[1] = SYNC2;
+    let _ = hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
     avr_device::interrupt::free(|cs| {
         if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
-            let mut pb = FrameBuffer::new();
-            pb.pos = 0;
-            pb.data[0] = SYNC1;
-            pb.data[1] = SYNC2;
-            hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
             // CHECK IF THE INCOMING BUFFER IS BUSY.
-            if cd.in_frame.status == FrameStatus::Idle {
-                // and there are no waiting packets
-                if cd.out_comm.is_empty() {
-                    // Put the frame straight into the outgoing buffer.
-                    //serial_println!("{:?}", pb.data[..]);
-                    // // if the ring is empty put it straight into the buffer
-                    // if cr.is_empty() {
-                    //     if let Some(out_frame) = &mut *OUT_FRAME.borrow(cs).borrow_mut() {
-                    //         out_frame.data = pb.data;
-                    //     }
-                    //     return;
-                    // }
+            if cd.in_frame.status == FrameStatus::Idle && cd.out_comm.is_empty() {
+                cd.out_frame.data = pb.data;
+                // preload
+                cd.out_frame.pos = 1;
+                cd.out_frame.status = FrameStatus::Idle;
+                // preload the first byte
+                if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+                    unsafe {
+                        s.spdr.write(|w| w.bits(pb.data[0]));
+                    }
                 }
+                //serial_println!("send {:?}", cd.out_frame.data[..]);
             } else {
+                //
                 // Chuck it into the ring buffer
                 cd.out_comm.append(pb);
             }
-
-
         }
     });
 }
