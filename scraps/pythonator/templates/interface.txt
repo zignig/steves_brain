@@ -1,7 +1,7 @@
 # generated from rust enum
 
 
-from machine import Pin, SPI
+from machine import Pin, SPI , SoftSPI
 import time
 import struct
 
@@ -21,8 +21,9 @@ FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
 class controller:
     def __init__(self,speed=10000):
         self.ss = Pin({{select_pin}},Pin.OUT)
+        self.interval = {{interval}}
         self.ss.on()
-        self.port = SPI({{spi_interface}},speed)
+        self.port = SoftSPI(baudrate=speed,sck=Pin({{sck}}),mosi=Pin({{mosi}}),miso=Pin({{miso}}))
         self._frame = bytearray([0]*FRAME_SIZE)
         self._return_frame = bytearray([0]*FRAME_SIZE)
         self._data = bytearray([0,0,0,0])
@@ -34,17 +35,27 @@ class controller:
     
     def _send_to_port(self):
         self.ss.off()
-        # self.port.write(self._frame)
         self.port.write(self._frame)
-        self.ss.on()
-        self.ss.off()
-        self.port.readinto(self._return_frame)
         self.ss.on()
         
     def _send(self,action,data):
         self._build(action,data)
         self._send_to_port()
         self._process()
+    
+    def _read(self):
+        self.ss.off()
+        data = self.port.read(8)
+        self.ss.on()
+        self._return_frame = data
+        self._process()
+    
+    def _send(self,action,data):
+        self._build(action,data)
+        self._send_to_port()
+        time.sleep_ms(self.interval)
+        self._read()
+    
     {% for item in items %}
     def {{ item.name|lower }}(self{%- call parameters(item) -%}):
         struct.pack_into('{{item.format_string}}',self._data,0{%- call parameters(item) -%})

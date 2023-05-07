@@ -1,5 +1,8 @@
 [settings]
 file = "../../joybox/joycontroller/src/commands.rs"
 output = "../../joybox/files/joycontrol.py"
-spi_interface = 1
 select_pin = 16 
+sck = 14
+mosi = 13
+miso = 12
+interval = 5

@@ -21,8 +21,11 @@ struct Data {
 struct Settings {
     file: String,
     output: String,
-    spi_interface: u8,
+    interval: u16,
     select_pin: u8,
+    sck: u8,
+    mosi: u8,
+    miso: u8,
 }
 
 // Mapping File
@@ -127,8 +130,11 @@ fn main() {
 
     vis.visit_file(&syntax);
     println!("{:?}", vis);
-    vis.spi_interface = data.settings.spi_interface;
     vis.select_pin = data.settings.select_pin;
+    vis.sck = data.settings.sck;
+    vis.mosi = data.settings.mosi;
+    vis.miso = data.settings.miso;
+    vis.interval = data.settings.interval;
     vis.scan();
 
     println!("{:#?}", vis);
@@ -154,8 +160,11 @@ struct EnumVisitor {
     current: usize,
     pub items: Vec<Item>,
     mapping: Mapper,
-    pub spi_interface: u8,
+    pub interval: u16,
     pub select_pin: u8,
+    pub sck: u8,
+    pub mosi: u8,
+    pub miso: u8
 }
 
 impl EnumVisitor {
@@ -165,8 +174,11 @@ impl EnumVisitor {
             current: 0,
             items: vec![],
             mapping: Mapper::new(),
-            spi_interface: 1,
+            interval: 15,
             select_pin: 1,
+            sck: 1,
+            mosi: 1,
+            miso: 1 ,
         }
     }
 }
@@ -176,9 +188,9 @@ impl EnumVisitor {
         println!("update formatters");
         for item in self.items.iter_mut() {
             println!("{:?}", item);
-            for f in item.values.iter(){
-                println!("{:?} - {:?}",item.name , f);
-                if let Some(val) = self.mapping.types.get(f){
+            for f in item.values.iter() {
+                println!("{:?} - {:?}", item.name, f);
+                if let Some(val) = self.mapping.types.get(f) {
                     item.format_string.push_str(&val.clone());
                 }
             }
