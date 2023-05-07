@@ -13,8 +13,9 @@ SYNC1 = 0xF
 SYNC2 = 0xE
 FRAME_SIZE = 8 
 
-{% for item in items %}
-FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
+class com:
+{%- for item in items %}
+    FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
 {% endfor %}
 
 # create the controller device
@@ -44,17 +45,17 @@ class controller:
         data = self.port.read(8)
         self.ss.on()
         self._return_frame = data
-        self._process()
+        return self._process()
     
     def _send(self,action,data):
         self._build(action,data)
         self._send_to_port()
         time.sleep_ms(self.interval)
-        self._read()
+        return self._read()
     
     {% for item in items %}
     def {{ item.name|lower }}(self,{%- call parameters(item) -%}):
-        self._send(FRAME_{{item.name|upper}},[{%- call parameters(item) -%}])
+        return self._send(com.FRAME_{{item.name|upper}},[{%- call parameters(item) -%}])
     {% endfor %}
 
     def _callbacks(self):
@@ -81,4 +82,4 @@ class controller:
         data = self._return_frame[4:]
         if self.functions[command] != None:
             up = struct.unpack_from(self.data_format[command],data,0)
-            self.functions[command](*up)
+            return self.functions[command](*up)

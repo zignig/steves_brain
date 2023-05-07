@@ -64,10 +64,11 @@ def read(size=8):
     return list(data) 
 
 def hello():
-    print("hello reply")  
+    return "hi" 
 
 def mil(a):
     print('millis ->',a)
+    return a
 
 def two(a,b):
     print('two ->',a,b)
@@ -78,4 +79,4 @@ def outer(a,b,c,d):
 js.bind('xy',two)
 js.bind('outcontrol',outer)
 js.bind('getmillis',mil)
-#js.bind('hello',hello)
+js.bind('hello',hello)

@@ -141,7 +141,7 @@ fn main() -> ! {
             match comm {
                 Command::Hello => {
                     serial_println!("hello");
-                    send_command(Command::RunOn);
+                    send_command(Command::Hello);
                 }
                 Command::RunOn => {
                     send_command(Command::GetMillis(systick::millis()));

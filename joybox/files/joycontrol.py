@@ -11,28 +11,28 @@ SYNC1 = 0xF
 SYNC2 = 0xE
 FRAME_SIZE = 8 
 
-
-FRAME_HELLO = 0
-FRAME_RUNON = 1
-FRAME_XY = 2
-FRAME_ZT = 3
-FRAME_SHOWCAL = 4
-FRAME_STARTCAL = 5
-FRAME_ENDCAL = 6
-FRAME_RESETCAL = 7
-FRAME_LOADCAL = 8
-FRAME_LOADDEFAULT = 9
-FRAME_GETMILLIS = 10
-FRAME_DISPLAY = 11
-FRAME_HEXDISPLAY = 12
-FRAME_BRIGHTNESS = 13
-FRAME_CLEAR = 14
-FRAME_OUTCONTROL = 15
-FRAME_OUTSWITCHES = 16
-FRAME_DUMPEEPROM = 17
-FRAME_ERASEEEPROM = 18
-FRAME_LOGGER = 19
-FRAME_FAIL = 20
+class com:
+    FRAME_HELLO = 0
+    FRAME_RUNON = 1
+    FRAME_XY = 2
+    FRAME_ZT = 3
+    FRAME_SHOWCAL = 4
+    FRAME_STARTCAL = 5
+    FRAME_ENDCAL = 6
+    FRAME_RESETCAL = 7
+    FRAME_LOADCAL = 8
+    FRAME_LOADDEFAULT = 9
+    FRAME_GETMILLIS = 10
+    FRAME_DISPLAY = 11
+    FRAME_HEXDISPLAY = 12
+    FRAME_BRIGHTNESS = 13
+    FRAME_CLEAR = 14
+    FRAME_OUTCONTROL = 15
+    FRAME_OUTSWITCHES = 16
+    FRAME_DUMPEEPROM = 17
+    FRAME_ERASEEEPROM = 18
+    FRAME_LOGGER = 19
+    FRAME_FAIL = 20
 
 # create the controller device
 class controller:
@@ -61,77 +61,77 @@ class controller:
         data = self.port.read(8)
         self.ss.on()
         self._return_frame = data
-        self._process()
+        return self._process()
     
     def _send(self,action,data):
         self._build(action,data)
         self._send_to_port()
         time.sleep_ms(self.interval)
-        self._read()
+        return self._read()
     
     
     def hello(self,):
-        self._send(FRAME_HELLO,[])
+        return self._send(com.FRAME_HELLO,[])
     
     def runon(self,):
-        self._send(FRAME_RUNON,[])
+        return self._send(com.FRAME_RUNON,[])
     
     def xy(self,d1,d2):
-        self._send(FRAME_XY,[d1,d2])
+        return self._send(com.FRAME_XY,[d1,d2])
     
     def zt(self,d1,d2):
-        self._send(FRAME_ZT,[d1,d2])
+        return self._send(com.FRAME_ZT,[d1,d2])
     
     def showcal(self,):
-        self._send(FRAME_SHOWCAL,[])
+        return self._send(com.FRAME_SHOWCAL,[])
     
     def startcal(self,):
-        self._send(FRAME_STARTCAL,[])
+        return self._send(com.FRAME_STARTCAL,[])
     
     def endcal(self,):
-        self._send(FRAME_ENDCAL,[])
+        return self._send(com.FRAME_ENDCAL,[])
     
     def resetcal(self,):
-        self._send(FRAME_RESETCAL,[])
+        return self._send(com.FRAME_RESETCAL,[])
     
     def loadcal(self,):
-        self._send(FRAME_LOADCAL,[])
+        return self._send(com.FRAME_LOADCAL,[])
     
     def loaddefault(self,):
-        self._send(FRAME_LOADDEFAULT,[])
+        return self._send(com.FRAME_LOADDEFAULT,[])
     
     def getmillis(self,d1):
-        self._send(FRAME_GETMILLIS,[d1])
+        return self._send(com.FRAME_GETMILLIS,[d1])
     
     def display(self,d1):
-        self._send(FRAME_DISPLAY,[d1])
+        return self._send(com.FRAME_DISPLAY,[d1])
     
     def hexdisplay(self,d1):
-        self._send(FRAME_HEXDISPLAY,[d1])
+        return self._send(com.FRAME_HEXDISPLAY,[d1])
     
     def brightness(self,d1):
-        self._send(FRAME_BRIGHTNESS,[d1])
+        return self._send(com.FRAME_BRIGHTNESS,[d1])
     
     def clear(self,):
-        self._send(FRAME_CLEAR,[])
+        return self._send(com.FRAME_CLEAR,[])
     
     def outcontrol(self,d1,d2,d3,d4):
-        self._send(FRAME_OUTCONTROL,[d1,d2,d3,d4])
+        return self._send(com.FRAME_OUTCONTROL,[d1,d2,d3,d4])
     
     def outswitches(self,d1):
-        self._send(FRAME_OUTSWITCHES,[d1])
+        return self._send(com.FRAME_OUTSWITCHES,[d1])
     
     def dumpeeprom(self,):
-        self._send(FRAME_DUMPEEPROM,[])
+        return self._send(com.FRAME_DUMPEEPROM,[])
     
     def eraseeeprom(self,d1):
-        self._send(FRAME_ERASEEEPROM,[d1])
+        return self._send(com.FRAME_ERASEEEPROM,[d1])
     
     def logger(self,):
-        self._send(FRAME_LOGGER,[])
+        return self._send(com.FRAME_LOGGER,[])
     
     def fail(self,):
-        self._send(FRAME_FAIL,[])
+        return self._send(com.FRAME_FAIL,[])
     
 
     def _callbacks(self):
@@ -149,4 +149,4 @@ class controller:
         data = self._return_frame[4:]
         if self.functions[command] != None:
             up = struct.unpack_from(self.data_format[command],data,0)
-            self.functions[command](*up)
+            return self.functions[command](*up)
