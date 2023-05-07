@@ -197,6 +197,9 @@ fn main() -> ! {
                 Command::XY(x, y) => {
                     send_command(Command::XY(x, y));
                 }
+                Command::OutControl(a,b,c,d) => { 
+                    send_command(Command::OutControl(a, b, c, d));
+                }
                 _ => {serial_println!("unbound {:#?}", comm)}
             }
         }

@@ -53,8 +53,9 @@ class data:
         self.sock.sendto(mess,self.destination)
 
 import joycontrol
-js = joycontrol.controller(80000)
 
+js = joycontrol.controller(30000)
+js.interval = 10 
 js.hexdisplay(0xcafef00d)
 
 def read(size=8):
@@ -72,11 +73,40 @@ def mil(a):
 
 def two(a,b):
     print('two ->',a,b)
+    return (a,b)
 
 def outer(a,b,c,d):
-    print(" out |",a,b,c,d)
+    #print(" out |",a,b,c,d)
+    return (a,b,c,d)
 
 js.bind('xy',two)
 js.bind('outcontrol',outer)
 js.bind('getmillis',mil)
 js.bind('hello',hello)
+
+import random
+
+def geti8():
+    return random.getrandbits(8) - 128
+
+def check():
+    a = geti8()
+    b = geti8()
+    c = geti8()
+    d = geti8()
+    (e,f,g,h) = js.outcontrol(a,b,c,d)
+    if (a == e) and (b == f) and (c == g) and (d == h):
+        return True
+    else:
+        print(a,e)
+        print(b,f)
+        print(c,g)
+        print(d,h)
+        return False
+
+def go():
+    count = 0 
+    while check():
+        count += 1
+        js.display(count)
+    print("count ",count)
