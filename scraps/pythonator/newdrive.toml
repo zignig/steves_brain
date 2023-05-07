@@ -1,5 +1,8 @@
 [settings]
 file = "../../rover/newdrive/src/commands.rs"
 output = "minibrain.py"
-spi_interface = 1
 select_pin = 27
+sck = 10
+mosi = 11
+miso = 12
+interval = 30
