@@ -137,7 +137,7 @@ fn main() -> ! {
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            //serial_println!("{:?}", comm);
+            serial_println!("{:?}", comm);
             match comm {
                 Command::Hello => {
                     serial_println!("hello");
@@ -229,7 +229,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number(_time as i32);
+            //d.show_number(_time as i32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

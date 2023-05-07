@@ -1,7 +1,7 @@
 # generated from rust enum
 
 
-from machine import Pin, SPI
+from machine import Pin, SPI,SoftSPI
 import time
 import struct
 
@@ -36,11 +36,11 @@ FRAME_FAIL = 20
 
 # create the controller device
 class controller:
-    def __init__(self, speed=5000):
-        self.interval = 30
+    def __init__(self, speed=10000):
+        self.interval = 5
         self.ss = Pin(16, Pin.OUT)
         self.ss.on()
-        self.port = SPI(1, speed)
+        self.port = SoftSPI(baudrate=speed,sck=Pin(14),mosi=Pin(13),miso=Pin(12))
         self._frame = bytearray([0] * FRAME_SIZE)
         self._return_frame = bytearray([0] * FRAME_SIZE)
         self._data = bytearray([0, 0, 0, 0])
@@ -58,17 +58,16 @@ class controller:
         self.port.write(self._frame)
         self.ss.on()
 
-    def _read(self):
+    def _read(self,length=8):
         #print("read")
         self.ss.off()
-        data = self.port.read(8)
-        print(list(data))
+        data = self.port.read(length)
         self.ss.on()
+        print(list(data))
         self._return_frame = data 
         self._process()
 
     def _send(self, action, data):
-        time.sleep_ms(self.interval)
         self._build(action, data)
         self._send_to_port()
         time.sleep_ms(self.interval)

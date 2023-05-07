@@ -53,7 +53,7 @@ class data:
         self.sock.sendto(mess,self.destination)
 
 import joycontrol
-js = joycontrol.controller(100000)
+js = joycontrol.controller(80000)
 
 js.hexdisplay(0x010101010)
 
