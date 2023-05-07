@@ -38,7 +38,7 @@ FRAME_FAIL = 20
 class controller:
     def __init__(self,speed=10000):
         self.ss = Pin(16,Pin.OUT)
-        self.interval = 5
+        self.interval = 20
         self.ss.on()
         self.port = SoftSPI(baudrate=speed,sck=Pin(14),mosi=Pin(13),miso=Pin(12))
         self._frame = bytearray([0]*FRAME_SIZE)
@@ -47,18 +47,14 @@ class controller:
         self._callbacks()
 
     def _build(self,action,data):
+        struct.pack_into(self.data_format[action],self._data,0,*data)
         self._frame = bytearray([SYNC1,SYNC2,0,action])
-        self._frame = self._frame + bytes(data)
+        self._frame = self._frame + bytes(self._data)
     
     def _send_to_port(self):
         self.ss.off()
         self.port.write(self._frame)
         self.ss.on()
-        
-    def _send(self,action,data):
-        self._build(action,data)
-        self._send_to_port()
-        self._process()
     
     def _read(self):
         self.ss.off()
@@ -75,88 +71,67 @@ class controller:
     
     
     def hello(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_HELLO,self._data)
+        self._send(FRAME_HELLO,[])
     
     def runon(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_RUNON,self._data)
+        self._send(FRAME_RUNON,[])
     
     def xy(self,d1,d2):
-        struct.pack_into('bb',self._data,0,d1,d2)
-        self._send(FRAME_XY,self._data)
+        self._send(FRAME_XY,[d1,d2])
     
     def zt(self,d1,d2):
-        struct.pack_into('bb',self._data,0,d1,d2)
-        self._send(FRAME_ZT,self._data)
+        self._send(FRAME_ZT,[d1,d2])
     
     def showcal(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_SHOWCAL,self._data)
+        self._send(FRAME_SHOWCAL,[])
     
     def startcal(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_STARTCAL,self._data)
+        self._send(FRAME_STARTCAL,[])
     
     def endcal(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_ENDCAL,self._data)
+        self._send(FRAME_ENDCAL,[])
     
     def resetcal(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_RESETCAL,self._data)
+        self._send(FRAME_RESETCAL,[])
     
     def loadcal(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_LOADCAL,self._data)
+        self._send(FRAME_LOADCAL,[])
     
     def loaddefault(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_LOADDEFAULT,self._data)
+        self._send(FRAME_LOADDEFAULT,[])
     
     def getmillis(self,d1):
-        struct.pack_into('i',self._data,0,d1)
-        self._send(FRAME_GETMILLIS,self._data)
+        self._send(FRAME_GETMILLIS,[d1])
     
     def display(self,d1):
-        struct.pack_into('I',self._data,0,d1)
-        self._send(FRAME_DISPLAY,self._data)
+        self._send(FRAME_DISPLAY,[d1])
     
     def hexdisplay(self,d1):
-        struct.pack_into('i',self._data,0,d1)
-        self._send(FRAME_HEXDISPLAY,self._data)
+        self._send(FRAME_HEXDISPLAY,[d1])
     
     def brightness(self,d1):
-        struct.pack_into('B',self._data,0,d1)
-        self._send(FRAME_BRIGHTNESS,self._data)
+        self._send(FRAME_BRIGHTNESS,[d1])
     
     def clear(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_CLEAR,self._data)
+        self._send(FRAME_CLEAR,[])
     
     def outcontrol(self,d1,d2,d3,d4):
-        struct.pack_into('bbbb',self._data,0,d1,d2,d3,d4)
-        self._send(FRAME_OUTCONTROL,self._data)
+        self._send(FRAME_OUTCONTROL,[d1,d2,d3,d4])
     
     def outswitches(self,d1):
-        struct.pack_into('b',self._data,0,d1)
-        self._send(FRAME_OUTSWITCHES,self._data)
+        self._send(FRAME_OUTSWITCHES,[d1])
     
     def dumpeeprom(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_DUMPEEPROM,self._data)
+        self._send(FRAME_DUMPEEPROM,[])
     
     def eraseeeprom(self,d1):
-        struct.pack_into('B',self._data,0,d1)
-        self._send(FRAME_ERASEEEPROM,self._data)
+        self._send(FRAME_ERASEEEPROM,[d1])
     
     def logger(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_LOGGER,self._data)
+        self._send(FRAME_LOGGER,[])
     
     def fail(self,):
-        struct.pack_into('',self._data,0,)
-        self._send(FRAME_FAIL,self._data)
+        self._send(FRAME_FAIL,[])
     
 
     def _callbacks(self):

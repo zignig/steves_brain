@@ -6,7 +6,7 @@ import time
 import struct
 
 {% macro parameters(arg) -%}
-,{%- for val in arg.values -%}d{{loop.index}}{% if loop.last == false %},{% endif %}{%- endfor -%}
+{%- for val in arg.values -%}d{{loop.index}}{% if loop.last == false %},{% endif %}{%- endfor -%}
 {%- endmacro %}
 
 SYNC1 = 0xF
@@ -30,18 +30,14 @@ class controller:
         self._callbacks()
 
     def _build(self,action,data):
+        struct.pack_into(self.data_format[action],self._data,0,*data)
         self._frame = bytearray([SYNC1,SYNC2,0,action])
-        self._frame = self._frame + bytes(data)
+        self._frame = self._frame + bytes(self._data)
     
     def _send_to_port(self):
         self.ss.off()
         self.port.write(self._frame)
         self.ss.on()
-        
-    def _send(self,action,data):
-        self._build(action,data)
-        self._send_to_port()
-        self._process()
     
     def _read(self):
         self.ss.off()
@@ -57,9 +53,8 @@ class controller:
         self._read()
     
     {% for item in items %}
-    def {{ item.name|lower }}(self{%- call parameters(item) -%}):
-        struct.pack_into('{{item.format_string}}',self._data,0{%- call parameters(item) -%})
-        self._send(FRAME_{{item.name|upper}},self._data)
+    def {{ item.name|lower }}(self,{%- call parameters(item) -%}):
+        self._send(FRAME_{{item.name|upper}},[{%- call parameters(item) -%}])
     {% endfor %}
 
     def _callbacks(self):

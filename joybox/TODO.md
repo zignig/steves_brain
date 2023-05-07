@@ -5,11 +5,11 @@ in no particular order.
 - code for buttons , generate events.
   - press release for switches and buttons
   - probably need to debounce
-- update the code to move frames back to the esp
 - write the udp server and client for bot comms.
 - power supply for the box ( 4 x AA )
 
 ## Done
+- update the code to move frames back to the esp
 - swap missile and emergency stop , wiper clashes.
 - fix the display overflow issue
 - missle switch
