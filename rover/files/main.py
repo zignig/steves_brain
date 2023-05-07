@@ -62,6 +62,23 @@ class tracks(controller):
 
 d = tracks()
 
+
+def mil(a):
+    print('millis ->',a)
+    return a
+
+def compass(bearing):
+    print('bearing :',bearing)
+    return bearing 
+
+def current(value):
+    print('current -> ',value)
+    return current
+
+d.bind('getmillis',mil)
+d.bind('compass',compass)
+d.bind('current',current)
+
 import uasyncio
 
 

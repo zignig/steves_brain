@@ -103,8 +103,11 @@ fn main() -> ! {
 
     // find the now
     let mut last: u32 = millis();
-    let c = commands::Command::Run(10, -10);
-    commands::show(c);
+    let mut verbose: bool = false;
+
+    // let c = commands::Command::Run(10, -10);
+    // commands::show(c);
+
     loop {
         // if the current is too big , stop
         if current.overload(&mut adc) {
@@ -115,7 +118,6 @@ fn main() -> ! {
         if systick::is_tick() {
             let time = systick::millis();
             diff_drive.update();
-
             if let Some(value) = diff_drive.get_movement() {
                 serial_println!("drive {},{}", value.0, value.1).void_unwrap();
                 serial_println!("min {}", diff_drive.left.config.min_speed).void_unwrap();
@@ -142,6 +144,14 @@ fn main() -> ! {
                     Command::Stop => {
                         diff_drive.stop();
                     }
+                    Command::Cont => { 
+                        //let cs = current.get_value(&mut adc);
+                        //comms::send_command(Command::Current(cs));
+                        compass.update();
+                        let bearing = compass.get_bearing().unwrap();
+                        comms::send_command(Command::Compass(bearing));
+                        //comms::send_command(Command::GetMillis(systick::millis()));
+                    }
                     Command::SetAcc(rate) => {
                         diff_drive.set_rate(rate);
                     }
@@ -157,14 +167,19 @@ fn main() -> ! {
                     Command::SetJoy(x, y) => {
                         diff_drive.set_joy(x, y);
                     }
+                    Command::Verbose => { 
+                        verbose = !verbose;
+                    }
                     _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
                 }
             }
             // serial_println!("data {}",comms::get_data()).void_unwrap();
             // serial_println!("data {}",j.is_high()).void_unwrap();
             // serial_println!("drive {}",right_drive.get_current()).void_unwrap();
-            // compass.update();
-            // serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
+            if verbose { 
+                compass.update();
+                serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
+            }
             // serial_println!("Current: {}", current.get_value(&mut adc)).void_unwrap();
             // serial_println!("").void_unwrap();
         }

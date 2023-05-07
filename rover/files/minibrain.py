@@ -14,19 +14,22 @@ FRAME_SIZE = 8
 class com:
     FRAME_HELLO = 0
     FRAME_STOP = 1
-    FRAME_RUN = 2
-    FRAME_SETACC = 3
-    FRAME_SETJOY = 4
-    FRAME_SETTIMEOUT = 5
-    FRAME_SETTRIGGER = 6
-    FRAME_SETMINSPEED = 7
-    FRAME_SETMAXCURRENT = 8
-    FRAME_CONFIG = 9
-    FRAME_COUNT = 10
-    FRAME_DATA = 11
-    FRAME_COMPASS = 12
-    FRAME_MILLIS = 13
-    FRAME_FAIL = 14
+    FRAME_CONT = 2
+    FRAME_RUN = 3
+    FRAME_SETACC = 4
+    FRAME_SETJOY = 5
+    FRAME_SETTIMEOUT = 6
+    FRAME_SETTRIGGER = 7
+    FRAME_SETMINSPEED = 8
+    FRAME_SETMAXCURRENT = 9
+    FRAME_CONFIG = 10
+    FRAME_COUNT = 11
+    FRAME_DATA = 12
+    FRAME_COMPASS = 13
+    FRAME_GETMILLIS = 14
+    FRAME_CURRENT = 15
+    FRAME_VERBOSE = 16
+    FRAME_FAIL = 17
 
 # create the controller device
 class controller:
@@ -44,7 +47,6 @@ class controller:
         struct.pack_into(self.data_format[action],self._data,0,*data)
         self._frame = bytearray([SYNC1,SYNC2,0,action])
         self._frame = self._frame + bytes(self._data)
-        print(self._frame)
     
     def _send_to_port(self):
         self.ss.off()
@@ -70,6 +72,9 @@ class controller:
     
     def stop(self,):
         return self._send(com.FRAME_STOP,[])
+    
+    def cont(self,):
+        return self._send(com.FRAME_CONT,[])
     
     def run(self,d1,d2):
         return self._send(com.FRAME_RUN,[d1,d2])
@@ -104,17 +109,23 @@ class controller:
     def compass(self,d1):
         return self._send(com.FRAME_COMPASS,[d1])
     
-    def millis(self,d1):
-        return self._send(com.FRAME_MILLIS,[d1])
+    def getmillis(self,d1):
+        return self._send(com.FRAME_GETMILLIS,[d1])
+    
+    def current(self,d1):
+        return self._send(com.FRAME_CURRENT,[d1])
+    
+    def verbose(self,):
+        return self._send(com.FRAME_VERBOSE,[])
     
     def fail(self,):
         return self._send(com.FRAME_FAIL,[])
     
 
     def _callbacks(self):
-        self.names = ["hello","stop","run","setacc","setjoy","settimeout","settrigger","setminspeed","setmaxcurrent","config","count","data","compass","millis","fail",]
-        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
-        self.data_format = ["","","hh","B","hh","h","h","B","B","","","BBBB","h","I","",]
+        self.names = ["hello","stop","cont","run","setacc","setjoy","settimeout","settrigger","setminspeed","setmaxcurrent","config","count","data","compass","getmillis","current","verbose","fail",]
+        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","","hh","B","hh","h","h","B","B","","","BBBB","H","I","h","","",]
 
     def bind(self,name,func):
         for i in enumerate(self.names):

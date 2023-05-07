@@ -25,6 +25,7 @@ libm = { version = "0.2.6", default-features = false }
 byteio = { version = "0.2.3", default-features = false }
 serde = { version = "1.0.149", default-features = false }
 store_u8 = { path = "crates/store_u8" } 
+hubpack = "0.1.2"
 
 
 [dependencies.arduino-hal]

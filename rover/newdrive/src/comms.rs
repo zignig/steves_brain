@@ -7,7 +7,7 @@
 //!
 
 use crate::serial_println;
-use arduino_hal::prelude::*;
+use hubpack;
 
 use crate::commands::Command;
 use crate::ring_buffer::Ring;
@@ -15,7 +15,9 @@ use arduino_hal::pac::SPI;
 use avr_device;
 
 use avr_device::interrupt::Mutex;
-use core::cell::RefCell;
+//use core::borrow::BorrowMut;
+use core::cell::{Cell, RefCell};
+
 use core::u8;
 
 pub const FRAME_SIZE: usize = 8;
@@ -28,11 +30,10 @@ pub const RING_SIZE: usize = 8;
 
 // Need to structure the outgoing
 // status of the frame
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FrameStatus {
-    Start,
-    Inside,
-    Finished,
+    Running,
+    Idle,
 }
 
 pub trait Buffer {}
@@ -49,7 +50,7 @@ impl FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
-            status: FrameStatus::Finished,
+            status: FrameStatus::Idle,
         }
     }
 }
@@ -59,7 +60,7 @@ impl Default for FrameBuffer {
         Self {
             data: [0; FRAME_SIZE],
             pos: 0,
-            status: FrameStatus::Finished,
+            status: FrameStatus::Idle,
         }
     }
 }
@@ -67,26 +68,35 @@ impl Default for FrameBuffer {
 // TODO use phantom data to consume the pins
 pub struct SlaveSPI {}
 
-// Incoming data
+pub struct DataComms {
+    counter: u8,
+    in_frame: FrameBuffer,
+    in_comm: Ring<Command, RING_SIZE>,
+    out_data: u8,
+    out_frame: FrameBuffer,
+    out_comm: Ring<FrameBuffer, RING_SIZE>,
+    flag: bool,
+}
+
+impl DataComms {
+    pub fn new() -> Self {
+        Self {
+            counter: 0,
+            in_frame: FrameBuffer::new(),
+            in_comm: Ring::<Command, RING_SIZE>::new(),
+            out_data: 0,
+            out_frame: FrameBuffer::new(),
+            out_comm: Ring::<FrameBuffer, RING_SIZE>::new(),
+            flag: false,
+        }
+    }
+}
+
+static COMMS: Mutex<RefCell<Option<DataComms>>> = Mutex::new(RefCell::new(None));
 
 // guarded access to the SPI object
 static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
-
-// guarded incoming data PacketBuffer
-static DATA_FRAME: Mutex<RefCell<Option<FrameBuffer>>> = Mutex::new(RefCell::new(None));
-
-// ring buffer for the created commands
-static COMMAND_RING: Mutex<RefCell<Option<Ring<Command, RING_SIZE>>>> =
-    Mutex::new(RefCell::new(None));
-
-// Outgoing data
-
-// guarded outgoing data PacketBuffer
-static OUT_FRAME: Mutex<RefCell<Option<FrameBuffer>>> = Mutex::new(RefCell::new(None));
-
-// ring buffer for outgoing packets
-static OUT_RING: Mutex<RefCell<Option<Ring<FrameBuffer, RING_SIZE>>>> =
-    Mutex::new(RefCell::new(None));
+static COUNTER: Mutex<Cell<u8>> = Mutex::new(Cell::new(0));
 
 impl SlaveSPI {
     pub fn init(s: SPI) {
@@ -95,19 +105,10 @@ impl SlaveSPI {
         // set slave (mstr = 0)
         s.spcr
             .write(|w| w.spie().set_bit().spe().set_bit().mstr().clear_bit());
-        // put the spi , ring buffer and packetbuffer  into a protected globals
         avr_device::interrupt::free(|cs| {
-            // data incoming
-            SPI_INT.borrow(&cs).replace(Some(s));
-            DATA_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
-            COMMAND_RING
-                .borrow(&cs)
-                .replace(Some(Ring::<Command, RING_SIZE>::new()));
-            // data outgoing
-            OUT_FRAME.borrow(&cs).replace(Some(FrameBuffer::new()));
-            OUT_RING
-                .borrow(&cs)
-                .replace(Some(Ring::<FrameBuffer, RING_SIZE>::new()));
+            COMMS.borrow(cs).replace(Some(DataComms::new()));
+            SPI_INT.borrow(cs).replace(Some(s));
+            //COUNTER.borrow(cs).replace(Some(0 as u8));
         });
     }
 }
@@ -116,39 +117,35 @@ impl SlaveSPI {
 fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
         // Incoming Data
-        // get the data byte from the SPI bus
         let mut data: u8 = 0;
-        if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
-            data = s.spdr.read().bits();
-        }
-        // put the data into the buffer
-        if let Some(pb) = &mut *DATA_FRAME.borrow(&cs).borrow_mut() {
-            // push the byte into the packet checker
-            if let Some(the_packet) = process_packet(data, pb) {
-                // the packet is well formed
-                //serial_println!("{:#?}", the_packet.data[..]).void_unwrap();
-                // deserialize the command part of the packet
-                let comm = Command::deserialize(&the_packet);
-                // chuck the command into a ring buffer
-                if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
-                    cr.append(comm);
-                }
+
+        // Open the comms struct.
+        if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
+            // move the outgoing data into place
+            cd.out_data = cd.out_frame.data[cd.out_frame.pos];
+            cd.out_frame.pos += 1;
+            //serial_println!("{:?}",cd.out_frame.pos as u8 );
+            if (cd.out_frame.pos == FRAME_SIZE) {
+                cd.out_frame.pos = 0;
+                cd.flag = false;
             }
-        }
-        // Outgoing data
-        // When the interface is ready , spool out a frame
-        // Deserialize into the SPI interface.
-        if let Some(s) = &mut *SPI_INT.borrow(&cs).borrow_mut() {
-            if let Some(pb) = &mut *OUT_FRAME.borrow(&cs).borrow_mut() {
-                // OH NOES unsafitude !!DRAGONS!!
+            // get the data byte from the SPI bus and put a new byte in.
+            if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+                // write the out going data
                 unsafe {
-                    s.spdr.write(|w| w.bits(pb.data[pb.pos]));
+                    s.spdr.write(|w| w.bits(cd.out_data));
+                    //s.spdr.write(|w| w.bits(cd.out_frame.pos as u8));
                 }
-                pb.pos += 1;
-                if pb.pos == FRAME_SIZE {
-                    pb.pos = 0;
-                    // get new frame
-                }
+                data = s.spdr.read().bits();
+            }
+            // push the incoming byte into the packet checker
+            if let Some(the_packet) = process_packet(data, &mut cd.in_frame) {
+                // the_packet is good
+                let (comm, _) =
+                    hubpack::deserialize::<Command>(&the_packet.data[3..FRAME_SIZE]).unwrap();
+                //serial_println!("{:?}",the_packet.data[..]);
+                cd.in_comm.append(comm);
+                cd.flag = true;
             }
         }
     });
@@ -186,11 +183,11 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         //serial_println!("{:?}",data).void_unwrap();
         pb.data[pb.pos] = data;
         pb.pos += 1;
-        pb.status = FrameStatus::Inside;
+        pb.status = FrameStatus::Running;
         // end of the frame
         if pb.pos == FRAME_SIZE {
             pb.pos = 0;
-            pb.status = FrameStatus::Finished;
+            pb.status = FrameStatus::Idle;
             //Packet Buffer Full ready to go
             return Some(pb.clone());
         }
@@ -200,7 +197,7 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
         // bad packet data
         // reset
         pb.pos = 0;
-        pb.status = FrameStatus::Start;
+        pb.status = FrameStatus::Idle;
         // not ready
         None
     }
@@ -210,13 +207,57 @@ pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
 pub fn fetch_command() -> Option<Command> {
     let mut comm = None;
     avr_device::interrupt::free(|cs| {
-        if let Some(cr) = &mut *COMMAND_RING.borrow(&cs).borrow_mut() {
+        if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
             //serial_println!("len: {} ",cr.len()).void_unwrap();
-            if let Some(val) = cr.pop() {
+            if let Some(val) = cd.in_comm.pop() {
                 //serial_println!("value: {:#?} ",val).void_unwrap();
                 comm = Some(val);
             }
         }
     });
     comm
+}
+
+// Fetch a frame from the ring out
+fn fetch_frame() -> Option<FrameBuffer> {
+    let mut frame = None;
+    avr_device::interrupt::free(|cs| {
+        if let Some(comm_data) = &mut *COMMS.borrow(cs).borrow_mut() {
+            if let Some(val) = comm_data.out_comm.pop() {
+                frame = Some(val);
+            }
+        }
+    });
+    frame
+}
+
+pub fn send_command(comm: Command) {
+    //serial_println!("> {:?}", comm);
+    let mut pb = FrameBuffer::new();
+    pb.pos = 0;
+    pb.data[0] = SYNC1;
+    pb.data[1] = SYNC2;
+    let _ = hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
+    avr_device::interrupt::free(|cs| {
+        if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
+            // CHECK IF THE INCOMING BUFFER IS BUSY.
+            if cd.in_frame.status == FrameStatus::Idle && cd.out_comm.is_empty() {
+                cd.out_frame.data = pb.data;
+                // preload
+                cd.out_frame.pos = 1;
+                cd.out_frame.status = FrameStatus::Idle;
+                // preload the first byte
+                if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+                    unsafe {
+                        s.spdr.write(|w| w.bits(pb.data[0]));
+                    }
+                }
+                //serial_println!("send {:?}", cd.out_frame.data[..]);
+            } else {
+                //
+                // Chuck it into the ring buffer
+                cd.out_comm.append(pb);
+            }
+        }
+    });
 }
