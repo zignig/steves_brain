@@ -1,8 +1,8 @@
 [settings]
 file = "../../rover/newdrive/src/commands.rs"
-output = "minibrain.py"
+output = "../../rover/files/minibrain.py"
 select_pin = 27
-sck = 10
-mosi = 11
+sck = 14
+mosi = 13
 miso = 12
 interval = 30

@@ -12,6 +12,9 @@ in no particular order.
     - probably need to debounce
 - ESP
   - write the udp server and client for bot comms.
+- pythonator 
+  - read the frame size and the leading constants.
+  
 - power supply for the box ( 4 x AA )
 
 ## Done

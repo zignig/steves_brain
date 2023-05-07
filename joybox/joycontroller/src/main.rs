@@ -143,8 +143,9 @@ fn main() -> ! {
             }
             match comm {
                 Command::Hello => {
-                    serial_println!("hello");
-                    send_command(Command::Hello);
+                    serial_println!("Hello");
+                    //send_command(Command::Hello);
+                    send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::RunOn => {
                     let v = the_controls.joystick.x.value;

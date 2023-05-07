@@ -20,10 +20,47 @@ def show(directory="/"):
             print("file ", i)
 
 
-import minibrain
+# import minibrain
+from minibrain import controller,com
 
-d = minibrain.diff_drive()
 
+# subclass the interface
+# the diff drive is auto generated 
+# this extends the interface 
+class tracks(controller):
+    def __init__(self,speed=50000):
+        super(tracks,self).__init__(speed)
+        self.accel = 0
+        self._rate = 100
+    
+    def rate(self,val):
+        self._rate = val 
+
+    def move(self,m1,m2):
+        self._send(com.FRAME_RUN,[m1,m2])
+    
+    def forward(self):
+        self.move(self._rate, self._rate)
+
+    def backward(self):
+        self.move(-self._rate, -self._rate)
+
+    def left(self):
+        self.move(-self._rate, self._rate)
+
+    def right(self):
+        self.move(self._rate, -self._rate)
+
+    def bounce(self,count=5,timeout=0.5):
+        for i in range(count):
+            self.forward()
+            time.sleep(timeout)
+            self.backward()
+            time.sleep(timeout)
+        self.move(0,0)
+        self.stop()
+
+d = tracks()
 
 import uasyncio
 

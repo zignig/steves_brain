@@ -1,131 +1,129 @@
-# This is the interface to ardiuno minibrain
-# this drive the wheels and the 5V sensors
+# generated from rust enum
 
-# connection
-# green , pin 12 , MISO
-# yellow , pin 13 , MOSI
-# white , pin 14 , CLK
-# blue , pin 27 , SS
 
-from machine import Pin, SPI
+from machine import Pin, SPI , SoftSPI
 import time
 import struct
 
-# 20220614 - drive rework
-# Convert mini_brain to a frame based comm
-# sync , sync ,check, command , d1,d2,d3,d4
-# rewrite the Arduino software first (almost dne
 
-# FRAME type enum in newdrive/src/commands.rs
 
-FRAME_HELLO = 0
-FRAME_STOP = 1
-FRAME_RUN = 2 
-FRAME_SETACC = 3 
-FRAME_SETJOY = 4 
-FRAME_SETTIMEOUT = 5 
-FRAME_SETTRIGGER = 6 
-FRAME_SETMINSPEED = 7
-FRAME_MAXCUR = 8
-FRAME_CONFIG = 9 
-FRAME_COUNT = 10
-# Sync bytes for the frame
 SYNC1 = 0xF
 SYNC2 = 0xE
-FRAME_SIZE = 8
+FRAME_SIZE = 8 
 
-class diff_drive:
-    def __init__(self, speed=5000):
-        self.ss = Pin(27, Pin.OUT)
+class com:
+    FRAME_HELLO = 0
+    FRAME_STOP = 1
+    FRAME_RUN = 2
+    FRAME_SETACC = 3
+    FRAME_SETJOY = 4
+    FRAME_SETTIMEOUT = 5
+    FRAME_SETTRIGGER = 6
+    FRAME_SETMINSPEED = 7
+    FRAME_SETMAXCURRENT = 8
+    FRAME_CONFIG = 9
+    FRAME_COUNT = 10
+    FRAME_DATA = 11
+    FRAME_COMPASS = 12
+    FRAME_MILLIS = 13
+    FRAME_FAIL = 14
+
+# create the controller device
+class controller:
+    def __init__(self,speed=10000):
+        self.ss = Pin(27,Pin.OUT)
+        self.interval = 30
         self.ss.on()
-        self.port = SPI(1, speed)
-        self._frame = bytes([0]*FRAME_SIZE)
-        self._rate = 100
-        self.accel(5)
-        self.timeout(10)
-        self.min(50)       
-        # incoming interval
-        self.interval = 50
-        
-    def build(self,action,data):
-        self._frame  = bytes([SYNC1,SYNC2,action,0])
-        self._frame  = self._frame + bytes(data)
+        self.port = SoftSPI(baudrate=speed,sck=Pin(14),mosi=Pin(13),miso=Pin(12))
+        self._frame = bytearray([0]*FRAME_SIZE)
+        self._return_frame = bytearray([0]*FRAME_SIZE)
+        self._data = bytearray([0,0,0,0])
+        self._callbacks()
 
-    def send(self,action,data):
-        self.build(action,data)
-        self._send(self._frame)
-
-    def _send(self,fr):
+    def _build(self,action,data):
+        struct.pack_into(self.data_format[action],self._data,0,*data)
+        self._frame = bytearray([SYNC1,SYNC2,0,action])
+        self._frame = self._frame + bytes(self._data)
+        print(self._frame)
+    
+    def _send_to_port(self):
         self.ss.off()
-        self.port.write(fr)
+        self.port.write(self._frame)
         self.ss.on()
     
-    def _sr(self):
-        outdata = bytearray([0]*FRAME_SIZE)
+    def _read(self):
         self.ss.off()
-        self.port.write_readinto(self._frame,outdata)
+        data = self.port.read(8)
         self.ss.on()
-        return outdata
-
-    def rate(self,val):
-        self._rate = val 
+        self._return_frame = data
+        return self._process()
     
-    def i16_2(self,m1,m2):
-        return struct.pack('2h',m1,m2)
-
-    def i16_1(self,m1):
-        return self.i16_2(m1,0)
+    def _send(self,action,data):
+        self._build(action,data)
+        self._send_to_port()
+        time.sleep_ms(self.interval)
+        return self._read()
+    
+    
+    def hello(self,):
+        return self._send(com.FRAME_HELLO,[])
+    
+    def stop(self,):
+        return self._send(com.FRAME_STOP,[])
+    
+    def run(self,d1,d2):
+        return self._send(com.FRAME_RUN,[d1,d2])
+    
+    def setacc(self,d1):
+        return self._send(com.FRAME_SETACC,[d1])
+    
+    def setjoy(self,d1,d2):
+        return self._send(com.FRAME_SETJOY,[d1,d2])
+    
+    def settimeout(self,d1):
+        return self._send(com.FRAME_SETTIMEOUT,[d1])
+    
+    def settrigger(self,d1):
+        return self._send(com.FRAME_SETTRIGGER,[d1])
+    
+    def setminspeed(self,d1):
+        return self._send(com.FRAME_SETMINSPEED,[d1])
+    
+    def setmaxcurrent(self,d1):
+        return self._send(com.FRAME_SETMAXCURRENT,[d1])
+    
+    def config(self,):
+        return self._send(com.FRAME_CONFIG,[])
+    
+    def count(self,):
+        return self._send(com.FRAME_COUNT,[])
+    
+    def data(self,d1,d2,d3,d4):
+        return self._send(com.FRAME_DATA,[d1,d2,d3,d4])
+    
+    def compass(self,d1):
+        return self._send(com.FRAME_COMPASS,[d1])
+    
+    def millis(self,d1):
+        return self._send(com.FRAME_MILLIS,[d1])
+    
+    def fail(self,):
+        return self._send(com.FRAME_FAIL,[])
     
 
-    def u8_4(self,u1,u2,u3,u4):
-        return struct.pack('4B',u1,u2,u3,u4)
+    def _callbacks(self):
+        self.names = ["hello","stop","run","setacc","setjoy","settimeout","settrigger","setminspeed","setmaxcurrent","config","count","data","compass","millis","fail",]
+        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","hh","B","hh","h","h","B","B","","","BBBB","h","I","",]
 
-    def u8_1(self,u1):
-        return self.u8_4(u1,0,0,0)
-
-    def hello(self):
-        self.send(FRAME_HELLO,[0,0,0,0])
+    def bind(self,name,func):
+        for i in enumerate(self.names):
+            if self.names[i[0]] == name:
+                self.functions[i[0]] = func
     
-    def stop(self):
-        self.send(FRAME_STOP,[0,0,0,0])
-    
-    def accel(self,val):
-        self.send(FRAME_SETACC,self.u8_1(val))
-
-    def timeout(self,val):
-        self.send(FRAME_SETTIMEOUT,self.i16_1(val))
-
-    def min(self,val):
-        self.send(FRAME_SETMINSPEED,self.u8_1(val))
-
-    def maxc(self,val):
-        self.send(FRAME_MAXCUR,self.u8_1(val))
-
-
-    def move(self,m1,m2):
-        data = self.i16_2(m1,m2)
-        self.send(FRAME_RUN,data)
-
-    def joy(self,m1,m2):
-        self.send(FRAME_SETJOY,self.i16_2(m1,m2))
-
-    def forward(self):
-        self.move(self._rate, self._rate)
-
-    def backward(self):
-        self.move(-self._rate, -self._rate)
-
-    def left(self):
-        self.move(-self._rate, self._rate)
-
-    def right(self):
-        self.move(self._rate, -self._rate)
-
-    def bounce(self,count=5,timeout=0.5):
-        for i in range(count):
-            self.forward()
-            time.sleep(timeout)
-            self.backward()
-            time.sleep(timeout)
-        self.move(0,0)
-        self.stop()
+    def _process(self):
+        command = self._return_frame[3]
+        data = self._return_frame[4:]
+        if self.functions[command] != None:
+            up = struct.unpack_from(self.data_format[command],data,0)
+            return self.functions[command](*up)

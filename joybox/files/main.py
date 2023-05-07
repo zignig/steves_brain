@@ -3,7 +3,7 @@
 #import uasyncio
 #import _thread
 
-import struct 
+import struct , json
 
 def reset():
     machine.reset()
@@ -110,3 +110,12 @@ def go():
         count += 1
         js.display(count)
     print("count ",count)
+
+outgoing = data(reg.target)
+
+def sender():
+    while True:
+        # turn into async 
+        xy = js.runon()
+        outgoing.send(json.dumps(xy))
+        time.sleep_ms(200)
