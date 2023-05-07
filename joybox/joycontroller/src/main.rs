@@ -140,14 +140,15 @@ fn main() -> ! {
             //serial_println!("{:?}", comm);
             match comm {
                 Command::Hello => {
-                    serial_println!("hello");
-                    send_command(Command::RunOn);
-                }
+                    //serial_println!("hello");
+                    //send_command(Command::RunOn);
+                },
                 Command::RunOn => {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
                     d.show_number(val);
+                    send_command(Command::Display(val));
                 }
                 Command::HexDisplay(val) => {
                     d.show_hex(val as u32);
@@ -229,7 +230,7 @@ fn main() -> ! {
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);
-            d.show_number(_time as i32);
+            //d.show_number(_time as i32);
             //d.show_hex(num as u32);
             num = num + 1;
         }

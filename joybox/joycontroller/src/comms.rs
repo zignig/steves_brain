@@ -114,6 +114,17 @@ impl SlaveSPI {
 #[avr_device::interrupt(atmega328p)]
 fn SPI_STC() {
     avr_device::interrupt::free(|cs| {
+        let mut data: u8 = 0;
+        if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
+            data = s.spdr.read().bits();
+            //serial_println!("{:?}", data);
+        }
+    });
+}
+
+//#[avr_device::interrupt(atmega328p)]
+fn SPI_STC_4() {
+    avr_device::interrupt::free(|cs| {
         // Incoming Data
         let mut flag: bool = false;
         let mut data: u8 = 0;
@@ -130,9 +141,10 @@ fn SPI_STC() {
             // get the data byte from the SPI bus and put a new byte in.
             if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
                 // write the out going data
+                //serial_println!("{:?}",comm_data.out_data);
                 unsafe {
-                    s.spdr.write(|w| w.bits(comm_data.out_data));
-                    //s.spdr.write(|w| w.bits(comm_data.out_frame.pos as u8));
+                    //     //s.spdr.write(|w| w.bits(comm_data.out_data));
+                    s.spdr.write(|w| w.bits(comm_data.out_frame.pos as u8));
                 }
                 data = s.spdr.read().bits();
             }
@@ -258,9 +270,11 @@ pub fn send_command(comm: Command) {
     let _ = hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
     avr_device::interrupt::free(|cs| {
         if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
+            //serial_println!("{:?}",cd.out_comm.size());
             // CHECK IF THE INCOMING BUFFER IS BUSY.
             if cd.in_frame.status == FrameStatus::Idle && cd.out_comm.is_empty() {
                 cd.out_frame.data = pb.data;
+                //serial_println!("{:?}",pb.data);
                 // preload
                 cd.out_frame.pos = 1;
                 cd.out_frame.status = FrameStatus::Idle;

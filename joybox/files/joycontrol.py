@@ -71,7 +71,7 @@ class controller:
         time.sleep_ms(self.interval)
         self._build(action, data)
         self._send_to_port()
-        time.sleep_ms(self.interval)
+        #time.sleep_ms(self.interval)
         self._read()
 
         # read ??
