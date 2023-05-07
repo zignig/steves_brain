@@ -2,20 +2,26 @@
 
 in no particular order.
 
-- code for buttons , generate events.
-  - press release for switches and buttons
-  - probably need to debounce
-- write the udp server and client for bot comms.
+- Arduino
+  - scale analogue controller with calibration to u8
+  - return an option for the joystick on change.
+  - fix comms to unroll commands of the ring buffer 
+    - return zero frame
+  - code for buttons , generate events.
+    - press release for switches and buttons
+    - probably need to debounce
+- ESP
+  - write the udp server and client for bot comms.
 - power supply for the box ( 4 x AA )
 
 ## Done
 - update the code to move frames back to the esp
 - swap missile and emergency stop , wiper clashes.
 - fix the display overflow issue
-- missle switch
+- missile switch
 - emergency stop 
 - left and right buttons
-- top switches and top leds
+- top switches and top led
   - check wiring
   - soft interface on esp
 - double check the dimensions 

@@ -232,7 +232,7 @@ fn fetch_frame() -> Option<FrameBuffer> {
 }
 
 pub fn send_command(comm: Command) {
-    serial_println!("> {:?}", comm);
+    //serial_println!("> {:?}", comm);
     let mut pb = FrameBuffer::new();
     pb.pos = 0;
     pb.data[0] = SYNC1;

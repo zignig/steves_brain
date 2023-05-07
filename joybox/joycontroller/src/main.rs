@@ -133,18 +133,24 @@ fn main() -> ! {
     //let c = Command::XY(10, 10);
     //commands::show(c);
     let mut logging: bool = false;
+    let mut verbose: bool = false;
     let mut state = State::Running;
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            serial_println!("{:?}", comm);
+            if verbose{
+                serial_println!("{:?}", comm);
+            }
             match comm {
                 Command::Hello => {
                     serial_println!("hello");
                     send_command(Command::Hello);
                 }
                 Command::RunOn => {
-                    send_command(Command::GetMillis(systick::millis()));
+                    let v = the_controls.joystick.x.value;
+                    let h = the_controls.joystick.y.value;
+                    send_command(Command::XY(v,h));
+                    //send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
                     d.show_number(val);
@@ -181,6 +187,9 @@ fn main() -> ! {
                 Command::Logger => {
                     logging = !logging;
                 }
+                Command::Verbose =>{
+                    verbose = !verbose;
+                }
                 Command::DumpEeprom => {
                     let mut buf: [u8; 100] = [0; 100];
                     ee.read(0, &mut buf).unwrap();
@@ -195,7 +204,7 @@ fn main() -> ! {
                     serial_println!("finshed erase");
                 }
                 Command::XY(x, y) => {
-                    send_command(Command::XY(x, y));
+                    send_command(Command::XY(x,y));
                 }
                 Command::OutControl(a,b,c,d) => { 
                     send_command(Command::OutControl(a, b, c, d));

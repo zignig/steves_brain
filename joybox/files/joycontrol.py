@@ -32,7 +32,8 @@ class com:
     FRAME_DUMPEEPROM = 17
     FRAME_ERASEEEPROM = 18
     FRAME_LOGGER = 19
-    FRAME_FAIL = 20
+    FRAME_VERBOSE = 20
+    FRAME_FAIL = 21
 
 # create the controller device
 class controller:
@@ -130,14 +131,17 @@ class controller:
     def logger(self,):
         return self._send(com.FRAME_LOGGER,[])
     
+    def verbose(self,):
+        return self._send(com.FRAME_VERBOSE,[])
+    
     def fail(self,):
         return self._send(com.FRAME_FAIL,[])
     
 
     def _callbacks(self):
-        self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","fail",]
-        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
-        self.data_format = ["","","bb","bb","","","","","","","i","I","i","B","","bbbb","b","","B","","",]
+        self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","verbose","fail",]
+        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","hh","hh","","","","","","","I","i","I","B","","bbbb","b","","B","","","",]
 
     def bind(self,name,func):
         for i in enumerate(self.names):
