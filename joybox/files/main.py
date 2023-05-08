@@ -56,7 +56,7 @@ import joycontrol
 
 js = joycontrol.controller(30000)
 js.interval = 6
-js.hexdisplay(0xcafef00d)
+#js.hexdisplay(0xcafef00d)
 
 def read(size=8):
     js.ss.off()
@@ -113,9 +113,9 @@ def go():
 
 outgoing = data(reg.target)
 
-def sender():
+def sender(sl=200):
     while True:
         # turn into async 
         xy = js.runon()
         outgoing.send(json.dumps(xy))
-        time.sleep_ms(200)
+        time.sleep_ms(sl)

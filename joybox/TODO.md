@@ -5,17 +5,21 @@ in no particular order.
 - Arduino
   - scale analogue controller with calibration to u8
   - return an option for the joystick on change.
+  - have invert flag for the axes.
   - fix comms to unroll commands of the ring buffer 
-    - return zero frame
+    - return default frame when empty
   - code for buttons , generate events.
     - press release for switches and buttons
     - probably need to debounce
+  - power supply for the box ( 4 x AA )
+
+
 - ESP
   - write the udp server and client for bot comms.
 - pythonator 
   - read the frame size and the leading constants.
   
-- power supply for the box ( 4 x AA )
+
 
 ## Done
 - update the code to move frames back to the esp
