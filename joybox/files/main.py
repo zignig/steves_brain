@@ -76,13 +76,14 @@ def two(a,b):
     return (a,b)
 
 def outer(a,b,c,d):
-    #print(" out |",a,b,c,d)
+    print(" out |",a,b,c,d)
     return (a,b,c,d)
 
 js.bind('xy',two)
 js.bind('outcontrol',outer)
 js.bind('getmillis',mil)
 js.bind('hello',hello)
+
 
 import random
 
@@ -116,6 +117,6 @@ outgoing = data(reg.target)
 def sender(sl=200):
     while True:
         # turn into async 
-        xy = js.runon()
-        outgoing.send(json.dumps(xy))
+        xyzt = js.runon()
+        outgoing.send(json.dumps(xyzt))
         time.sleep_ms(sl)

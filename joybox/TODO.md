@@ -3,11 +3,11 @@
 in no particular order.
 
 - Arduino
-  - scale analogue controller with calibration to u8
+  - scale analogue controller with calibration to i8
   - return an option for the joystick on change.
   - have invert flag for the axes.
   - fix comms to unroll commands of the ring buffer 
-    - return default frame when empty
+  - return default frame when empty
   - code for buttons , generate events.
     - press release for switches and buttons
     - probably need to debounce
@@ -17,11 +17,11 @@ in no particular order.
 - ESP
   - write the udp server and client for bot comms.
 - pythonator 
-  - read the frame size and the leading constants.
   
 
 
 ## Done
+- read the frame size and the leading constants.
 - update the code to move frames back to the esp
 - swap missile and emergency stop , wiper clashes.
 - fix the display overflow issue
@@ -32,7 +32,7 @@ in no particular order.
   - check wiring
   - soft interface on esp
 - double check the dimensions 
-- update the dxf for the box creation (doneish)
+- update the dxf for the box creation
 - cut the box carefully and mount the electronics 
 
 

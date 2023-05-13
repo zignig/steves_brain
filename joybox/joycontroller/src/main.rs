@@ -150,9 +150,11 @@ fn main() -> ! {
                 Command::RunOn => {
                     // let v = the_controls.joystick.x.value;
                     // let h = the_controls.joystick.y.value;
-                    let v = the_controls.joystick.z.value;
-                    let h = the_controls.throttle.t.value;
-                    send_command(Command::XY(v.into(),h.into()));
+                    //let v = the_controls.joystick.x.get_scaled();
+                    //let h = the_controls.joystick.y.get_scaled();
+                    let (a,b,c,d) = the_controls.data();
+                    send_command(Command::OutControl(a, b, c, d));
+                    //send_command(Command::XY(v.into(),h.into()));
                     //send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
@@ -166,6 +168,7 @@ fn main() -> ! {
                 }
                 Command::StartCal => {
                     the_mode = joystick::Mode::RunCallibrate;
+                    the_controls.zero_out(&mut adc);
                     state = State::StartCallibration;
                 }
                 Command::EndCal => {

@@ -17,7 +17,7 @@ use ufmt::derive::uDebug;
 pub enum Command {
     Hello,
     RunOn,
-    XY(i16, i16),
+    XY(i8,i8),
     ZT(i16, i16),
     ShowCal,
     StartCal,

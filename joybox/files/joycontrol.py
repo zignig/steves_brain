@@ -157,7 +157,7 @@ class controller:
     def _callbacks(self):
         self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","verbose","leftbutton","rightbutton","estop","missile","fail",]
         self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
-        self.data_format = ["","","hh","hh","","","","","","","I","i","I","B","","bbbb","b","","B","","","","","","","",]
+        self.data_format = ["","","bb","hh","","","","","","","I","i","I","B","","bbbb","b","","B","","","","","","","",]
 
     def bind(self,name,func):
         for i in enumerate(self.names):

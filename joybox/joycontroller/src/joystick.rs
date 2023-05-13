@@ -9,9 +9,8 @@ use ufmt::derive::uDebug;
 use avr_device;
 
 // some math stuff
-use libm;
+use libm::{self, fabs};
 use libm::{acosf, fabsf, fmaxf, roundf, sqrtf};
-
 
 // Until the eeprom is fixed use a fixed callibration
 impl Controls {
@@ -20,25 +19,29 @@ impl Controls {
             zero: 499,
             min: -129,
             max: 129,
-            dead_zone: -20,
+            dead_zone: 5,
+            invert: true,
         };
         self.joystick.y.config = AxisConfig {
             zero: 519,
             min: -129,
             max: 125,
-            dead_zone: -20,
+            dead_zone: 5,
+            invert: false,
         };
         self.joystick.z.config = AxisConfig {
             zero: 553,
             min: -203,
             max: 226,
-            dead_zone: -20,
+            dead_zone: 5,
+            invert: false,
         };
         self.throttle.t.config = AxisConfig {
             zero: 642,
             min: 0,
             max: 250,
-            dead_zone: -20,
+            dead_zone: 5,
+            invert: false,
         };
     }
 }
@@ -66,6 +69,7 @@ pub struct AxisConfig {
     pub min: i16,
     pub max: i16,
     pub dead_zone: i16,
+    pub invert: bool,
 }
 
 impl AxisConfig {
@@ -74,7 +78,8 @@ impl AxisConfig {
             zero: 0,
             min: 0,
             max: 0,
-            dead_zone: -20,
+            dead_zone: 5,
+            invert: false,
         }
     }
 }
@@ -82,7 +87,6 @@ pub struct Axis {
     channel: Channel,
     pub reading: i16,
     pub value: i8,
-
     pub config: AxisConfig,
 }
 
@@ -123,7 +127,6 @@ impl Axis {
         let (config, _) = hubpack::deserialize::<AxisConfig>(&buf).unwrap();
         self.config = config;
         // calculate and load the floating point parameters
-        
     }
 
     pub fn get_value(&mut self, adc: &mut arduino_hal::Adc) -> i16 {
@@ -134,10 +137,42 @@ impl Axis {
     }
 
     pub fn get_scaled(&mut self) -> i8 {
+        // convert to floating point
+        // scale to i8
         let mut fvalue: f32 = self.reading.into();
         let mut fzero: f32 = self.config.zero.into();
+        let mut fmax: f32 = (self.config.max as f32) + 1.0;
+        let mut fmin: f32 = (self.config.min as f32) - 1.0;
+        let mut fdead: f32 = self.config.dead_zone.into();
 
-        0
+        let mut fscaled: f32 = 0.0;
+        let mut val: i8 = 0;
+
+        // limit the dead_zone
+        if self.reading.abs() < self.config.dead_zone {
+            return 0 
+        }
+        // rescale the -ve and +ve values
+        if fvalue > 0.0 {
+            fscaled = fvalue / fmax;
+        }
+        if fvalue < 0.0 {
+            fscaled = -fvalue / fmin;
+        }
+        // invert the axis if needed;
+        if self.config.invert {
+            fscaled = -fscaled;
+        }
+        // bound check on callibration
+        if fscaled > 1.0 { 
+            fscaled = 1.0;
+        }
+        if fscaled < -1.0 { 
+            fscaled = -1.0;
+        }
+        val = (fscaled * 128.0) as i8;
+        //serial_println!("val = {:?}", val);
+        val
     }
 
     pub fn get_zero(&mut self, adc: &mut arduino_hal::Adc) {
@@ -206,7 +241,12 @@ impl AnalogController for Joy3Axis {
     }
 
     fn show(&mut self) {
-        serial_println!("X:{} Y:{} Z{}", self.x.value, self.y.value, self.z.value);
+        serial_println!(
+            "X:{} Y:{} Z{}",
+            self.x.get_scaled(),
+            self.y.get_scaled(),
+            self.z.get_scaled()
+        );
     }
 
     fn show_config(&mut self) {
@@ -255,7 +295,7 @@ impl AnalogController for Throttle {
     }
 
     fn show(&mut self) {
-        serial_println!("T:{}", self.t.reading);
+        serial_println!("T:{}", self.t.get_scaled());
     }
 
     fn update(&mut self, mode: &Mode, adc: &mut arduino_hal::Adc) {
@@ -289,6 +329,14 @@ impl Controls {
     pub fn new(joystick: Joy3Axis, throttle: Throttle) -> Self {
         Self { joystick, throttle }
     }
+
+    pub fn data(&mut self) -> (i8,i8,i8,i8){
+        let a = self.joystick.x.get_scaled();
+        let b = self.joystick.y.get_scaled();
+        let c = self.joystick.z.get_scaled();
+        let d = self.throttle.t.get_scaled();
+        (a,b,c,d)
+    }
 }
 
 impl AnalogController for Controls {
@@ -313,10 +361,10 @@ impl AnalogController for Controls {
     fn show(&mut self) {
         serial_println!(
             "X : {:?} , Y : {:?} , Z : {:?} , T : {:?}",
-            self.joystick.x.reading,
-            self.joystick.y.reading,
-            self.joystick.z.reading,
-            self.throttle.t.reading
+            self.joystick.x.get_scaled(),
+            self.joystick.y.get_scaled(),
+            self.joystick.z.get_scaled(),
+            self.throttle.t.get_scaled()
         );
         //self.joystick.show();
         //self.throttle.show();
