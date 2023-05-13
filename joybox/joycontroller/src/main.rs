@@ -119,7 +119,7 @@ fn main() -> ! {
     let mut num: i32 = 1;
     // activate the display
     d.power_on();
-    d.brightness(1);
+    d.brightness(2);
 
     the_controls.load(&mut ee);
     //the_controls.load_fixed();
@@ -148,9 +148,11 @@ fn main() -> ! {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::RunOn => {
-                    let v = the_controls.joystick.x.value;
-                    let h = the_controls.joystick.y.value;
-                    send_command(Command::XY(v,h));
+                    // let v = the_controls.joystick.x.value;
+                    // let h = the_controls.joystick.y.value;
+                    let v = the_controls.joystick.z.value;
+                    let h = the_controls.throttle.t.value;
+                    send_command(Command::XY(v.into(),h.into()));
                     //send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {

@@ -26,6 +26,7 @@ serde_derive = { version = "1.0.147", default-features = false }
 byteio = { version = "0.2.3", default-features = false }
 serde = { version = "1.0.149", default-features = false }
 hubpack = "0.1.1"
+libm = "0.2.6"
 
 [dependencies.max7219]
 path = "/opt/max7219/" # the update

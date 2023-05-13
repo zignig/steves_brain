@@ -1,5 +1,5 @@
 // The various parts of the joystick reader
-use crate::{serial_println};
+use crate::serial_println;
 use arduino_hal::adc::Channel;
 use arduino_hal::Eeprom;
 use hubpack::SerializedSize;
@@ -7,6 +7,10 @@ use serde_derive::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
 
 use avr_device;
+
+// some math stuff
+use libm;
+use libm::{acosf, fabsf, fmaxf, roundf, sqrtf};
 
 
 // Until the eeprom is fixed use a fixed callibration
@@ -76,8 +80,9 @@ impl AxisConfig {
 }
 pub struct Axis {
     channel: Channel,
-    pub value: i16,
-    pub test: f32,
+    pub reading: i16,
+    pub value: i8,
+
     pub config: AxisConfig,
 }
 
@@ -87,8 +92,8 @@ impl Axis {
     fn new(channel: Channel) -> Self {
         Self {
             channel: channel,
+            reading: 0,
             value: 0,
-            test: 0.0,
             config: AxisConfig::new(),
         }
     }
@@ -117,13 +122,22 @@ impl Axis {
         ee.read(offset, &mut buf).unwrap();
         let (config, _) = hubpack::deserialize::<AxisConfig>(&buf).unwrap();
         self.config = config;
+        // calculate and load the floating point parameters
+        
     }
 
     pub fn get_value(&mut self, adc: &mut arduino_hal::Adc) -> i16 {
         let mut val = adc.read_blocking(&self.channel) as i16;
         val = self.config.zero - val;
-        self.value = val;
+        self.reading = val;
         val
+    }
+
+    pub fn get_scaled(&mut self) -> i8 {
+        let mut fvalue: f32 = self.reading.into();
+        let mut fzero: f32 = self.config.zero.into();
+
+        0
     }
 
     pub fn get_zero(&mut self, adc: &mut arduino_hal::Adc) {
@@ -138,11 +152,11 @@ impl Axis {
 
     pub fn callibrate(&mut self, adc: &mut arduino_hal::Adc) {
         self.get_value(adc);
-        if self.config.min > self.value {
-            self.config.min = self.value;
+        if self.config.min > self.reading {
+            self.config.min = self.reading;
         }
-        if self.config.max < self.value {
-            self.config.max = self.value;
+        if self.config.max < self.reading {
+            self.config.max = self.reading;
         }
     }
 }
@@ -196,9 +210,9 @@ impl AnalogController for Joy3Axis {
     }
 
     fn show_config(&mut self) {
-        serial_println!("X:{:?} - {:?}", self.x.config, self.x.value);
-        serial_println!("Y:{:?} - {:?}", self.y.config, self.y.value);
-        serial_println!("Z:{:?} - {:?}", self.z.config, self.z.value);
+        serial_println!("X:{:?} - {:?}", self.x.config, self.x.reading);
+        serial_println!("Y:{:?} - {:?}", self.y.config, self.y.reading);
+        serial_println!("Z:{:?} - {:?}", self.z.config, self.z.reading);
         //serial_println!("\n");
     }
 
@@ -241,7 +255,7 @@ impl AnalogController for Throttle {
     }
 
     fn show(&mut self) {
-        serial_println!("T:{}", self.t.value);
+        serial_println!("T:{}", self.t.reading);
     }
 
     fn update(&mut self, mode: &Mode, adc: &mut arduino_hal::Adc) {
@@ -299,10 +313,10 @@ impl AnalogController for Controls {
     fn show(&mut self) {
         serial_println!(
             "X : {:?} , Y : {:?} , Z : {:?} , T : {:?}",
-            self.joystick.x.value,
-            self.joystick.y.value,
-            self.joystick.z.value,
-            self.throttle.t.value
+            self.joystick.x.reading,
+            self.joystick.y.reading,
+            self.joystick.z.reading,
+            self.throttle.t.reading
         );
         //self.joystick.show();
         //self.throttle.show();

@@ -108,7 +108,7 @@ def go():
     count = 0 
     while check():
         count += 1
-        js.display(count)
+        js.hexdisplay(count)
     print("count ",count)
 
 outgoing = data(reg.target)

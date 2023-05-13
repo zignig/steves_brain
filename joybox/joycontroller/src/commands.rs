@@ -36,6 +36,10 @@ pub enum Command {
     EraseEeprom(u8),
     Logger,
     Verbose,
+    LeftButton,
+    RightButton,
+    EStop,
+    Missile,
     Fail,
 }
 

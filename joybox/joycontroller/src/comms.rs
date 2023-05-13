@@ -36,7 +36,6 @@ pub enum FrameStatus {
     Idle,
 }
 
-pub trait Buffer {}
 
 #[derive(Clone, Copy)]
 pub struct FrameBuffer {
@@ -47,11 +46,7 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
     pub fn new() -> Self {
-        Self {
-            data: [0; FRAME_SIZE],
-            pos: 0,
-            status: FrameStatus::Idle,
-        }
+        FrameBuffer::default()
     }
 }
 
@@ -128,6 +123,8 @@ fn SPI_STC() {
             if (cd.out_frame.pos == FRAME_SIZE) {
                 cd.out_frame.pos = 0;
                 cd.flag = false;
+                // clear the data 
+                cd.out_frame.data = [0;FRAME_SIZE];
             }
             // get the data byte from the SPI bus and put a new byte in.
             if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {

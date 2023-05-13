@@ -33,7 +33,11 @@ class com:
     FRAME_ERASEEEPROM = 18
     FRAME_LOGGER = 19
     FRAME_VERBOSE = 20
-    FRAME_FAIL = 21
+    FRAME_LEFTBUTTON = 21
+    FRAME_RIGHTBUTTON = 22
+    FRAME_ESTOP = 23
+    FRAME_MISSILE = 24
+    FRAME_FAIL = 25
 
 # create the controller device
 class controller:
@@ -134,14 +138,26 @@ class controller:
     def verbose(self,):
         return self._send(com.FRAME_VERBOSE,[])
     
+    def leftbutton(self,):
+        return self._send(com.FRAME_LEFTBUTTON,[])
+    
+    def rightbutton(self,):
+        return self._send(com.FRAME_RIGHTBUTTON,[])
+    
+    def estop(self,):
+        return self._send(com.FRAME_ESTOP,[])
+    
+    def missile(self,):
+        return self._send(com.FRAME_MISSILE,[])
+    
     def fail(self,):
         return self._send(com.FRAME_FAIL,[])
     
 
     def _callbacks(self):
-        self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","verbose","fail",]
-        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
-        self.data_format = ["","","hh","hh","","","","","","","I","i","I","B","","bbbb","b","","B","","","",]
+        self.names = ["hello","runon","xy","zt","showcal","startcal","endcal","resetcal","loadcal","loaddefault","getmillis","display","hexdisplay","brightness","clear","outcontrol","outswitches","dumpeeprom","eraseeeprom","logger","verbose","leftbutton","rightbutton","estop","missile","fail",]
+        self.functions = [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,]
+        self.data_format = ["","","hh","hh","","","","","","","I","i","I","B","","bbbb","b","","B","","","","","","","",]
 
     def bind(self,name,func):
         for i in enumerate(self.names):
@@ -149,8 +165,9 @@ class controller:
                 self.functions[i[0]] = func
     
     def _process(self):
-        command = self._return_frame[3]
-        data = self._return_frame[4:]
-        if self.functions[command] != None:
-            up = struct.unpack_from(self.data_format[command],data,0)
-            return self.functions[command](*up)
+        if ((self._return_frame[0] == SYNC1) & (self._return_frame[1] == SYNC2)):
+            command = self._return_frame[3]
+            data = self._return_frame[4:]
+            if self.functions[command] != None:
+                up = struct.unpack_from(self.data_format[command],data,0)
+                return self.functions[command](*up)
