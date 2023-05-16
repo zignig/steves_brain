@@ -1,6 +1,5 @@
 use askama::Template;
 use serde_derive::Deserialize;
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -10,6 +9,9 @@ use std::process::exit;
 use syn::visit::{self, Visit};
 use syn::ItemEnum;
 use toml;
+
+mod mapping;
+use mapping::{get_mappings,Mapper};
 
 // Settings Configuration file
 #[derive(Deserialize, Debug)]
@@ -28,18 +30,7 @@ struct Settings {
     miso: u8,
 }
 
-// Mapping File
-#[derive(Deserialize, Debug)]
-struct Mapper {
-    types: HashMap<String, String>,
-}
-impl Mapper {
-    fn new() -> Self {
-        Self {
-            types: HashMap::new(),
-        }
-    }
-}
+
 
 fn main() {
     let mut args = env::args();
@@ -79,35 +70,12 @@ fn main() {
         }
     };
 
-    // Load the mapping file
-    let mapping_file = "mapping.toml";
-    let mappings = match fs::read_to_string(mapping_file) {
-        // If successful return the files text as `contents`.
-        // `c` is a local variable.
-        Ok(c) => c,
-        // Handle the `error` case.
-        Err(err) => {
-            // Write `msg` to `stderr`.
-            eprintln!("Could not read file `{}` with {} ", mapping_file, err);
-            // Exit the program with exit code `1`.
-            exit(1);
-        }
+   let map_data  = match get_mappings("mapping.toml"){
+        Ok(map) => map ,
+        Err(_) => exit(1),
     };
-
-    let map_data: Mapper = match toml::from_str(&mappings) {
-        // If successful, return data as `Data` struct.
-        // `d` is a local variable.
-        Ok(d) => d,
-        // Handle the `error` case.
-        Err(err) => {
-            eprintln!("Unable to load data from `{}` with {}", mapping_file, err);
-            // Exit the program with exit code `1`.
-            exit(1);
-        }
-    };
-
     println!("Mapping {:?}", &map_data);
-
+    
     // build the enum cross
     let contents = match fs::read_to_string(&data.settings.file.as_str()) {
         // If successful return the files text as `contents`.
@@ -126,6 +94,7 @@ fn main() {
     //     // Debug impl is available if Syn is built with "extra-traits" feature.
     //     //println!("{:#?}", &syntax);
     let mut vis = EnumVisitor::new("testing".to_string());
+
     vis.mapping = map_data;
 
     vis.visit_file(&syntax);

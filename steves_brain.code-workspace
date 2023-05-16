@@ -16,5 +16,7 @@
 			"path": "../max7219"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"rust-analyzer.showUnlinkedFileNotification": false
+	},
 }
