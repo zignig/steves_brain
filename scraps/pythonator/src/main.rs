@@ -11,12 +11,18 @@ use syn::ItemEnum;
 use toml;
 
 mod mapping;
-use mapping::{get_mappings,Mapper};
+use mapping::{get_mappings, Mapper};
 
 // Settings Configuration file
 #[derive(Deserialize, Debug)]
 struct Data {
     settings: Settings,
+    i2c: Option<I2cSettings>,
+}
+
+#[derive(Deserialize, Debug)]
+struct I2cSettings {
+    addr: i32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -29,8 +35,6 @@ struct Settings {
     mosi: u8,
     miso: u8,
 }
-
-
 
 fn main() {
     let mut args = env::args();
@@ -63,19 +67,21 @@ fn main() {
         // `d` is a local variable.
         Ok(d) => d,
         // Handle the `error` case.
-        Err(_) => {
-            eprintln!("Unable to load data from `{}`", filename);
+        Err(e) => {
+            eprintln!("Error `{:#?}` in {}", e, filename);
             // Exit the program with exit code `1`.
             exit(1);
         }
     };
 
-   let map_data  = match get_mappings("mapping.toml"){
-        Ok(map) => map ,
+    println!("Settings {:#?}", data);
+
+    let map_data = match get_mappings("mapping.toml") {
+        Ok(map) => map,
         Err(_) => exit(1),
     };
     println!("Mapping {:?}", &map_data);
-    
+
     // build the enum cross
     let contents = match fs::read_to_string(&data.settings.file.as_str()) {
         // If successful return the files text as `contents`.
@@ -133,7 +139,7 @@ struct EnumVisitor {
     pub select_pin: u8,
     pub sck: u8,
     pub mosi: u8,
-    pub miso: u8
+    pub miso: u8,
 }
 
 impl EnumVisitor {
@@ -147,7 +153,7 @@ impl EnumVisitor {
             select_pin: 1,
             sck: 1,
             mosi: 1,
-            miso: 1 ,
+            miso: 1,
         }
     }
 }

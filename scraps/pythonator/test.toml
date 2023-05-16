@@ -1,5 +1,10 @@
 [settings]
+interval = 5
 file = "comm_test.rs"
 output = "test.py"
-spi_interface = 1
+sck = 1
+miso  = 10
+mosi = 12
 select_pin = 27
+[i2c]
+addr = 4
