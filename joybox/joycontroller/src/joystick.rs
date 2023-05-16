@@ -16,31 +16,31 @@ use libm::{acosf, fabsf, fmaxf, roundf, sqrtf};
 impl Controls {
     pub fn load_fixed(&mut self) {
         self.joystick.x.config = AxisConfig {
-            zero: 499,
-            min: -129,
-            max: 129,
-            dead_zone: 5,
+            zero: 501,
+            min: -128,
+            max: 132,
+            dead_zone: 10,
             invert: true,
         };
         self.joystick.y.config = AxisConfig {
             zero: 519,
-            min: -129,
-            max: 125,
-            dead_zone: 5,
-            invert: false,
+            min: -130,
+            max: 124,
+            dead_zone: 10,
+            invert: true,
         };
         self.joystick.z.config = AxisConfig {
-            zero: 553,
-            min: -203,
-            max: 226,
-            dead_zone: 5,
+            zero: 550,
+            min: -207,
+            max: 225,
+            dead_zone: 10,
             invert: false,
         };
         self.throttle.t.config = AxisConfig {
-            zero: 642,
+            zero: 643,
             min: 0,
             max: 250,
-            dead_zone: 5,
+            dead_zone: 10,
             invert: false,
         };
     }
@@ -87,6 +87,7 @@ pub struct Axis {
     channel: Channel,
     pub reading: i16,
     pub value: i8,
+    pub prev: i8,
     pub config: AxisConfig,
 }
 
@@ -98,6 +99,7 @@ impl Axis {
             channel: channel,
             reading: 0,
             value: 0,
+            prev: 0,
             config: AxisConfig::new(),
         }
     }
@@ -170,7 +172,8 @@ impl Axis {
         if fscaled < -1.0 { 
             fscaled = -1.0;
         }
-        val = (fscaled * 128.0) as i8;
+        // convert to u8  and return
+        val = (fscaled * 127.0) as i8;
         //serial_println!("val = {:?}", val);
         val
     }

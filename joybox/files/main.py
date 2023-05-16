@@ -76,7 +76,7 @@ def two(a,b):
     return (a,b)
 
 def outer(a,b,c,d):
-    print(" out |",a,b,c,d)
+    #print(" out |",a,b,c,d)
     return (a,b,c,d)
 
 js.bind('xy',two)
@@ -118,5 +118,6 @@ def sender(sl=200):
     while True:
         # turn into async 
         xyzt = js.runon()
-        outgoing.send(json.dumps(xyzt))
+        if xyzt is not None:
+            outgoing.send(json.dumps(xyzt))
         time.sleep_ms(sl)

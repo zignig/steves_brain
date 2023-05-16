@@ -30,6 +30,7 @@ class UDPServer:
                     await uasyncio.sleep(0)
                     if ret:
                         s.sendto(ret, addr)  # blocking
+                    del buf , addr
                 await uasyncio.sleep(0)
             except uasyncio.core.CancelledError:
                 # Shutdown server

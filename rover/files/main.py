@@ -8,6 +8,9 @@ import upip
 upip.index_urls = [reg.uplink + '/packages']
 
 import os
+import gc
+
+gc.threshold(4096)
 
 def show(directory="/"):
     li = os.listdir(directory)
