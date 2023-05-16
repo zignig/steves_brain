@@ -119,8 +119,8 @@ fn main() -> ! {
             let time = systick::millis();
             diff_drive.update();
             if let Some(value) = diff_drive.get_movement() {
-                serial_println!("drive {},{}", value.0, value.1).void_unwrap();
-                serial_println!("min {}", diff_drive.left.config.min_speed).void_unwrap();
+                //serial_println!("drive {},{}", value.0, value.1).void_unwrap();
+                //serial_println!("min {}", diff_drive.left.config.min_speed).void_unwrap();
 
                 //     //serial_println!("current {}", current.get_value(&mut adc)).void_unwrap();
                 //     //serial_println!("zero {}", current.zero_offset).void_unwrap();
