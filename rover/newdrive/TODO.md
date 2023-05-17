@@ -1,5 +1,7 @@
 # TODO 
 - add joystick input to diff drive
+- add throttle imput
+- add Z axis as turn.
 - state machine for robot control 
 - fix change of timeout
 
