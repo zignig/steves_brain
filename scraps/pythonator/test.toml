@@ -1,7 +1,8 @@
 [settings]
-interval = 5
 file = "comm_test.rs"
 output = "test.py"
+[spi]
+interval = 5
 sck = 1
 miso  = 10
 mosi = 12

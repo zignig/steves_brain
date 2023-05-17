@@ -9,6 +9,7 @@ use std::fs;
 pub struct Mapper {
     pub types: HashMap<String, String>,
 }
+
 impl Mapper {
     pub fn new() -> Self {
         Self {

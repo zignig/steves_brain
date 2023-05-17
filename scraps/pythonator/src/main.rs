@@ -17,29 +17,43 @@ use mapping::{get_mappings, Mapper};
 #[derive(Deserialize, Debug)]
 struct Data {
     settings: Settings,
+    spi: Option<SpiSettings>,
     i2c: Option<I2cSettings>,
 }
 
 #[derive(Deserialize, Debug)]
 struct I2cSettings {
-    addr: i32,
+    scl: u8,
+    sda: u8,
 }
 
 #[derive(Deserialize, Debug)]
-struct Settings {
-    file: String,
-    output: String,
+struct SpiSettings {
     interval: u16,
     select_pin: u8,
     sck: u8,
     mosi: u8,
     miso: u8,
 }
+#[derive(Deserialize, Debug)]
+struct Settings {
+    file: String,
+    output: String,
+}
 
 fn main() {
+    println!("Load Mappings");
+    let map_data = match get_mappings("mapping.toml") {
+        Ok(map) => map,
+        Err(e) => {
+            println!("Error {:?}", e);
+            exit(1)
+        }
+    };
+    println!("Mapping {:?}", &map_data);
+
     let mut args = env::args();
     let _ = args.next(); // executable name
-
     let filename = match (args.next(), args.next()) {
         (Some(filename), None) => filename,
         _ => {
@@ -74,13 +88,7 @@ fn main() {
         }
     };
 
-    println!("Settings {:#?}", data);
-
-    let map_data = match get_mappings("mapping.toml") {
-        Ok(map) => map,
-        Err(_) => exit(1),
-    };
-    println!("Mapping {:?}", &map_data);
+    println!("Settings {:#?}\n", data);
 
     // build the enum cross
     let contents = match fs::read_to_string(&data.settings.file.as_str()) {
@@ -105,11 +113,13 @@ fn main() {
 
     vis.visit_file(&syntax);
     println!("{:?}", vis);
-    vis.select_pin = data.settings.select_pin;
-    vis.sck = data.settings.sck;
-    vis.mosi = data.settings.mosi;
-    vis.miso = data.settings.miso;
-    vis.interval = data.settings.interval;
+    if let Some(spi) = data.spi {
+        vis.select_pin = spi.select_pin;
+        vis.sck = spi.sck;
+        vis.mosi = spi.mosi;
+        vis.miso = spi.miso;
+        vis.interval = spi.interval;
+    }
     vis.scan();
 
     println!("{:#?}", vis);
