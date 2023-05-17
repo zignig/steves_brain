@@ -9,10 +9,9 @@ in no particular order.
     - if empty , load defaults.
     - query callibrate.
   - idle scanner for display 
-  
     - Jensen scanner on decimal point
   - appease clippy.
-    - ve is so rude.
+    - Ve is so rude.
   - return an option for the joystick on change.
     - keep last value , check and Option forward
   - fix comms to unroll commands of the ring buffer 

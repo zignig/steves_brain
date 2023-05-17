@@ -121,3 +121,5 @@ def sender(sl=200):
         if xyzt is not None:
             outgoing.send(json.dumps(xyzt))
         time.sleep_ms(sl)
+
+#sender(50)
