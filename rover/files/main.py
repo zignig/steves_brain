@@ -8,6 +8,9 @@ import upip
 upip.index_urls = [reg.uplink + '/packages']
 
 import os
+import gc
+
+gc.threshold(4096)
 
 def show(directory="/"):
     li = os.listdir(directory)
@@ -60,8 +63,11 @@ class tracks(controller):
         self.move(0,0)
         self.stop()
 
+
+# Create the main drive objects
 d = tracks()
 
+# Some Callback functions for the SPI interface
 
 def mil(a):
     print('millis ->',a)
@@ -75,18 +81,22 @@ def current(value):
     print('current -> ',value)
     return current
 
-d.bind('getmillis',mil)
-d.bind('compass',compass)
-d.bind('current',current)
+# Bind the callbacks to the drive
+#d.bind('getmillis',mil)
+#d.bind('compass',compass)
+#d.bind('current',current)
+
+
+# Set up the async thread
 
 import uasyncio
 
 
-def main_runner(reg, app, ws, mb):
+def main_runner(reg, app, ws, drive):
     loop = uasyncio.get_event_loop()
     if reg.ws:
         print("Starting Web Socket")
-        ws_app = ws.get(mb)
+        ws_app = ws.get(drive)
         loop.create_task(ws_app)
     if reg.web:
         print("Starting WebServer")
@@ -99,7 +109,7 @@ def main_runner(reg, app, ws, mb):
         loop.create_task(uasyncio.start_server(app._handle, "0.0.0.0", 80))
     if reg.udp:
         print("UDP server starting")
-        ud = udpserver.UDPServer()
+        ud = udpserver.UDPServer(drive)
         loop.create_task(ud.serve(udpserver.cb,'0.0.0.0',12345))
     loop.run_forever()
 

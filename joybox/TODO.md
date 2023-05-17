@@ -3,37 +3,61 @@
 in no particular order.
 
 - Arduino
-  - scale analogue controller with calibration to i8
+
+
+  - move config down and have a status check on low eeprom
+    - if empty , load defaults.
+    - query callibrate.
+  - idle scanner for display 
+  
+    - Jensen scanner on decimal point
+  - appease clippy.
+    - ve is so rude.
   - return an option for the joystick on change.
-  - have invert flag for the axes.
+    - keep last value , check and Option forward
   - fix comms to unroll commands of the ring buffer 
-  - return default frame when empty
   - code for buttons , generate events.
     - press release for switches and buttons
     - probably need to debounce
-  - power supply for the box ( 4 x AA )
-
 
 - ESP
+  - startup
+    - check millis , see elapsed time.
+  - idle state
+    - if nothing is happening on the joy stick or buttons.
+      - don't send packet
+      - 
   - write the udp server and client for bot comms.
-- pythonator 
-  
+  - convert to single uasync 
+    - query
 
+- pythonator 
+  - if binding does not match return list.
+  
+- phys
+  - hot glue coat the M3 cap head for contact.
+  - clean edges and polish. 
+  - power supply for the box ( 4 x AA )
 
 ## Done
-- read the frame size and the leading constants.
-- update the code to move frames back to the esp
-- swap missile and emergency stop , wiper clashes.
-- fix the display overflow issue
-- missile switch
-- emergency stop 
-- left and right buttons
-- top switches and top led
-  - check wiring
-  - soft interface on esp
-- double check the dimensions 
-- update the dxf for the box creation
-- cut the box carefully and mount the electronics 
+- Joycontroller
+  - have invert flag for the axes.
+  - return default frame when empty
+  - scale analogue controller with calibration to i8
+  - read the frame size and the leading constants.
+  - update the code to move frames back to the esp
+  - swap missile and emergency stop , wiper clashes.
+  - fix the display overflow issue
+- JoyBox ( the hardware )
+  - missile switch
+  - emergency stop 
+  - left and right buttons
+  - top switches and top led
+    - check wiring
+    - soft interface on esp
+  - double check the dimensions 
+  - update the dxf for the box creation
+  - cut the box carefully and mount the electronics 
 
 
 # Code cleanup

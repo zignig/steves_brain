@@ -133,8 +133,9 @@ class controller:
                 self.functions[i[0]] = func
     
     def _process(self):
-        command = self._return_frame[3]
-        data = self._return_frame[4:]
-        if self.functions[command] != None:
-            up = struct.unpack_from(self.data_format[command],data,0)
-            return self.functions[command](*up)
+        pass
+        # command = self._return_frame[3]
+        # data = self._return_frame[4:]
+        # if self.functions[command] != None:
+        #     up = struct.unpack_from(self.data_format[command],data,0)
+        #     return self.functions[command](*up)
