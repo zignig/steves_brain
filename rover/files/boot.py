@@ -7,8 +7,8 @@ import uos, machine
 # uos.dupterm(None, 1) # disable REPL on UART(0)
 import gc
 import json
-import upip
 import time
+import urequests
 
 gc.collect()
 
@@ -195,8 +195,9 @@ except OSError as e:
 
 def update():
     "Get the updates"
-    import upip
-    data = json.load(upip.url_open(reg.uplink + "/status/"+reg.id))
+    import urequests
+    path = reg.uplink + "/status/" + reg.id
+    data = urequests.get(path).json()
     for i in data:
         local = reg.get("f_" + i)
         remote = data[i]
@@ -208,8 +209,12 @@ def update():
             else:
                 print("hash is different")
             print("Fetch file ", i)
-            upip._makedirs("/"+i)
-            upip.save_file(i, upip.url_open(reg.uplink + '/files/' + reg.id +'/'+ i))
+            path = reg.uplink + "/files/" + reg.id + "/" + i
+            print(path)
+            r = urequests.get(path)
+            f =  open(i,'wb')
+            f.write(r.content)
+            f.close()
             print("Update registry")
             reg.set("f_" + i, data[i])
             # wait for the flash to catch up
@@ -251,7 +256,8 @@ def format_drive():
 def set_time():
     print(time.localtime())
     rtc = machine.RTC()
-    t = json.load(upip.url_open(reg.uplink + "/time"))
+    path =  reg.uplink + '/time'
+    t = urequests.get(path).json()
     # esp32 rtc has a weird format
     # weekday in the middle
     val = (t[0],t[1],t[2],0,t[3],t[4],t[5],0)
