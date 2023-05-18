@@ -152,7 +152,7 @@ impl Axis {
 
         // limit the dead_zone
         if self.reading.abs() < self.config.dead_zone {
-            return 0 
+            return 0;
         }
         // rescale the -ve and +ve values
         if fvalue > 0.0 {
@@ -166,10 +166,10 @@ impl Axis {
             fscaled = -fscaled;
         }
         // bound check on callibration
-        if fscaled > 1.0 { 
+        if fscaled > 1.0 {
             fscaled = 1.0;
         }
-        if fscaled < -1.0 { 
+        if fscaled < -1.0 {
             fscaled = -1.0;
         }
         // convert to u8  and return
@@ -311,9 +311,11 @@ impl AnalogController for Throttle {
             }
         }
     }
+
     fn show_config(&mut self) {
         serial_println!("T:{:?} - {:?}", self.t.config, self.t.value);
     }
+
     fn zero_out(&mut self, adc: &mut arduino_hal::Adc) {
         self.t.get_zero(adc);
     }
@@ -333,12 +335,12 @@ impl Controls {
         Self { joystick, throttle }
     }
 
-    pub fn data(&mut self) -> (i8,i8,i8,i8){
+    pub fn data(&mut self) -> (i8, i8, i8, i8) {
         let a = self.joystick.x.get_scaled();
         let b = self.joystick.y.get_scaled();
         let c = self.joystick.z.get_scaled();
         let d = self.throttle.t.get_scaled();
-        (a,b,c,d)
+        (a, b, c, d)
     }
 }
 

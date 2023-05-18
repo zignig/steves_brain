@@ -1,10 +1,7 @@
 # Todo for the joy box
 
-in no particular order.
-
+# JoyBox
 - Arduino
-
-
   - move config down and have a status check on low eeprom
     - if empty , load defaults.
     - query callibrate.
@@ -18,7 +15,6 @@ in no particular order.
   - code for buttons , generate events.
     - press release for switches and buttons
     - probably need to debounce
-
 - ESP
   - startup
     - check millis , see elapsed time.
