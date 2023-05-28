@@ -38,7 +38,7 @@ fn main() -> ! {
     // bind the serial port to the macro in utils so it can be used anywhere
     utils::serial_init(serial_port);
 
-    serial_println!("Woot it works").void_unwrap();
+    serial_println!("Woot it works");
 
     // i2c driver
     let i2c = arduino_hal::I2c::new(
@@ -87,7 +87,7 @@ fn main() -> ! {
     // sensor starts at 512  ( measures +ve and -ve, sample at rest and create a zero point )
     current.get_zero(&mut adc);
 
-    serial_println!("Behold steve's minibrain").void_unwrap();
+    serial_println!("Behold steve's minibrain");
     //u activate the interrupts
     // !! DRAGONS , beware the unsafe code !!
     unsafe { avr_device::interrupt::enable() };
@@ -99,7 +99,7 @@ fn main() -> ! {
 
     // Show some compass data.
     compass.update();
-    serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
+    serial_println!("The Compass: {}", compass.get_bearing().unwrap());
 
     // find the now
     let mut last: u32 = millis();
@@ -111,7 +111,7 @@ fn main() -> ! {
     loop {
         // if the current is too big , stop
         if current.overload(&mut adc) {
-            serial_println!("STOP").void_unwrap();
+            serial_println!("STOP");
             diff_drive.stop();
         }
         // on the tick ... DO.
@@ -133,7 +133,7 @@ fn main() -> ! {
                 last = time;
                 //serial_println!(" {}", time-last).void_unwrap();
                 //commands::show(comm);
-                serial_println!("{:#?}", comm).void_unwrap();
+                serial_println!("{:#?}", comm);
                 //serial_println!("").void_unwrap();
                 //commands::show(comm);
 
@@ -170,7 +170,7 @@ fn main() -> ! {
                     Command::Verbose => { 
                         verbose = !verbose;
                     }
-                    _ => serial_println!("unbound {:#?}", comm).void_unwrap(),
+                    _ => serial_println!("unbound {:#?}", comm),
                 }
             }
             // serial_println!("data {}",comms::get_data()).void_unwrap();
@@ -178,7 +178,7 @@ fn main() -> ! {
             // serial_println!("drive {}",right_drive.get_current()).void_unwrap();
             if verbose { 
                 compass.update();
-                serial_println!("The Compass: {}", compass.get_bearing().unwrap()).void_unwrap();
+                serial_println!("The Compass: {}", compass.get_bearing().unwrap());
             }
             // serial_println!("Current: {}", current.get_value(&mut adc)).void_unwrap();
             // serial_println!("").void_unwrap();
