@@ -93,16 +93,6 @@ fn main() -> ! {
 
     let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
 
-    let (vbg, gnd, tmp) = (
-        adc.read_blocking(&adc::channel::Vbg),
-        adc.read_blocking(&adc::channel::Gnd),
-        adc.read_blocking(&adc::channel::Temperature),
-    );
-
-    serial_println!("Vbandgap: {}", vbg);
-    serial_println!("Ground: {}", gnd);
-    serial_println!("Temperature: {}", tmp);
-
     // joy stick and throttle ananlog pins.
     let a0 = pins.a0.into_analog_input(&mut adc).into_channel();
     let a1 = pins.a1.into_analog_input(&mut adc).into_channel();
@@ -132,13 +122,14 @@ fn main() -> ! {
 
     //let c = Command::XY(10, 10);
     //commands::show(c);
+    let mut idle_counter: i32 = 0;
     let mut logging: bool = false;
-    let mut verbose: bool = false;
+    let mut verbose: bool = true;
     let mut state = State::Running;
     loop {
         // If there is a command in the ring buffer , fetch and execute.
         if let Some(comm) = fetch_command() {
-            if verbose{
+            if verbose {
                 serial_println!("{:?}", comm);
             }
             match comm {
@@ -148,14 +139,8 @@ fn main() -> ! {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::RunOn => {
-                    // let v = the_controls.joystick.x.value;
-                    // let h = the_controls.joystick.y.value;
-                    //let v = the_controls.joystick.x.get_scaled();
-                    //let h = the_controls.joystick.y.get_scaled();
-                    let (a,b,c,d) = the_controls.data();
+                    let (a, b, c, d) = the_controls.data();
                     send_command(Command::OutControl(a, b, c, d));
-                    //send_command(Command::XY(v.into(),h.into()));
-                    //send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::Display(val) => {
                     d.show_number(val);
@@ -193,7 +178,7 @@ fn main() -> ! {
                 Command::Logger => {
                     logging = !logging;
                 }
-                Command::Verbose =>{
+                Command::Verbose => {
                     verbose = !verbose;
                 }
                 Command::DumpEeprom => {
@@ -210,12 +195,14 @@ fn main() -> ! {
                     serial_println!("finshed erase");
                 }
                 Command::XY(x, y) => {
-                    send_command(Command::XY(x,y));
+                    send_command(Command::XY(x, y));
                 }
-                Command::OutControl(a,b,c,d) => { 
+                Command::OutControl(a, b, c, d) => {
                     send_command(Command::OutControl(a, b, c, d));
                 }
-                _ => {serial_println!("unbound {:#?}", comm)}
+                _ => {
+                    serial_println!("unbound {:#?}", comm)
+                }
             }
         }
         // on the tick ... DO.
