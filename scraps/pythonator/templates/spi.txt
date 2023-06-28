@@ -6,31 +6,26 @@ from machine import Pin, SPI , SoftSPI
 import time
 import struct
 
-
+{% macro parameters(arg) -%}
+{%- for val in arg.values -%}d{{loop.index}}{% if loop.last == false %},{% endif %}{%- endfor -%}
+{%- endmacro %}
 
 SYNC1 = 0xF
 SYNC2 = 0xE
 FRAME_SIZE = 8 
 
 class com:
-    FRAME_HELLO = 0
-    FRAME_START = 1
-    FRAME_STOP = 2
-    FRAME_ONE = 3
-    FRAME_TWO = 4
-    FRAME_THREE = 5
-    FRAME_FOUR = 6
-    FRAME_STUFF = 7
-    FRAME_OTHER = 8
-    FRAME_INTEROTHER = 9
+{%- for item in items %}
+    FRAME_{{ item.name| upper  }} = {{ loop.index - 1 -}}
+{% endfor %}
 
 # create the controller device
 class controller:
     def __init__(self,speed=10000):
-        self.ss = Pin(27,Pin.OUT)
-        self.interval = 5
+        self.ss = Pin({{select_pin}},Pin.OUT)
+        self.interval = {{interval}}
         self.ss.on()
-        self.port = SoftSPI(baudrate=speed,sck=Pin(1),mosi=Pin(12),miso=Pin(10))
+        self.port = SoftSPI(baudrate=speed,sck=Pin({{sck}}),mosi=Pin({{mosi}}),miso=Pin({{miso}}))
         self._frame = bytearray([0]*FRAME_SIZE)
         self._return_frame = bytearray([0]*FRAME_SIZE)
         self._data = bytearray([0,0,0,0])
@@ -59,42 +54,24 @@ class controller:
         time.sleep_ms(self.interval)
         return self._read()
     
-    
-    def hello(self,):
-        return self._send(com.FRAME_HELLO,[])
-    
-    def start(self,):
-        return self._send(com.FRAME_START,[])
-    
-    def stop(self,):
-        return self._send(com.FRAME_STOP,[])
-    
-    def one(self,d1):
-        return self._send(com.FRAME_ONE,[d1])
-    
-    def two(self,d1,d2):
-        return self._send(com.FRAME_TWO,[d1,d2])
-    
-    def three(self,d1,d2,d3):
-        return self._send(com.FRAME_THREE,[d1,d2,d3])
-    
-    def four(self,d1):
-        return self._send(com.FRAME_FOUR,[d1])
-    
-    def stuff(self,d1):
-        return self._send(com.FRAME_STUFF,[d1])
-    
-    def other(self,d1):
-        return self._send(com.FRAME_OTHER,[d1])
-    
-    def interother(self,d1,d2,d3):
-        return self._send(com.FRAME_INTEROTHER,[d1,d2,d3])
-    
+    {% for item in items %}
+    def {{ item.name|lower }}(self,{%- call parameters(item) -%}):
+        return self._send(com.FRAME_{{item.name|upper}},[{%- call parameters(item) -%}])
+    {% endfor %}
 
     def _callbacks(self):
-        self.names = ["hello","start","stop","one","two","three","four","stuff","other","interother",]
-        self.functions = [None,None,None,None,None,None,None,None,None,None,]
-        self.data_format = ["","","","B","BB","bbb","i","i","I","bBb",]
+        self.names = [
+    {%- for item in items -%}
+        "{{ item.name| lower }}",
+    {%- endfor -%}]
+        self.functions = [
+    {%- for item in items -%}
+        None,
+    {%- endfor -%}]
+        self.data_format = [
+    {%- for item in items -%}
+        "{{item.format_string}}",
+    {%- endfor -%}]
 
     def bind(self,name,func):
         for i in enumerate(self.names):

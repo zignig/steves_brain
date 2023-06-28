@@ -12,6 +12,8 @@ use crate::comms::{FrameBuffer, SYNC1, SYNC2};
 use serde_derive::{Deserialize, Serialize};
 use store_u8::{Dump, Load};
 
+pub const FRAME_SIZE:usize = 8;
+
 // TODO use the store_u8 serialization ( and write a packet formatter)
 // This is the primary command enum
 #[derive(uDebug, Clone, Copy, Deserialize, Serialize)]
@@ -25,5 +27,6 @@ pub enum Incoming {
     Four(i32),
     Stuff(i32),
     Other(u32),
+    InterOther(i8,u8,i8)
 }
 

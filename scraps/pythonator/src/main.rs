@@ -10,9 +10,14 @@ use std::process::exit;
 use toml;
 
 mod mapping;
-use mapping::{get_mappings, Mapper};
 mod items;
+
+use mapping::{get_mappings, Mapper};
 use items::EnumVisitor;
+
+mod protocol;
+use protocol::spi::SpiSettings;
+
 
 // Settings Configuration file
 #[derive(Deserialize, Debug)]
@@ -20,22 +25,21 @@ struct Data {
     settings: Settings,
     spi: Option<SpiSettings>,
     i2c: Option<I2cSettings>,
+    uart: Option<UARTSettings>,
 }
 
+#[derive(Deserialize, Debug)]
+struct UARTSettings {
+    tx: u8,
+    rx: u8,
+    baud: usize,
+}
 #[derive(Deserialize, Debug)]
 struct I2cSettings {
     scl: u8,
     sda: u8,
 }
 
-#[derive(Deserialize, Debug)]
-struct SpiSettings {
-    interval: u16,
-    select_pin: u8,
-    sck: u8,
-    mosi: u8,
-    miso: u8,
-}
 #[derive(Deserialize, Debug)]
 struct Settings {
     file: String,
@@ -51,7 +55,7 @@ fn main() {
             exit(1)
         }
     };
-    println!("Mapping {:?}", &map_data);
+    //println!("Mapping {:?}", &map_data);
 
     let mut args = env::args();
     let _ = args.next(); // executable name
@@ -103,33 +107,30 @@ fn main() {
             // Exit the program with exit code `1`.
             exit(1);
         }
-    };
+    }; 
+
+    // Parse the rust file into AST
     let syntax = syn::parse_file(&contents).expect("Unable to parse file");
-
-    //     // Debug impl is available if Syn is built with "extra-traits" feature.
-    //     //println!("{:#?}", &syntax);
+    //println!("{:#?}",syntax);
+    // Get the structure out into an EnumVisitor
     let mut vis = EnumVisitor::new("testing".to_string());
-
+    // bind the mapping
     vis.mapping = map_data;
-
+    // build the extras
     vis.build(&syntax);
-    println!("{:?}", vis);
+    //println!("{:?}", vis);
+    //println!("{:?}",data);
 
-    vis.scan();
+    let mut output: String = "unbuilt".to_string();
 
-    // if let Some(spi) = data.spi {
-    //     vis.select_pin = spi.select_pin;
-    //     vis.sck = spi.sck;
-    //     vis.mosi = spi.mosi;
-    //     vis.miso = spi.miso;
-    //     vis.interval = spi.interval;
-    // }
+    if let Some(settings) = data.spi { 
+        let spi_out = protocol::spi::SPIExport::build(settings, vis.items);
+        //println!("{:?}",spi_out);
+        output = spi_out.render().unwrap();
+        //println!("{:?}",output);
 
-    println!("{:#?}", vis);
+    }
 
-    //let output = vis.render().unwrap();
-    //println!("{}",output);
-    //let mut output_file = File::create(data.settings.output).expect("Write Fail");
-    //write!(output_file, "{}", output).expect("cannot write");
+    let mut output_file = File::create(data.settings.output).expect("Write Fail");
+    write!(output_file, "{}", output).expect("cannot write");
 }
-

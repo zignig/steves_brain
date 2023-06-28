@@ -1,14 +1,15 @@
 // Parse the file and create the items list form templating.
 
-use syn::visit::{self, Visit};
-use syn::{ItemEnum,File};
 use crate::mapping::Mapper;
+use serde_derive::Deserialize;
+use syn::visit::{self, Visit};
+use syn::{File, ItemEnum};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Item {
-    name: String,
-    values: Vec<String>,
-    format_string: String,
+    pub name: String,
+    pub values: Vec<String>,
+    pub format_string: String,
 }
 
 #[derive(Debug)]
@@ -32,11 +33,10 @@ impl EnumVisitor {
 
 impl EnumVisitor {
     pub fn scan(&mut self) {
-        println!("update formatters");
         for item in self.items.iter_mut() {
-            println!("{:?}", item);
+            //println!("{:?}", item);
             for f in item.values.iter() {
-                println!("{:?} - {:?}", item.name, f);
+                //println!("{:?} - {:?}", item.name, f);
                 if let Some(val) = self.mapping.types.get(f) {
                     item.format_string.push_str(&val.clone());
                 }
@@ -44,8 +44,9 @@ impl EnumVisitor {
         }
     }
 
-    pub fn build(&mut self,i: &File) -> &mut Self{
+    pub fn build(&mut self, i: &File) -> &mut Self {
         self.visit_file(i);
+        self.scan();
         self
     }
 }
@@ -77,11 +78,22 @@ impl<'ast> Visit<'ast> for EnumVisitor {
 
     fn visit_path_segment(&mut self, i: &'ast syn::PathSegment) {
         let t = i.ident.to_string();
-        println!("\t\t{:?} -- {:?} ", t, self.current);
+        //println!("\t\t{:?} -- {:?} ", t, self.current);
         //let i = self.items.get_mut(self.current).unwrap();
         //println!("{}",i);
         if let Some(val) = self.items.get_mut(self.current) {
             val.values.push(t);
         }
     }
+
+    fn visit_item_const(&mut self, i: &'ast syn::ItemConst) {
+        println!("{:#?}",i);
+        println!("CONSTANT -- {:#?}",i.ident.to_string());
+        println!("VALUE -- {:#?}",i.expr);
+    }
+
+    fn visit_expr_lit(&mut self, i: &'ast syn::ExprLit) {
+        println!("LIT -- {:#?}",i);       
+    }
+
 }

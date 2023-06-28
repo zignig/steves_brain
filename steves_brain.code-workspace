@@ -17,6 +17,9 @@
 		},
 		{
 			"path": "rover"
+		},
+		{
+			"path": "../other"
 		}
 	],
 	"settings": {
