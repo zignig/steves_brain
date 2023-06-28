@@ -7,5 +7,4 @@ sck = 1
 miso  = 10
 mosi = 12
 select_pin = 27
-[i2c]
-addr = 4
+
