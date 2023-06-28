@@ -149,7 +149,7 @@ impl<TC, E: PwmPinOps<TC>, P1: PinOps, P2: PinOps> Update for SingleDrive<TC, E,
             let now = millis();
             // check the timeout
             if self.config.last_update < now {
-                serial_println!("timeout").void_unwrap();
+                serial_println!("timeout");
                 self.stop();
                 return;
             }

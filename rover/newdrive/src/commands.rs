@@ -55,5 +55,5 @@ pub fn show(comm: Command) {
     comm.dump_into_bytes(&mut buf.data[3..]).unwrap_or_default();
     //serial_println!("{:?}", &mut buf.data).void_unwrap();
     let up = Command::load_from_bytes(&buf.data[3..]).unwrap_or_default();
-    serial_println!("{:#?}", up).void_unwrap();
+    serial_println!("{:#?}", up);
 }
