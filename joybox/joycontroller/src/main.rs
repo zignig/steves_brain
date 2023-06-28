@@ -131,6 +131,7 @@ fn main() -> ! {
         if let Some(comm) = fetch_command() {
             if verbose {
                 serial_println!("{:?}", comm);
+                d.scanner();
             }
             match comm {
                 Command::Hello => {
@@ -210,7 +211,6 @@ fn main() -> ! {
             let _time = systick::millis();
             //serial_println!("{:?}", &the_mode);
             the_controls.update(&the_mode, &mut adc);
-
             match state {
                 State::Running => {
                     if logging {

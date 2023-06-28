@@ -3,6 +3,8 @@ import usocket
 import uasyncio
 import json
 
+log = False
+
 # UDP server
 class UDPServer:
     def __init__(self, drive, polltimeout=1, max_packet=1024):
@@ -45,7 +47,8 @@ def cb(msg, adr,drive):
     #print("Got:", msg)#, " from ", adr)
     #print(drive)
     data = json.loads(msg)
-    print(data)
+    if log:
+        print(data)
     if (data[0] != 0) | (data[1] != 0):
         drive.setjoy(data[0],data[1])
     return "ack".encode("ascii")

@@ -84,6 +84,9 @@ js.bind('outcontrol',outer)
 js.bind('getmillis',mil)
 js.bind('hello',hello)
 
+#turn the light on.
+led.on()
+
 
 import random
 
@@ -114,12 +117,22 @@ def go():
 
 outgoing = data(reg.target)
 
-def sender(sl=200):
+def sender(sl=100):
     while True:
-        # turn into async 
+        # turn into async
+        time.sleep_ms(sl)
+        led.off() 
         xyzt = js.runon()
         if xyzt is not None:
             outgoing.send(json.dumps(xyzt))
         time.sleep_ms(sl)
+        led.on()
 
+def reboot():
+    import machine 
+    machine.reset()
+
+for i in range(8):
+    js.runon()
+js.clear()
 #sender(50)
