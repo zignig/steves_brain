@@ -1,6 +1,8 @@
 [settings]
 file = "../../joybox/joycontroller/src/commands.rs"
-output = "../../joybox/files/joycontrol.py"
+#output = "../../joybox/files/joycontrol.py"
+output = "joytest.py"
+[spi]
 select_pin = 16 
 sck = 14
 mosi = 13
