@@ -9,14 +9,16 @@ use std::process::exit;
 
 use toml;
 
-mod mapping;
 mod items;
+mod mapping;
 
-use mapping::{get_mappings, Mapper};
 use items::EnumVisitor;
+use mapping::get_mappings;
 
 mod protocol;
 use protocol::spi::SpiSettings;
+use protocol::i2c::I2cSettings;
+use protocol::uart::UARTSettings;
 
 
 // Settings Configuration file
@@ -28,17 +30,6 @@ struct Data {
     uart: Option<UARTSettings>,
 }
 
-#[derive(Deserialize, Debug)]
-struct UARTSettings {
-    tx: u8,
-    rx: u8,
-    baud: usize,
-}
-#[derive(Deserialize, Debug)]
-struct I2cSettings {
-    scl: u8,
-    sda: u8,
-}
 
 #[derive(Deserialize, Debug)]
 struct Settings {
@@ -67,51 +58,38 @@ fn main() {
         }
     };
 
-    // Load the contents file
-    let contents = match fs::read_to_string(filename.as_str()) {
-        // If successful return the files text as `contents`.
-        // `c` is a local variable.
+    // Load the rust file to scan
+    let settings  = match fs::read_to_string(filename.as_str()) {
         Ok(c) => c,
-        // Handle the `error` case.
         Err(_) => {
-            // Write `msg` to `stderr`.
             eprintln!("Could not read file `{}`", filename);
-            // Exit the program with exit code `1`.
             exit(1);
         }
     };
 
-    let data: Data = match toml::from_str(&contents) {
-        // If successful, return data as `Data` struct.
-        // `d` is a local variable.
+    // Load the config file from toml
+    let data: Data = match toml::from_str(&settings) {
         Ok(d) => d,
-        // Handle the `error` case.
         Err(e) => {
             eprintln!("Error `{:#?}` in {}", e, filename);
-            // Exit the program with exit code `1`.
             exit(1);
         }
     };
 
+    // Show the settings
     println!("Settings {:#?}\n", data);
 
     // build the enum cross
     let contents = match fs::read_to_string(&data.settings.file.as_str()) {
-        // If successful return the files text as `contents`.
-        // `c` is a local variable.
         Ok(c) => c,
-        // Handle the `error` case.
         Err(_) => {
-            // Write `msg` to `stderr`.
-            eprintln!("Could not read file `{}`", filename);
-            // Exit the program with exit code `1`.
+            println!("Could not read file `{}`", filename);
             exit(1);
         }
-    }; 
+    };
 
     // Parse the rust file into AST
     let syntax = syn::parse_file(&contents).expect("Unable to parse file");
-    //println!("{:#?}",syntax);
     // Get the structure out into an EnumVisitor
     let mut vis = EnumVisitor::new("testing".to_string());
     // bind the mapping
@@ -123,12 +101,15 @@ fn main() {
 
     let mut output: String = "unbuilt".to_string();
 
-    if let Some(settings) = data.spi { 
+    if let Some(settings) = data.spi {
         let spi_out = protocol::spi::SPIExport::build(settings, vis.items);
         //println!("{:?}",spi_out);
         output = spi_out.render().unwrap();
         //println!("{:?}",output);
-
+    }
+    else if let Some(settings) = data.i2c { 
+        let i2c_out = protocol::i2c::I2CExport::build(settings, vis.items);
+        output = i2c_out.render().unwrap();
     }
 
     let mut output_file = File::create(data.settings.output).expect("Write Fail");

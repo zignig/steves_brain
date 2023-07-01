@@ -5,8 +5,6 @@ from machine import Pin, SPI , SoftSPI
 import time
 import struct
 
-
-
 SYNC1 = 0xF
 SYNC2 = 0xE
 FRAME_SIZE = 8 
@@ -163,7 +161,8 @@ class controller:
         for i in enumerate(self.names):
             if self.names[i[0]] == name:
                 self.functions[i[0]] = func
-    
+                return
+        
     def _process(self):
         if ((self._return_frame[0] == SYNC1) & (self._return_frame[1] == SYNC2)):
             command = self._return_frame[3]

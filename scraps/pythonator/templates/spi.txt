@@ -77,10 +77,7 @@ class controller:
             if self.names[i[0]] == name:
                 self.functions[i[0]] = func
                 return
-        print("No such function, select from :")
-        for i in self.names:
-            print(i)
-    
+        
     def _process(self):
         if ((self._return_frame[0] == SYNC1) & (self._return_frame[1] == SYNC2)):
             command = self._return_frame[3]
