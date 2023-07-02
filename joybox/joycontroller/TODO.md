@@ -4,9 +4,7 @@
     - throttle
     - buttons
     - switches
-
-- Do calculations in floats and then covert to i8 for tranmission
-
-
+    
 # DONE 
 - Eeprom load/save 
+- Do calculations in floats and then covert to i8 for tranmission

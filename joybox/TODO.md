@@ -2,19 +2,20 @@
 
 # JoyBox
 - Arduino
+ - return an option for the joystick on change.
+    - keep last value , check and Option forward
+  - fix comms to unroll commands of the ring buf\\\fer 
+  - code for buttons , generate events.
+    - press release for switches and buttons
+    - probably need to debounce
   - move config down and have a status check on low eeprom
     - if empty , load defaults.
     - query callibrate.
   - idle scanner for display 
-    - Jensen scanner on decimal point
+    - Jensen scanner on decimal point (done)
   - appease clippy.
     - Ve is so rude.
-  - return an option for the joystick on change.
-    - keep last value , check and Option forward
-  - fix comms to unroll commands of the ring buffer 
-  - code for buttons , generate events.
-    - press release for switches and buttons
-    - probably need to debounce
+ 
 - ESP
   - startup
     - check millis , see elapsed time.

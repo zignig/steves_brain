@@ -1,5 +1,8 @@
 # BROKEN stuff
 
-1. pythonator is not working,
-    1. after adding i2c the pins on spi don't work
-    
+- yeah most of it.
+
+# DONE 
+
+- pythonator is not working,
+    - after adding i2c the pins on spi don't work
