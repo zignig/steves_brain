@@ -132,6 +132,7 @@ _thread.start_new_thread(
 if reg.telnet:
     print("Starting telnet server")
     import utelnetserver
+    utelnetserver.log = True
     utelnetserver.start()
 
 print("Steve Running")

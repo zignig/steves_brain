@@ -25,8 +25,6 @@
   - convert to single uasync 
     - query
 
-- pythonator 
-  - if binding does not match return list.
   
 - phys
   - hot glue coat the M3 cap head for contact.
@@ -55,6 +53,11 @@
   - update the dxf for the box creation
   - cut the box carefully and mount the electronics 
 
+# Won't fix
+- Joybox
+  - pythonator 
+    - if binding does not match return list.
+    - oom error (bleh)
 
 # Code cleanup
 - Break out the comms system

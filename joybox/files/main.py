@@ -1,7 +1,9 @@
 # Main runner
+# Joycontroller
+# 20230705
+# Simon Kirkby
+# obeygiantrobot@gmail.com
 
-#import uasyncio
-#import _thread
 
 import struct , json
 
@@ -16,6 +18,7 @@ switch2 = machine.Pin(5  ,machine.Pin.IN)
 def count(val=200):
     for i in range(val):
         js.display(i+1)
+    js.clear()
 
 def check(val=200):
     start = time.time_ns()
@@ -132,7 +135,11 @@ def reboot():
     import machine 
     machine.reset()
 
-for i in range(8):
-    js.runon()
 js.clear()
 #sender(50)
+
+boot_text = """
+Welcome to the joy controller
+"""
+
+print(boot_text)
