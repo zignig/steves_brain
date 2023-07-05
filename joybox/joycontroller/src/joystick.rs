@@ -86,8 +86,8 @@ impl AxisConfig {
 pub struct Axis {
     channel: Channel,
     pub reading: i16,
+    pub previous: i16,
     pub value: i8,
-    pub prev: i8,
     pub config: AxisConfig,
 }
 
@@ -98,8 +98,8 @@ impl Axis {
         Self {
             channel: channel,
             reading: 0,
+            previous: 0,
             value: 0,
-            prev: 0,
             config: AxisConfig::new(),
         }
     }
@@ -134,8 +134,23 @@ impl Axis {
     pub fn get_value(&mut self, adc: &mut arduino_hal::Adc) -> i16 {
         let mut val = adc.read_blocking(&self.channel) as i16;
         val = self.config.zero - val;
+        // save the last value
+        self.previous = self.reading;
         self.reading = val;
         val
+    }
+
+    pub fn changed(&mut self) -> bool { 
+        if (self.previous != self.reading) && (self.reading.abs() > self.config.dead_zone) {
+            return true;
+        }
+        false
+    }
+    pub fn active(&mut self) -> bool {
+        if self.reading.abs() > self.config.dead_zone {
+            return true;
+        }
+        false
     }
 
     pub fn get_scaled(&mut self) -> i8 {
@@ -335,12 +350,28 @@ impl Controls {
         Self { joystick, throttle }
     }
 
-    pub fn data(&mut self) -> (i8, i8, i8, i8) {
-        let a = self.joystick.x.get_scaled();
-        let b = self.joystick.y.get_scaled();
-        let c = self.joystick.z.get_scaled();
-        let d = self.throttle.t.get_scaled();
-        (a, b, c, d)
+    pub fn active(&mut self) -> bool {
+        if self.joystick.x.active()
+            || self.joystick.y.active()
+            || self.joystick.z.active()
+            || self.throttle.t.changed()
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    pub fn data(&mut self) -> Option<(i8, i8, i8, i8)> {
+        if self.active() {
+            let a = self.joystick.x.get_scaled();
+            let b = self.joystick.y.get_scaled();
+            let c = self.joystick.z.get_scaled();
+            let d = self.throttle.t.get_scaled();
+            return Some((a, b, c, d));
+        } else {
+            None
+        }
     }
 }
 

@@ -228,12 +228,14 @@ fn fetch_frame() -> Option<FrameBuffer> {
     frame
 }
 
+// Put a command into the outgoing buffer.
 pub fn send_command(comm: Command) {
     //serial_println!("> {:?}", comm);
     let mut pb = FrameBuffer::new();
     pb.pos = 0;
     pb.data[0] = SYNC1;
     pb.data[1] = SYNC2;
+    serial_println!("{:#?}",comm);
     let _ = hubpack::serialize(&mut pb.data[3..FRAME_SIZE], &comm);
     avr_device::interrupt::free(|cs| {
         if let Some(cd) = &mut *COMMS.borrow(cs).borrow_mut() {
@@ -242,7 +244,7 @@ pub fn send_command(comm: Command) {
                 cd.out_frame.data = pb.data;
                 // preload
                 cd.out_frame.pos = 1;
-                cd.out_frame.status = FrameStatus::Idle;
+                cd.out_frame.status = FrameStatus::Idle; 
                 // preload the first byte
                 if let Some(s) = &mut *SPI_INT.borrow(cs).borrow_mut() {
                     unsafe {

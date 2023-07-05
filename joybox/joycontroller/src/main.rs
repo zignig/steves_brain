@@ -1,3 +1,10 @@
+//# The avr section of the joystick interface
+//# 3 axis joytick 
+//# throttle 
+//# two buttons
+//# two switches
+
+
 #![no_std]
 #![no_main]
 #![feature(abi_avr_interrupt)]
@@ -25,11 +32,13 @@ use arduino_hal::simple_pwm::*;
 use commands::Command;
 use panic_halt as _;
 
+// This is the primary state of the joystick.
 enum State {
     Running,
     Sleeping,
     StartCallibration,
     EndCallibration,
+    Idle(i32),
 }
 
 #[arduino_hal::entry]
@@ -140,8 +149,10 @@ fn main() -> ! {
                     send_command(Command::GetMillis(systick::millis()));
                 }
                 Command::RunOn => {
-                    let (a, b, c, d) = the_controls.data();
-                    send_command(Command::OutControl(a, b, c, d));
+                    if let Some((a, b, c, d)) = the_controls.data(){
+                        serial_println!("data");
+                        send_command(Command::OutControl(a, b, c, d));
+                    }
                 }
                 Command::Display(val) => {
                     d.show_number(val);
@@ -230,7 +241,8 @@ fn main() -> ! {
                     //the_controls.joystick.save(&mut ee);
                     the_mode = joystick::Mode::Running;
                     state = State::Running;
-                }
+                },
+                State::Idle(_) => {}
             }
             //d.show_number(the_controls.throttle.t.value as i32);
             //d.show_number(the_controls.throttle.t.value as i32);

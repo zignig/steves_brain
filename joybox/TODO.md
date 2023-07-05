@@ -2,8 +2,6 @@
 
 # JoyBox
 - Arduino
- - return an option for the joystick on change.
-    - keep last value , check and Option forward
   - fix comms to unroll commands of the ring buf\\\fer 
   - code for buttons , generate events.
     - press release for switches and buttons
@@ -37,6 +35,8 @@
 
 ## Done
 - Joycontroller
+  - return an option for the joystick on change.
+      - keep last value , check and Option forward
   - have invert flag for the axes.
   - return default frame when empty
   - scale analogue controller with calibration to i8

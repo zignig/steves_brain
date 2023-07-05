@@ -76,7 +76,7 @@ def two(a,b):
     return (a,b)
 
 def outer(a,b,c,d):
-    #print(" out |",a,b,c,d)
+    print(" out |",a,b,c,d)
     return (a,b,c,d)
 
 js.bind('xy',two)
@@ -121,12 +121,12 @@ def sender(sl=100):
     while True:
         # turn into async
         time.sleep_ms(sl)
-        led.off() 
         xyzt = js.runon()
         if xyzt is not None:
+            led.on() 
             outgoing.send(json.dumps(xyzt))
-        time.sleep_ms(sl)
-        led.on()
+            time.sleep_ms(sl)
+            led.off()
 
 def reboot():
     import machine 

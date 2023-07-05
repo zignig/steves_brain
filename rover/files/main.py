@@ -8,6 +8,7 @@ import web_interface
 import os
 import gc
 
+# set the gc threshold quite low
 gc.threshold(4096)
 
 def show(directory="/"):
@@ -23,7 +24,6 @@ def show(directory="/"):
 
 # import minibrain
 from minibrain import controller,com
-
 
 # subclass the interface
 # the diff drive is auto generated 
@@ -83,7 +83,7 @@ def current(value):
 #d.bind('getmillis',mil)
 #d.bind('compass',compass)
 #d.bind('current',current)
-
+d.bind('cont',compass)
 
 # Set up the async thread
 

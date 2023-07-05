@@ -9,10 +9,8 @@ use hubpack::SerializedSize;
 use serde_derive::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
 
-//use store_u8::{Dump, Load};
-
-// TODO use the store_u8 serialization ( and write a packet formatter)
 // This is the primary command enum
+// use hubpack for serialization. Comms will make frames
 #[derive(uDebug, Clone, Copy, Deserialize, Serialize, SerializedSize)]
 pub enum Command {
     Hello,
