@@ -20,6 +20,15 @@
 		},
 		{
 			"path": "../other"
+		},
+		{
+			"path": "../viewer"
+		},
+		{
+			"path": "../cqparts-server"
+		},
+		{
+			"path": "../other/file_watcher"
 		}
 	],
 	"settings": {

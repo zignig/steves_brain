@@ -143,3 +143,4 @@ Welcome to the joy controller
 """
 
 print(boot_text)
+sender()

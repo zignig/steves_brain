@@ -20,7 +20,7 @@ impl Controls {
             min: -128,
             max: 132,
             dead_zone: 10,
-            invert: true,
+            invert: false  ,
         };
         self.joystick.y.config = AxisConfig {
             zero: 519,
