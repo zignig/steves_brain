@@ -85,7 +85,6 @@ def accept_telnet_connect(telnet_server):
     last_client_socket.sendall(bytes([255, 252, 34]))  # dont allow line mode
     last_client_socket.sendall(bytes([255, 251, 1]))  # turn off local echo
     wr = TelnetWrapper(last_client_socket)
-    wr.write('hello')
     uos.dupterm(wr)
 
 

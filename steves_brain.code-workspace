@@ -25,7 +25,7 @@
 			"path": "../viewer"
 		},
 		{
-			"path": "../other/file_watcher"
+			"path": "../opencascade-rs/crates/opencascade"
 		}
 	],
 	"settings": {
