@@ -14,13 +14,12 @@ use arduino_hal::{
     hal::port::PB5,
     port::{mode::Output, Pin},
 };
-use channel::{Channel, Sender};
+use channel::{Channel, Receiver, Sender};
 
 use drive::{Drive, DriveState};
 use executor::run_tasks;
 use time::{delay, TickDuration, Ticker};
 
-// use arduino_hal::port::{mode::Output, Pin};
 use core::pin::pin;
 use fugit::ExtU32;
 
@@ -50,34 +49,60 @@ fn main() -> ! {
     let serial_task = pin!(ser_incoming.task(char_chan.get_sender()));
 
     // Led (blinky!)
-    let mut led = pins.d13.into_output();
-
-    // !! DRAGONS , beware the unsafe code !!
-    // Enable interrupts
-    unsafe { avr_device::interrupt::enable() };
+    let led = pins.d13.into_output();
 
     // Some Test tasks
     let blink = pin!(blinker(led, 500.millis()));
-    let t1 = pin!(test_task(1000.millis(), "boop!"));
-    //let t2 = pin!(test_task(800.millis(), "slower"));
-    //let t3 = pin!(test_task(60.secs(), "every minute"));
+    let t1 = pin!(show_name(1000.millis(), "boop!"));
+    let t3 = pin!(show_name(1.hours(), "every minute"));
     let show = pin!(show_time());
 
     // Make a new Drive task
 
     // Make a comms channel to the motor
-    let chan: Channel<DriveState> = Channel::new();
+    let drive_chan: Channel<DriveState> = Channel::new();
 
     // Create  the drive
     let mut drive = Drive::new(50);
-    let drive_task = pin!(drive.task(chan.get_receiver()));
+    let drive_task = pin!(drive.task(drive_chan.get_receiver()));
 
     // Make a drive starter , temp
-    let drive_starter = pin!(drive_starter(chan.get_sender(), 10.secs()));
+    let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
+
+    let scc = pin!(single_char_command(
+        char_chan.get_receiver(),
+        drive_chan.get_sender()
+    ));
+
+    // !! DRAGONS , beware the unsafe code !!
+    // Enable interrupts
+    unsafe { avr_device::interrupt::enable() };
 
     // Main Executor (asyncy goodness)
     loop {
-        run_tasks(&mut [serial_task, t1, blink, drive_task, drive_starter, show]);
+        run_tasks(&mut [
+            // scc,
+            // serial_task,
+            t1,
+            t3,
+            blink,
+            drive_task,
+            drive_starter,
+            show,
+        ]);
+    }
+}
+
+async fn single_char_command(mut incoming: Receiver<'_, u8>, outgoing: Sender<'_, DriveState>) {
+    loop {
+        let ch = incoming.receive().await;
+        print!("{}", ch as char);
+        match ch {
+            // b'1' => outgoing.send(DriveState::Running),
+            _ => {
+                print!("empty")
+            }
+        }
     }
 }
 
@@ -88,7 +113,7 @@ async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
     }
 }
 
-async fn test_task(interval: TickDuration, blurb: &str) {
+async fn show_name(interval: TickDuration, blurb: &str) {
     loop {
         delay(interval).await;
         print!("{}", blurb);
@@ -117,7 +142,7 @@ async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
 
 #[cfg(not(doc))]
 #[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
+fn panic(_info: &core::panic::PanicInfo) -> ! {
     // disable interrupts - firmware has panicked so no ISRs should continue running
     avr_device::interrupt::disable();
 

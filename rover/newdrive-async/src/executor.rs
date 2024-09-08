@@ -11,7 +11,7 @@ use core::{
 };
 
 
-use heapless::mpmc::Q8;
+use heapless::mpmc::Q16;
 use portable_atomic::{AtomicUsize, Ordering};
 
 /// An alternative to storing the waker: just extract the task information
@@ -66,7 +66,7 @@ pub fn wake_task(task_id: usize) {
     }
 }
 
-static TASK_ID_READY: Q8<usize> = Q8::new();
+static TASK_ID_READY: Q16<usize> = Q16::new();
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
