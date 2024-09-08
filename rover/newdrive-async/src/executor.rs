@@ -4,6 +4,8 @@ use core::{
     task::{Context, RawWaker, RawWakerVTable, Waker},
 };
 
+use core::task::LocalWaker;
+
 use heapless::mpmc::Q8;
 use portable_atomic::{AtomicUsize, Ordering};
 
@@ -64,8 +66,8 @@ static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
-
     // everybody gets one run to start...
+    crate::print!("Starting Executor");
     for task_id in 0..tasks.len() {
         crate::print!("insert task: {}",task_id);
         TASK_ID_READY.enqueue(task_id).ok();

@@ -24,6 +24,7 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
+    
     // serial port
     let serial_port = arduino_hal::default_serial!(dp, pins, 115200);
     // bind the serial port to the macro in utils so it can be used anywhere
@@ -41,24 +42,20 @@ fn main() -> ! {
 
     let chan: Channel<DriveState> = Channel::new();
 
-    let tt = pin!(test_task(200.millis(), "quick"));
+    let tt = pin!(test_task(140.millis(), "quick"));
     let t2 = pin!(test_task(800.millis(), "slower"));
     let t3 = pin!(test_task(10.secs(), "every 10 seconds"));
-    let show = pin!(show_time());
+    //let show = pin!(show_time());
 
     // Make a new Drive task
-    let mut drive = Drive::new(200);
+    let mut drive = Drive::new(50);
 
     let drive_task = pin!(drive.task(chan.get_receiver()));
 
     // Make a drive starter
     let drive_starter = pin!(drive_starter(chan.get_sender(), 10.secs()));
     loop {
-        //arduino_hal::delay_ms(1000);
-        run_tasks(&mut [tt, t2, t3, drive_task, drive_starter,show]);
-        //print!("{}", Ticker::now().duration_since_epoch().to_millis());
-        // Ticker::show_timers();
-        // print!("{}",Ticker::ticks());
+        run_tasks(&mut [tt, t2, t3, drive_task, drive_starter]);
     }
 }
 
@@ -70,11 +67,11 @@ async fn test_task(interval: TickDuration, blurb: &str) {
     }
 }
 
-async fn show_time(){
-    loop { 
+async fn show_time() {
+    loop {
         delay(1.secs()).await;
         print!("-----------");
-        print!("time: {}",Ticker::now().duration_since_epoch().to_millis());
+        print!("time: {}", Ticker::now().duration_since_epoch().to_millis());
         Ticker::show_timers();
         print!("-----------");
     }

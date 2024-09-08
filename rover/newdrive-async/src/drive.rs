@@ -25,7 +25,7 @@ pub struct Drive{
 impl Drive{ 
     pub fn new(counter: u32) -> Self{
         Self{
-            state: DriveState::Running,
+            state: DriveState::Idle,
             counter: counter,
             reset: counter
         }
@@ -35,6 +35,7 @@ impl Drive{
         poll_fn(|_cx|{
             match self.state{
                 DriveState::Init => {
+                    crate::print!("Initialize the drive");
                     self.state = DriveState::Idle;
                     Poll::Pending
                 },
@@ -64,12 +65,12 @@ impl Drive{
     pub async fn task(&mut self,mut incoming: Receiver<'_,DriveState>){
         loop {
             select_biased! {
-                _ = self.run_if().fuse() => {}
                 state = incoming.receive().fuse()=>{
                     self.state = state;
                 }
+                _ = self.run_if().fuse() => {}
             } 
-            time::delay(5.millis()).await;
+            time::delay(10.millis()).await;
         }
     }
 }
