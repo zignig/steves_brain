@@ -1,3 +1,11 @@
+/// Async executor for avr , timer queue
+/// Stolen from https://github.com/therustybits/zero-to-async
+/// chapter 6 and converted. 
+
+
+//TODO Should convert to timer1 (16bit)
+// and use the overflow and value interuppt.
+
 use core::{
     cell::RefCell,
     future::Future,
@@ -102,7 +110,6 @@ impl Ticker {
         });
     }
     // Get the current time, which is a combination of:
-    // /// value are collected during the same overflow-cycle.
     pub fn now() -> TickInstant {
         let ticks = TICKER.ovf_count.load(Ordering::SeqCst);
         TickInstant::from_ticks(ticks)
@@ -114,9 +121,12 @@ impl Ticker {
 
     pub fn show_timers() {
         avr_device::interrupt::free(|cs| {
+            let ticks = Ticker::ticks();
             let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
             for i in deadlines.iter() {
-                crate::print!("{}-{}", i.0, i.1);
+                // this might just be negative ( panic causing)
+                let until: i32 = (i.0 as i32) - (ticks as i32);
+                crate::print!("task {} in {} ticks ",i.1, until);
             }
         });
     }

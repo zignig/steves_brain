@@ -1,3 +1,5 @@
+/// Mockup for the drive system
+
 use core::{
     future::poll_fn,
     task::Poll,
@@ -25,7 +27,7 @@ pub struct Drive{
 impl Drive{ 
     pub fn new(counter: u32) -> Self{
         Self{
-            state: DriveState::Idle,
+            state: DriveState::Init,
             counter: counter,
             reset: counter
         }
@@ -70,7 +72,7 @@ impl Drive{
                 }
                 _ = self.run_if().fuse() => {}
             } 
-            time::delay(10.millis()).await;
+            time::delay(50.millis()).await;
         }
     }
 }

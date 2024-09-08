@@ -1,11 +1,14 @@
+/// Async executor for avr , data channel (CSP Hoare style)
+/// Stolen from https://github.com/therustybits/zero-to-async
+/// chapter 6 and converted. 
+
+
 use core::{
     cell::{Cell, RefCell},
     future::poll_fn,
     task::{Poll, Waker},
 };
 
-/// Storing the `Waker` directly this time, just to see how that works.
-/// There is no more executor dependency, which is nice..
 pub struct Channel<T> {
     item: Cell<Option<T>>,
     waker: RefCell<Option<Waker>>,

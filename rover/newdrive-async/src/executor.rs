@@ -1,10 +1,15 @@
+/// Async executor for avr
+/// Stolen from https://github.com/therustybits/zero-to-async
+/// and converted. 
+/// excellent video https://www.youtube.com/watch?v=wni5h5vIPhU
+/// 
+
 use core::{
     future::Future,
     pin::Pin,
     task::{Context, RawWaker, RawWakerVTable, Waker},
 };
 
-use core::task::LocalWaker;
 
 use heapless::mpmc::Q8;
 use portable_atomic::{AtomicUsize, Ordering};
