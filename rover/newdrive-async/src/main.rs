@@ -77,7 +77,7 @@ fn main() -> ! {
     // !! DRAGONS , beware the unsafe code !!
     // Enable interrupts
     unsafe { avr_device::interrupt::enable() };
-
+    
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
