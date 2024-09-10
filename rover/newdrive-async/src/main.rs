@@ -23,7 +23,7 @@ use time::{delay, TickDuration, Ticker};
 use core::pin::pin;
 use fugit::ExtU32;
 
-// use panic_halt as _;
+use panic_halt as _;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -45,16 +45,17 @@ fn main() -> ! {
     let char_chan: Channel<u8> = Channel::new();
 
     // Set up the serial incoming
-    let mut ser_incoming = serial::SerialIncoming::new();
-    let serial_task = pin!(ser_incoming.task(char_chan.get_sender()));
+    // let mut ser_incoming = serial::SerialIncoming::new();
+    // let serial_task = pin!(ser_incoming.task(char_chan.get_sender()));
 
     // Led (blinky!)
     let led = pins.d13.into_output();
 
     // Some Test tasks
     let blink = pin!(blinker(led, 500.millis()));
-    let t1 = pin!(show_name(1000.millis(), "boop!"));
-    let t3 = pin!(show_name(1.hours(), "every minute"));
+    let t1 = pin!(show_name(874.millis(), "beep!"));
+    let t2 = pin!(show_name(513.millis(), "boop!"));
+    let t3 = pin!(show_name(1000.millis(), "blorp!"));
     let show = pin!(show_time());
 
     // Make a new Drive task
@@ -69,10 +70,10 @@ fn main() -> ! {
     // Make a drive starter , temp
     let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
-    let scc = pin!(single_char_command(
-        char_chan.get_receiver(),
-        drive_chan.get_sender()
-    ));
+    // let scc = pin!(single_char_command(
+    //     char_chan.get_receiver(),
+    //     drive_chan.get_sender()
+    // ));
 
     // !! DRAGONS , beware the unsafe code !!
     // Enable interrupts
@@ -84,6 +85,7 @@ fn main() -> ! {
             // scc,
             // serial_task,
             t1,
+            t2,
             t3,
             blink,
             drive_task,
@@ -93,18 +95,18 @@ fn main() -> ! {
     }
 }
 
-async fn single_char_command(mut incoming: Receiver<'_, u8>, outgoing: Sender<'_, DriveState>) {
-    loop {
-        let ch = incoming.receive().await;
-        print!("{}", ch as char);
-        match ch {
-            // b'1' => outgoing.send(DriveState::Running),
-            _ => {
-                print!("empty")
-            }
-        }
-    }
-}
+// async fn single_char_command(mut incoming: Receiver<'_, u8>, outgoing: Sender<'_, DriveState>) {
+//     loop {
+//         let ch = incoming.receive().await;
+//         print!("{}", ch as char);
+//         match ch {
+//             // b'1' => outgoing.send(DriveState::Running),
+//             _ => {
+//                 print!("empty")
+//             }
+//         }
+//     }
+// }
 
 async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
     loop {
@@ -137,30 +139,5 @@ async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
         delay(interval).await;
         print!("Start the drive");
         sender.send(DriveState::Running);
-    }
-}
-
-#[cfg(not(doc))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    // disable interrupts - firmware has panicked so no ISRs should continue running
-    avr_device::interrupt::disable();
-
-    // get the peripherals so we can access serial and the LED.
-    //
-    // SAFETY: Because main() already has references to the peripherals this is an unsafe
-    // operation - but because no other code can run after the panic handler was called,
-    // we know it is okay.
-    let dp = unsafe { arduino_hal::Peripherals::steal() };
-    let pins = arduino_hal::pins!(dp);
-    let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
-
-    // Print out panic location
-    ufmt::uwriteln!(&mut serial, "Firmware panic!\r").unwrap_infallible();
-    // Blink LED rapidly
-    let mut led = pins.d13.into_output();
-    loop {
-        led.toggle();
-        arduino_hal::delay_ms(100);
     }
 }

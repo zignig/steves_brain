@@ -1,17 +1,18 @@
 /// Async executor for avr
 /// Stolen from https://github.com/therustybits/zero-to-async
-/// and converted. 
+/// and converted.
 /// excellent video https://www.youtube.com/watch?v=wni5h5vIPhU
-/// 
+///
 
+/// Converting to bitmask waker ( like lilos )
+/// Has the advantage that multiple wakes in the loop don't fill up
+/// a queue, the just set the bit that is already 1 to 1 ... ;)
 use core::{
     future::Future,
     pin::Pin,
     task::{Context, RawWaker, RawWakerVTable, Waker},
 };
 
-
-use heapless::mpmc::Q16;
 use portable_atomic::{AtomicUsize, Ordering};
 
 /// An alternative to storing the waker: just extract the task information
@@ -58,37 +59,38 @@ unsafe fn wake_by_ref(p: *const ()) {
 }
 
 pub fn wake_task(task_id: usize) {
-    //crate::print!("Waking task {}", task_id);
-    if TASK_ID_READY.enqueue(task_id).is_err() {
-        // Being unable to wake a task will likely cause it to become
-        // permanently unresponsive.
-        crate::print!("Task queue full: can't add task {}", task_id);
-    }
+    let _ = TASK_MASK.bit_set(task_id as u32, Ordering::SeqCst);
 }
 
-static TASK_ID_READY: Q16<usize> = Q16::new();
+const fn mask_for_index(index: usize) -> usize {
+    1_usize.rotate_left(index as u32)
+}
+
+static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
     // everybody gets one run to start...
+    // Set all the bits to 1 ( run everything first time)
     crate::print!("Starting Executor");
     for task_id in 0..tasks.len() {
-        crate::print!("insert task: {}",task_id);
-        TASK_ID_READY.enqueue(task_id).ok();
+        crate::print!("task {} starting",task_id);
+        let _ = TASK_MASK.bit_set(task_id as u32, Ordering::SeqCst);
     }
-
+    crate::print!("running");
     loop {
-        while let Some(task_id) = TASK_ID_READY.dequeue() {
-            if task_id >= tasks.len() {
-                crate::print!("Bad task id {}!", task_id);
-                continue;
+        let mask = TASK_MASK.load(Ordering::SeqCst);
+        if mask != 0 {
+            for (task_id, task) in tasks.iter_mut().enumerate() {
+                if mask & mask_for_index(task_id) != 0 {
+                    // Clear the wake bit for the task
+                    let _ = TASK_MASK.bit_clear(task_id as u32, Ordering::SeqCst);
+                    let _ = task
+                        .as_mut()
+                        .poll(&mut Context::from_waker(&get_waker(task_id)));
+                }
             }
-            //crate::print!("Running task {}", task_id);
-            let _ = tasks[task_id]
-                .as_mut()
-                .poll(&mut Context::from_waker(&get_waker(task_id)));
         }
-        // crate::print!("No tasks ready, going to sleep...");
     }
 }
