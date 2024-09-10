@@ -28,7 +28,7 @@ use crate::executor::{wake_task, ExtWaker};
 pub type TickInstant = Instant<u32, 1, 984>;
 pub type TickDuration = Duration<u32, 1, 984>;
 
-const MAX_DEADLINES: usize = 8;
+const MAX_DEADLINES: usize = 15;
 static WAKE_DEADLINES: Mutex<RefCell<BinaryHeap<(u32, usize), Min, MAX_DEADLINES>>> =
     Mutex::new(RefCell::new(BinaryHeap::new()));
 

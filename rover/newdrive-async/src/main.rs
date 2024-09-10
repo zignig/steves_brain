@@ -6,6 +6,7 @@
 mod channel;
 mod drive;
 mod executor;
+mod queue;
 mod serial;
 mod time;
 
@@ -14,16 +15,19 @@ use arduino_hal::{
     hal::port::PB5,
     port::{mode::Output, Pin},
 };
-use channel::{Channel, Receiver, Sender};
-
-use drive::{Drive, DriveState};
-use executor::run_tasks;
-use time::{delay, TickDuration, Ticker};
-
 use core::pin::pin;
 use fugit::ExtU32;
+use futures::{select_biased, FutureExt};
 
-use panic_halt as _;
+use channel::{Channel, Receiver, Sender};
+use drive::{Drive, DriveState};
+use executor::run_tasks;
+use queue::Queue;
+use time::{delay, TickDuration, Ticker};
+
+//use panic_halt as _;
+
+use crate::time::Timer;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -41,21 +45,14 @@ fn main() -> ! {
     // Set up timer 0 for system clock
     Ticker::init(dp.TC0);
 
-    // Make a serial char channel for testing
-    let char_chan: Channel<u8> = Channel::new();
-
-    // Set up the serial incoming
-    // let mut ser_incoming = serial::SerialIncoming::new();
-    // let serial_task = pin!(ser_incoming.task(char_chan.get_sender()));
-
     // Led (blinky!)
     let led = pins.d13.into_output();
 
     // Some Test tasks
     let blink = pin!(blinker(led, 500.millis()));
-    let t1 = pin!(show_name(874.millis(), "beep!"));
-    let t2 = pin!(show_name(513.millis(), "boop!"));
-    let t3 = pin!(show_name(1000.millis(), "blorp!"));
+    let t1 = pin!(show_name(1000.millis(), "beep!"));
+    // let t2 = pin!(show_name(513.millis(), "boop!"));
+    let t3 = pin!(show_name(24.secs(), "blorp!"));
     let show = pin!(show_time());
 
     // Make a new Drive task
@@ -64,28 +61,27 @@ fn main() -> ! {
     let drive_chan: Channel<DriveState> = Channel::new();
 
     // Create  the drive
-    let mut drive = Drive::new(50);
+    let mut drive = Drive::new(30);
     let drive_task = pin!(drive.task(drive_chan.get_receiver()));
 
     // Make a drive starter , temp
     let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
-    // let scc = pin!(single_char_command(
-    //     char_chan.get_receiver(),
-    //     drive_chan.get_sender()
-    // ));
+    // Queue testing
+    let spooly: Queue<u8, 16> = Queue::new();
 
-    // !! DRAGONS , beware the unsafe code !!
-    // Enable interrupts
-    unsafe { avr_device::interrupt::enable() };
+    let spool_task = pin!(spool_in(spooly.get_sender(), 4.secs()));
+    let spool_out_task = pin!(spool_out(spooly.get_receiver(), 310.millis()));
     
+    // DRAGONS! beware , unsafe code.
+    unsafe { avr_device::interrupt::enable() };
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
-            // scc,
-            // serial_task,
+            spool_task,
+            spool_out_task,
             t1,
-            t2,
+            // t2,
             t3,
             blink,
             drive_task,
@@ -95,18 +91,33 @@ fn main() -> ! {
     }
 }
 
-// async fn single_char_command(mut incoming: Receiver<'_, u8>, outgoing: Sender<'_, DriveState>) {
-//     loop {
-//         let ch = incoming.receive().await;
-//         print!("{}", ch as char);
-//         match ch {
-//             // b'1' => outgoing.send(DriveState::Running),
-//             _ => {
-//                 print!("empty")
-//             }
-//         }
-//     }
-// }
+async fn spool_in(sender: queue::Sender<'_, u8, 16>, interval: TickDuration) {
+    print!("start spool task");
+    let mut counter: u8 = 0;
+    loop {
+        delay(interval).await;
+        //sender.send(counter);
+        counter += 1;
+        print!("spool counter: {}, len: {}",counter,sender.len());
+        // print!("spool counter: {}", counter);
+    }
+}
+
+async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, interval: TickDuration) {
+    loop {
+        delay(interval).await;
+        print!("spoolout");
+        // let val = rec.receive().await;
+        // select_biased! {
+        //     val = rec.receive().fuse() => {
+        //         print!("{}",val);
+        //     }
+        //     _ = delay(interval).fuse() => {
+        //         print!("timeout");
+        //     }
+        // }
+    }
+}
 
 async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
     loop {
@@ -140,4 +151,15 @@ async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
         print!("Start the drive");
         sender.send(DriveState::Running);
     }
+}
+
+#[cfg(not(doc))]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    avr_device::interrupt::disable();
+    let dp = unsafe { arduino_hal::Peripherals::steal() };
+    let pins = arduino_hal::pins!(dp);
+    let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
+    ufmt::uwriteln!(&mut serial, "Firmware panic!\r").unwrap_infallible();
+    loop {}
 }

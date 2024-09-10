@@ -42,6 +42,7 @@ fn get_waker(task_id: usize) -> Waker {
     unsafe { Waker::from_raw(RawWaker::new(task_id as *const (), &VTABLE)) }
 }
 
+// Vector table
 static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake_by_ref, drop);
 
 unsafe fn clone(p: *const ()) -> RawWaker {
@@ -66,19 +67,22 @@ const fn mask_for_index(index: usize) -> usize {
     1_usize.rotate_left(index as u32)
 }
 
+// end Vector Table 
+
 static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
     // everybody gets one run to start...
-    // Set all the bits to 1 ( run everything first time)
+    // Set all the bits to 1 ( run everything first time )
     crate::print!("Starting Executor");
     for task_id in 0..tasks.len() {
         crate::print!("task {} starting",task_id);
         let _ = TASK_MASK.bit_set(task_id as u32, Ordering::SeqCst);
     }
     crate::print!("running");
+    
     loop {
         let mask = TASK_MASK.load(Ordering::SeqCst);
         if mask != 0 {
