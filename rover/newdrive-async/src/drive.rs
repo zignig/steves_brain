@@ -57,7 +57,7 @@ impl Drive{
 
     fn update(&mut self){
         self.counter -= 1; 
-        crate::print!("counter {}",self.counter);
+        crate::print!("drive {}",self.counter);
         if self.counter == 0{ 
             self.counter = self.reset;
             self.state = DriveState::Idle;

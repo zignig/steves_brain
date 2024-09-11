@@ -27,6 +27,7 @@ use time::{delay, TickDuration, Ticker};
 
 //use panic_halt as _;
 
+use crate::serial::SerialIncoming;
 use crate::time::Timer;
 
 #[arduino_hal::entry]
@@ -51,7 +52,6 @@ fn main() -> ! {
     // Some Test tasks
     let blink = pin!(blinker(led, 500.millis()));
     let t1 = pin!(show_name(1000.millis(), "beep!"));
-    // let t2 = pin!(show_name(513.millis(), "boop!"));
     let t3 = pin!(show_name(24.secs(), "blorp!"));
     let show = pin!(show_time());
 
@@ -65,14 +65,24 @@ fn main() -> ! {
     let drive_task = pin!(drive.task(drive_chan.get_receiver()));
 
     // Make a drive starter , temp
-    let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
+    // let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
     // Queue testing
     let spooly: Queue<u8, 16> = Queue::new();
+    let spool_task = pin!(spool_in(spooly.get_sender(), 600.millis()));
+    let spool_out_task = pin!(spool_out(spooly.get_receiver(), 50.millis()));
 
-    let spool_task = pin!(spool_in(spooly.get_sender(), 4.secs()));
-    let spool_out_task = pin!(spool_out(spooly.get_receiver(), 310.millis()));
-    
+    // Serial command system.
+    let command: Queue<u8, 16> = Queue::new();
+    let mut serial_incoming = SerialIncoming::new();
+    let serial_task = pin!(serial_incoming.task(command.get_sender()));
+
+    // Push The commands into another task
+    let command_out = pin!(set_commands(
+        command.get_receiver(),
+        drive_chan.get_sender()
+    ));
+
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
     // Main Executor (asyncy goodness)
@@ -81,33 +91,48 @@ fn main() -> ! {
             spool_task,
             spool_out_task,
             t1,
-            // t2,
             t3,
             blink,
             drive_task,
-            drive_starter,
+            //drive_starter,
+            serial_task,
+            command_out,
             show,
         ]);
     }
 }
 
+async fn set_commands(
+    mut rec: queue::Receiver<'_, u8, 16>,
+    drive: channel::Sender<'_, DriveState>,
+) {
+    loop {
+        let val = rec.receive().await;
+        match val {
+            b'1' => drive.send(DriveState::Running),
+            _ => print!("asdfasf"),
+        }
+    }
+}
+
 async fn spool_in(sender: queue::Sender<'_, u8, 16>, interval: TickDuration) {
     print!("start spool task");
+    for i in 0..10 {
+        sender.send(i);
+    }
     let mut counter: u8 = 0;
     loop {
         delay(interval).await;
-        //sender.send(counter);
-        counter += 1;
-        print!("spool counter: {}, len: {}",counter,sender.len());
-        // print!("spool counter: {}", counter);
+        sender.send(counter);
+        (counter, _) = counter.overflowing_add(1);
+        print!("spool counter: {}, len: {}", counter, sender.len());
     }
 }
 
 async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, interval: TickDuration) {
     loop {
-        delay(interval).await;
-        print!("spoolout");
-        // let val = rec.receive().await;
+        let val = rec.receive().await;
+        print!("out {}", val);
         // select_biased! {
         //     val = rec.receive().fuse() => {
         //         print!("{}",val);
@@ -155,11 +180,15 @@ async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
 
 #[cfg(not(doc))]
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
+fn panic(info: &core::panic::PanicInfo) -> ! {
     avr_device::interrupt::disable();
     let dp = unsafe { arduino_hal::Peripherals::steal() };
     let pins = arduino_hal::pins!(dp);
     let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
     ufmt::uwriteln!(&mut serial, "Firmware panic!\r").unwrap_infallible();
+    if let Some(data) = info.message() {
+        let stuff = data.as_str().unwrap();
+        ufmt::uwriteln!(&mut serial, "{}", stuff).unwrap_infallible();
+    }
     loop {}
 }

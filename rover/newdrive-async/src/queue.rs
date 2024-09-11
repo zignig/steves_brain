@@ -7,24 +7,39 @@
 /// Stolen from https://github.com/therustybits/zero-to-async
 /// chapter 6 and converted.
 use core::{
-    cell::{Cell, RefCell},
-    future::poll_fn,
-    task::{Poll, Waker},
+    borrow::BorrowMut, cell::{Cell, RefCell}, future::poll_fn, task::{Poll, Waker}
 };
 
 use avr_device::interrupt::Mutex;
-use heapless::spsc::Queue as HQueue;
+use heapless::Deque;
 
+// Inner struct
+
+pub struct QueueState< T , const N: usize> { 
+    queue: Deque<T,N>,
+    waker: RefCell<Option<Waker>>
+}
+
+impl <T, const N: usize> QueueState<T,N>{ 
+    const fn new() -> Self { 
+        QueueState {
+            queue: Deque::new(),
+            waker: RefCell::new(None)
+        }
+    }
+}
+
+
+// Wrapping Struct , use this. 
+// Is mutexed so it can be used from an ISR
 pub struct Queue<T, const N: usize> {
-    items: Mutex<RefCell<HQueue<T, N>>>,
-    waker: RefCell<Option<Waker>>,
+    inner: Mutex<RefCell<QueueState<T,N>>>
 }
 
 impl<T, const N: usize> Queue<T, N> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            items: Mutex::new(RefCell::new(HQueue::new())),
-            waker: RefCell::new(None),
+            inner: Mutex::new(RefCell::new(QueueState::new()))
         }
     }
 
@@ -39,12 +54,12 @@ impl<T, const N: usize> Queue<T, N> {
         }
     }
 
-    fn send(&self, item: T) {
+    pub fn send(&self, item: T) {
         // Open up the queue and add the item into it.
         avr_device::interrupt::free(|cs| {
-            let items = &mut *self.items.borrow(cs).borrow_mut();
-            if items.enqueue(item).is_ok() {
-                if let Some(waker) = self.waker.borrow().as_ref() {
+            let inner = &mut *self.inner.borrow(cs).borrow_mut();
+            if inner.queue.push_back(item).is_ok() {
+                if let Some(waker) = &mut *inner.waker.borrow_mut(){
                     // Calling `wake()` consumes the waker, which means we'd have to
                     // `clone()` it first, so instead here we use `wake_by_ref()`
                     waker.wake_by_ref();
@@ -54,16 +69,24 @@ impl<T, const N: usize> Queue<T, N> {
     }
 
     fn receive(&self) -> Option<T> {
-        crate::print!("get item");
         avr_device::interrupt::free(|cs| {
-            crate::print!("in mutex");
-            let items = &mut *self.items.borrow(cs).borrow_mut();
-            items.dequeue()
+            let inner = &mut *self.inner.borrow(cs).borrow_mut();
+            inner.queue.pop_front()
         })
     }
 
     fn register(&self, waker: Waker) {
-        self.waker.replace(Some(waker));
+        avr_device::interrupt::free(|cs| {
+            let inner = &mut *self.inner.borrow(cs).borrow_mut();
+            inner.waker.replace(Some(waker));
+        });
+    }
+
+    pub fn len(&self) -> usize { 
+        avr_device::interrupt::free(|cs| {
+            let inner = &mut *self.inner.borrow(cs).borrow_mut();
+            inner.queue.len()
+        })
     }
 }
 
@@ -77,12 +100,7 @@ impl<T, const N: usize> Sender<'_, T, N> {
     }
 
     pub fn len(&self) -> usize {
-        let mut len: usize = 0;
-        avr_device::interrupt::free(|cs| {
-            let items = &mut *self.queue.items.borrow(cs).borrow_mut();
-            len =  items.len();
-        });
-        len
+        self.queue.len()
     }
 }
 
