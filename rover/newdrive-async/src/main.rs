@@ -17,9 +17,9 @@ use arduino_hal::{
 };
 use core::pin::pin;
 use fugit::ExtU32;
-use futures::{select_biased, FutureExt};
+// use futures::{select_biased, FutureExt};
 
-use channel::{Channel, Receiver, Sender};
+use channel::{Channel, Sender};
 use drive::{Drive, DriveState};
 use executor::run_tasks;
 use queue::Queue;
@@ -28,7 +28,6 @@ use time::{delay, TickDuration, Ticker};
 //use panic_halt as _;
 
 use crate::serial::SerialIncoming;
-use crate::time::Timer;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -61,7 +60,7 @@ fn main() -> ! {
     let drive_chan: Channel<DriveState> = Channel::new();
 
     // Create  the drive
-    let mut drive = Drive::new(30);
+    let mut drive = Drive::new(80);
     let drive_task = pin!(drive.task(drive_chan.get_receiver()));
 
     // Make a drive starter , temp
@@ -88,9 +87,9 @@ fn main() -> ! {
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
-            spool_task,
-            spool_out_task,
-            t1,
+            // spool_task,
+            // spool_out_task,
+            // t1,
             t3,
             blink,
             drive_task,
@@ -110,6 +109,7 @@ async fn set_commands(
         let val = rec.receive().await;
         match val {
             b'1' => drive.send(DriveState::Running),
+            b'2' => drive.send(DriveState::Idle),
             _ => print!("asdfasf"),
         }
     }
@@ -129,7 +129,7 @@ async fn spool_in(sender: queue::Sender<'_, u8, 16>, interval: TickDuration) {
     }
 }
 
-async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, interval: TickDuration) {
+async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, _interval: TickDuration) {
     loop {
         let val = rec.receive().await;
         print!("out {}", val);

@@ -6,11 +6,10 @@ use core::{
     future::poll_fn,
     task::Poll,
 };
-use fugit::ExtU32;
 
 use crate::{
     executor::{wake_task, ExtWaker},
-    queue::{self, Queue}, time::delay,
+    queue::{self, Queue}
 };
 
 pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;

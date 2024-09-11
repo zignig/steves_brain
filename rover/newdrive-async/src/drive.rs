@@ -73,7 +73,7 @@ impl Drive{
                 _ = self.run_if().fuse() => {}
                 complete => break
             } 
-            time::delay(10.millis()).await;
+            time::delay(5.millis()).await;
         }
     }
 }

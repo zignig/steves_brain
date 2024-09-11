@@ -3,11 +3,8 @@
 /// majorly simplified version https://github.com/embassy-rs/embassy/blob/main/embassy-sync/src/channel.rs
 ///
 
-/// Async executor for avr , data channel (CSP Hoare style)
-/// Stolen from https://github.com/therustybits/zero-to-async
-/// chapter 6 and converted.
 use core::{
-    borrow::BorrowMut, cell::{Cell, RefCell}, future::poll_fn, task::{Poll, Waker}
+    cell::RefCell, future::poll_fn, task::{Poll, Waker}
 };
 
 use avr_device::interrupt::Mutex;
