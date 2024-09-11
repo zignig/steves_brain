@@ -64,7 +64,7 @@ fn main() -> ! {
     let drive_task = pin!(drive.task(drive_chan.get_receiver()));
 
     // Make a drive starter , temp
-    // let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
+    let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
     // Queue testing
     let spooly: Queue<u8, 16> = Queue::new();
@@ -87,13 +87,13 @@ fn main() -> ! {
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
-            // spool_task,
-            // spool_out_task,
-            // t1,
+            spool_task,
+            spool_out_task,
+            t1,
             t3,
             blink,
             drive_task,
-            //drive_starter,
+            drive_starter,
             serial_task,
             command_out,
             show,

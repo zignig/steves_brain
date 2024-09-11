@@ -14,6 +14,7 @@ use crate::time;
 pub enum DriveState{
     Init,
     Running,
+    Throttle(i16),
     Idle,
     Error
 }
@@ -21,7 +22,8 @@ pub enum DriveState{
 pub struct Drive{ 
     state: DriveState,
     counter: u32,
-    reset: u32
+    reset: u32,
+    throttle: i16
 }
 
 impl Drive{ 
@@ -29,7 +31,8 @@ impl Drive{
         Self{
             state: DriveState::Init,
             counter: counter,
-            reset: counter
+            reset: counter,
+            throttle: 0
         }
     }
 
@@ -45,6 +48,11 @@ impl Drive{
                     self.update();
                     Poll::Ready(())
                 },
+                DriveState::Throttle(val) =>{
+                    self.throttle = val;
+                    self.state = DriveState::Running;
+                    Poll::Ready(())
+                }
                 DriveState::Idle => {
                     Poll::Pending
                 },
