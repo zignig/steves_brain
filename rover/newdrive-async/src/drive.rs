@@ -47,7 +47,7 @@ impl Drive {
             next_timeout: 0,
             throttle: 0,
             current: 0,
-            rate: 0,
+            rate: 5,
         }
     }
 
@@ -71,9 +71,25 @@ impl Drive {
     fn update(&mut self) {
         if Ticker::ticks() > self.next_timeout {
             crate::print!("drive timeout");
+            self.current = 0;
             self.state = DriveState::Idle;
             return;
         }
+        if self.current != self.throttle {
+            if self.current < self.throttle {
+                self.current += self.rate;
+                if self.current > self.throttle {
+                    self.current = self.throttle;
+                }
+            }
+            if self.current > self.throttle {
+                self.current -= self.rate;
+                if self.current < self.throttle {
+                    self.current = self.throttle
+                }
+            }
+        }
+        crate::print!("current {}", self.current);
     }
 
     fn enable(&mut self) {
@@ -93,10 +109,12 @@ impl Drive {
             match command {
                 DriveCommands::Forward => {
                     self.enable();
+                    self.throttle = 200;
                     crate::print!("forward")
                 }
                 DriveCommands::Backwards => {
                     self.enable();
+                    self.throttle = -200;
                     crate::print!("backwards")
                 }
                 DriveCommands::Left => {
@@ -109,6 +127,7 @@ impl Drive {
                 }
                 DriveCommands::Stop => {
                     self.disable();
+                    self.throttle = 0;
                     crate::print!("stop");
                 }
             }

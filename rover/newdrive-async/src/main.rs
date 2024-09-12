@@ -61,7 +61,7 @@ fn main() -> ! {
     let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
-    let mut drive = Drive::new(2.secs());
+    let mut drive = Drive::new(500.millis());
     let drive_task = pin!(drive.task(drive_state.get_receiver(), drive_commands.get_receiver()));
 
     // Make a drive starter , temp
@@ -90,10 +90,10 @@ fn main() -> ! {
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
-            spool_task,
-            spool_out_task,
+            // spool_task,
+            // spool_out_task,
             t1,
-            // t3,
+            t3,
             blink,
             drive_task,
             //drive_starter,
@@ -119,7 +119,7 @@ async fn make_commands(
             b'a' => drive_commands.send(DriveCommands::Left),
             b'd' => drive_commands.send(DriveCommands::Right),
             b' ' => drive_commands.send(DriveCommands::Stop),
-            _ => print!("no command"),
+            _ => print!("{}",val.D),
         }
     }
 }
