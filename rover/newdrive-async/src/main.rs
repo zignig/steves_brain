@@ -20,7 +20,7 @@ use fugit::ExtU32;
 // use futures::{select_biased, FutureExt};
 
 use channel::{Channel, Sender};
-use drive::{Drive, DriveState};
+use drive::{Drive, DriveCommands, DriveState};
 use executor::run_tasks;
 use queue::Queue;
 use time::{delay, TickDuration, Ticker};
@@ -57,14 +57,15 @@ fn main() -> ! {
     // Make a new Drive task
 
     // Make a comms channel to the motor
-    let drive_chan: Channel<DriveState> = Channel::new();
+    let drive_state: Channel<DriveState> = Channel::new();
+    let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
-    let mut drive = Drive::new(80);
-    let drive_task = pin!(drive.task(drive_chan.get_receiver()));
+    let mut drive = Drive::new(2.secs());
+    let drive_task = pin!(drive.task(drive_state.get_receiver(), drive_commands.get_receiver()));
 
     // Make a drive starter , temp
-    let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
+    // let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
     // Queue testing
     let spooly: Queue<u8, 16> = Queue::new();
@@ -72,28 +73,30 @@ fn main() -> ! {
     let spool_out_task = pin!(spool_out(spooly.get_receiver(), 50.millis()));
 
     // Serial command system.
-    let command: Queue<u8, 16> = Queue::new();
+    let serial_chars: Queue<u8, 16> = Queue::new();
     let mut serial_incoming = SerialIncoming::new();
-    let serial_task = pin!(serial_incoming.task(command.get_sender()));
+    let serial_task = pin!(serial_incoming.task(serial_chars.get_sender()));
 
     // Push The commands into another task
-    let command_out = pin!(set_commands(
-        command.get_receiver(),
-        drive_chan.get_sender()
+    let command_out = pin!(make_commands(
+        serial_chars.get_receiver(),
+        drive_state.get_sender(),
+        drive_commands.get_sender()
     ));
 
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
+
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
             spool_task,
             spool_out_task,
             t1,
-            t3,
+            // t3,
             blink,
             drive_task,
-            drive_starter,
+            //drive_starter,
             serial_task,
             command_out,
             show,
@@ -101,16 +104,22 @@ fn main() -> ! {
     }
 }
 
-async fn set_commands(
+async fn make_commands(
     mut rec: queue::Receiver<'_, u8, 16>,
-    drive: channel::Sender<'_, DriveState>,
+    drive_state: channel::Sender<'_, DriveState>,
+    drive_commands: channel::Sender<'_,DriveCommands>
 ) {
     loop {
         let val = rec.receive().await;
         match val {
-            b'1' => drive.send(DriveState::Running),
-            b'2' => drive.send(DriveState::Idle),
-            _ => print!("asdfasf"),
+            b'1' => drive_state.send(DriveState::Running),
+            b'2' => drive_state.send(DriveState::Idle),
+            b'w' => drive_commands.send(DriveCommands::Forward),
+            b's' => drive_commands.send(DriveCommands::Backwards),
+            b'a' => drive_commands.send(DriveCommands::Left),
+            b'd' => drive_commands.send(DriveCommands::Right),
+            b' ' => drive_commands.send(DriveCommands::Stop),
+            _ => print!("no command"),
         }
     }
 }
@@ -133,14 +142,6 @@ async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, _interval: TickDuration
     loop {
         let val = rec.receive().await;
         print!("out {}", val);
-        // select_biased! {
-        //     val = rec.receive().fuse() => {
-        //         print!("{}",val);
-        //     }
-        //     _ = delay(interval).fuse() => {
-        //         print!("timeout");
-        //     }
-        // }
     }
 }
 
@@ -170,13 +171,13 @@ async fn show_time() {
     }
 }
 
-async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
-    loop {
-        delay(interval).await;
-        print!("Start the drive");
-        sender.send(DriveState::Running);
-    }
-}
+// async fn drive_starter(sender: Sender<'_, DriveState>, interval: TickDuration) {
+//     loop {
+//         delay(interval).await;
+//         print!("Start the drive");
+//         sender.send(DriveState::Running);
+//     }
+// }
 
 #[cfg(not(doc))]
 #[panic_handler]

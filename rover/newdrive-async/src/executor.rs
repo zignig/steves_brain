@@ -96,5 +96,7 @@ pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
                 }
             }
         }
+        // go to sleep, wait for next interrupt.
+        avr_device::asm::sleep();
     }
 }

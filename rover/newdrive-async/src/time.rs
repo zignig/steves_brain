@@ -28,7 +28,7 @@ use crate::executor::{wake_task, ExtWaker};
 pub type TickInstant = Instant<u32, 1, 984>;
 pub type TickDuration = Duration<u32, 1, 984>;
 
-const MAX_DEADLINES: usize = 15;
+const MAX_DEADLINES: usize = 8;
 static WAKE_DEADLINES: Mutex<RefCell<BinaryHeap<(u32, usize), Min, MAX_DEADLINES>>> =
     Mutex::new(RefCell::new(BinaryHeap::new()));
 
@@ -139,6 +139,7 @@ fn TIMER0_OVF() {
     avr_device::interrupt::free(|cs| {
         let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
         if let Some((next_deadline, task_id)) = deadlines.peek() {
+            // what about 32 bit wrap around ? 
             if ticks > *next_deadline {
                 //crate::print!("Finished -- {} at {}", task_id,ticks);
                 // Wake up the task in the executor

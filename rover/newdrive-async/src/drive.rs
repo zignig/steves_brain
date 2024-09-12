@@ -1,87 +1,138 @@
 /// Mockup for the drive system
+use core::{future::poll_fn, task::Poll};
 
-use core::{
-    future::poll_fn,
-    task::Poll,
+use crate::{
+    channel::{self, Receiver},
+    time::TickDuration,
+    time::Ticker,
 };
 
 use fugit::ExtU32;
-use crate::channel::Receiver;
 use futures::{select_biased, FutureExt};
 
 use crate::time;
 
-pub enum DriveState{
+// Overstate of the drive
+#[derive(PartialEq)]
+pub enum DriveState {
     Init,
     Running,
-    Throttle(i16),
     Idle,
-    Error
+    Error,
 }
 
-pub struct Drive{ 
+// Driver commands
+pub enum DriveCommands {
+    Forward,
+    Backwards,
+    Left,
+    Right,
+    Stop,
+}
+
+pub struct Drive {
     state: DriveState,
-    counter: u32,
-    reset: u32,
-    throttle: i16
+    timeout: TickDuration,
+    next_timeout: u32,
+    throttle: i16,
+    current: i16,
+    rate: i16,
 }
 
-impl Drive{ 
-    pub fn new(counter: u32) -> Self{
-        Self{
+impl Drive {
+    pub fn new(timeout: TickDuration) -> Self {
+        Self {
             state: DriveState::Init,
-            counter: counter,
-            reset: counter,
-            throttle: 0
+            timeout: timeout,
+            next_timeout: 0,
+            throttle: 0,
+            current: 0,
+            rate: 0,
         }
     }
 
-    pub async fn run_if(&mut self){
-        poll_fn(|_cx|{
-            match self.state{
-                DriveState::Init => {
-                    crate::print!("Initialize the drive");
-                    self.state = DriveState::Idle;
-                    Poll::Pending
-                },
-                DriveState::Running => {
-                    self.update();
-                    Poll::Ready(())
-                },
-                DriveState::Throttle(val) =>{
-                    self.throttle = val;
-                    self.state = DriveState::Running;
-                    Poll::Ready(())
-                }
-                DriveState::Idle => {
-                    Poll::Pending
-                },
-                DriveState::Error => {
-                    Poll::Pending
-                },
+    pub async fn run_if(&mut self) {
+        poll_fn(|_cx| match self.state {
+            DriveState::Init => {
+                crate::print!("Initialize the drive");
+                self.state = DriveState::Idle;
+                Poll::Pending
             }
-        } ).await
+            DriveState::Running => {
+                self.update();
+                Poll::Ready(())
+            }
+            DriveState::Idle => Poll::Pending,
+            DriveState::Error => Poll::Pending,
+        })
+        .await
     }
 
-    fn update(&mut self){
-        self.counter -= 1; 
-        crate::print!("drive {}",self.counter);
-        if self.counter == 0{ 
-            self.counter = self.reset;
+    fn update(&mut self) {
+        if Ticker::ticks() > self.next_timeout {
+            crate::print!("drive timeout");
             self.state = DriveState::Idle;
+            return;
         }
     }
 
-    pub async fn task(&mut self,mut incoming: Receiver<'_,DriveState>){
+    fn enable(&mut self) {
+        self.next_timeout = Ticker::ticks() + self.timeout.ticks();
+        self.state = DriveState::Running;
+    }
+
+    fn disable(&mut self) {
+        self.state = DriveState::Idle;
+    }
+
+    fn set_command(&mut self, command: DriveCommands) {
+        // update as the update is lost in the select_biased
+        self.update();
+        // only run in running and idle
+        if (self.state == DriveState::Running) | (self.state == DriveState::Idle) {
+            match command {
+                DriveCommands::Forward => {
+                    self.enable();
+                    crate::print!("forward")
+                }
+                DriveCommands::Backwards => {
+                    self.enable();
+                    crate::print!("backwards")
+                }
+                DriveCommands::Left => {
+                    self.enable();
+                    crate::print!("left")
+                }
+                DriveCommands::Right => {
+                    self.enable();
+                    crate::print!("right")
+                }
+                DriveCommands::Stop => {
+                    self.disable();
+                    crate::print!("stop");
+                }
+            }
+        }
+    }
+
+    pub async fn task(
+        &mut self,
+        mut set_state: channel::Receiver<'_, DriveState>,
+        mut commands: channel::Receiver<'_, DriveCommands>,
+    ) {
         loop {
             select_biased! {
-                state = incoming.receive().fuse()=>{
+                state = set_state.receive().fuse()=>{
+                    crate::print!("state change");
                     self.state = state;
+                }
+                command = commands.receive().fuse()=>{
+                    self.set_command(command);
                 }
                 _ = self.run_if().fuse() => {}
                 complete => break
-            } 
-            time::delay(5.millis()).await;
+            }
+            time::delay(15.millis()).await;
         }
     }
 }
