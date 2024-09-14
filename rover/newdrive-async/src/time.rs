@@ -2,9 +2,8 @@
 /// Stolen from https://github.com/therustybits/zero-to-async
 /// chapter 6 and converted. 
 
-
-//TODO Should convert to timer1 (16bit)
-// and use the overflow and value interuppt.
+// TODO Should convert to timer1 (16bit)
+// and use the overflow and value interrupt.
 
 use core::{
     cell::RefCell,
@@ -21,8 +20,6 @@ use avr_device::interrupt::Mutex;
 
 use crate::executor::{wake_task, ExtWaker};
 
-
-//use crate::executor::{wake_task, ExtWaker};
 // fugit does ticks -> millis in compile time
 // for prescale_64
 pub type TickInstant = Instant<u32, 1, 984>;

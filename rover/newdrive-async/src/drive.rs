@@ -1,14 +1,22 @@
 /// Mockup for the drive system
-use core::{future::poll_fn, task::Poll};
+/// An example of a task that will run itself until it is finished
+/// and then just wait for events.
+use core::{
+    cell::RefCell,
+    future::poll_fn,
+    task::{Poll, Waker},
+};
 
 use crate::{
-    channel::{self, Receiver},
-    time::TickDuration,
-    time::Ticker,
+    channel,
+    executor::wake_task,
+    time::{TickDuration, Ticker},
 };
 
 use fugit::ExtU32;
 use futures::{select_biased, FutureExt};
+
+use crate::executor::ExtWaker;
 
 use crate::time;
 
@@ -17,6 +25,7 @@ use crate::time;
 pub enum DriveState {
     Init,
     Running,
+    SoftStop,
     Idle,
     Error,
 }
@@ -35,31 +44,47 @@ pub struct Drive {
     timeout: TickDuration,
     next_timeout: u32,
     throttle: i16,
+    default_throttle: i16,
     current: i16,
     rate: i16,
+    stop_rate: i16,
 }
 
 impl Drive {
+    // TODO this need to be handed to an eeprom config
     pub fn new(timeout: TickDuration) -> Self {
         Self {
             state: DriveState::Init,
             timeout: timeout,
             next_timeout: 0,
             throttle: 0,
+            default_throttle: 200,
             current: 0,
-            rate: 5,
+            rate: 1,
+            stop_rate: 10,
         }
     }
 
+    // On a state change or a command the select_biased! will
+    // do the thing
     pub async fn run_if(&mut self) {
-        poll_fn(|_cx| match self.state {
+        poll_fn(|cx| match self.state {
             DriveState::Init => {
                 crate::print!("Initialize the drive");
+                // Move to idle
                 self.state = DriveState::Idle;
                 Poll::Pending
             }
             DriveState::Running => {
                 self.update();
+                Poll::Ready(())
+            }
+            DriveState::SoftStop => {
+                // If the drive times out, put the throttle to zero
+                // TODO
+                crate::print!("soft stop");
+                self.state = DriveState::Idle;
+                self.throttle = 0;
                 Poll::Ready(())
             }
             DriveState::Idle => Poll::Pending,
@@ -68,22 +93,27 @@ impl Drive {
         .await
     }
 
+    // When the drive is running update the internal variables
+    // Once it is finished it will wait for commands in the task.
     fn update(&mut self) {
         if Ticker::ticks() > self.next_timeout {
             crate::print!("drive timeout");
             self.current = 0;
-            self.state = DriveState::Idle;
+            self.state = DriveState::SoftStop;
             return;
         }
+        // get the current closer to the throttle setting
         if self.current != self.throttle {
             if self.current < self.throttle {
                 self.current += self.rate;
+                // to far ?
                 if self.current > self.throttle {
                     self.current = self.throttle;
                 }
             }
             if self.current > self.throttle {
                 self.current -= self.rate;
+                // to far ?
                 if self.current < self.throttle {
                     self.current = self.throttle
                 }
@@ -105,16 +135,16 @@ impl Drive {
         // update as the update is lost in the select_biased
         self.update();
         // only run in running and idle
-        if (self.state == DriveState::Running) | (self.state == DriveState::Idle) {
+        if self.state != DriveState::Error {
             match command {
                 DriveCommands::Forward => {
                     self.enable();
-                    self.throttle = 200;
+                    self.throttle = self.default_throttle;
                     crate::print!("forward")
                 }
                 DriveCommands::Backwards => {
                     self.enable();
-                    self.throttle = -200;
+                    self.throttle = -self.default_throttle;
                     crate::print!("backwards")
                 }
                 DriveCommands::Left => {
@@ -151,7 +181,7 @@ impl Drive {
                 _ = self.run_if().fuse() => {}
                 complete => break
             }
-            time::delay(15.millis()).await;
+            time::delay(10.millis()).await;
         }
     }
 }

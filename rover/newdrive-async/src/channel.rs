@@ -1,7 +1,8 @@
 /// Async executor for avr , data channel (CSP Hoare style)
 /// Stolen from https://github.com/therustybits/zero-to-async
 /// chapter 6 and converted. 
-
+/// This provides a single item channel to move data and events 
+/// between tasks.
 
 use core::{
     cell::{Cell, RefCell},

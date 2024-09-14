@@ -1,3 +1,9 @@
+// This is an Async rewrite of the newdrive 
+// https://github.com/zignig/steves_brain/tree/main/rover/newdrive
+// the executor is based on chapter 6 of 
+// https://github.com/therustybits/zero-to-async
+
+
 #![no_std]
 #![no_main]
 #![feature(abi_avr_interrupt)]
@@ -7,8 +13,10 @@ mod channel;
 mod drive;
 mod executor;
 mod queue;
+mod isrqueue;
 mod serial;
 mod time;
+mod overlord;
 
 use arduino_hal::prelude::*;
 use arduino_hal::{
@@ -19,7 +27,7 @@ use core::pin::pin;
 use fugit::ExtU32;
 // use futures::{select_biased, FutureExt};
 
-use channel::{Channel, Sender};
+use channel::Channel;
 use drive::{Drive, DriveCommands, DriveState};
 use executor::run_tasks;
 use queue::Queue;
@@ -27,6 +35,7 @@ use time::{delay, TickDuration, Ticker};
 
 //use panic_halt as _;
 
+use crate::isrqueue::ISRQueue;
 use crate::serial::SerialIncoming;
 
 #[arduino_hal::entry]
@@ -49,9 +58,14 @@ fn main() -> ! {
     let led = pins.d13.into_output();
 
     // Some Test tasks
+    // Just blink the LED to show that it's running
+    // SPI takes this ! WATCH OUT !
     let blink = pin!(blinker(led, 500.millis()));
-    let t1 = pin!(show_name(1000.millis(), "beep!"));
-    let t3 = pin!(show_name(24.secs(), "blorp!"));
+    // See that it's running on the serial console
+    let t1 = pin!(show_name(2000.millis(), "boop!"));
+    // Longer task , perhaps shut everything down and go to low power
+    let t3 = pin!(show_name(30.secs(), "check idle"));
+    // Show the current timer queue for debug
     let show = pin!(show_time());
 
     // Make a new Drive task
@@ -61,19 +75,14 @@ fn main() -> ! {
     let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
-    let mut drive = Drive::new(500.millis());
+    let mut drive = Drive::new(1.secs());
     let drive_task = pin!(drive.task(drive_state.get_receiver(), drive_commands.get_receiver()));
 
     // Make a drive starter , temp
     // let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
-    // Queue testing
-    let spooly: Queue<u8, 16> = Queue::new();
-    let spool_task = pin!(spool_in(spooly.get_sender(), 600.millis()));
-    let spool_out_task = pin!(spool_out(spooly.get_receiver(), 50.millis()));
-
     // Serial command system.
-    let serial_chars: Queue<u8, 16> = Queue::new();
+    let serial_chars: ISRQueue<u8, 16> = ISRQueue::new();
     let mut serial_incoming = SerialIncoming::new();
     let serial_task = pin!(serial_incoming.task(serial_chars.get_sender()));
 
@@ -90,8 +99,6 @@ fn main() -> ! {
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
-            // spool_task,
-            // spool_out_task,
             t1,
             t3,
             blink,
@@ -105,7 +112,7 @@ fn main() -> ! {
 }
 
 async fn make_commands(
-    mut rec: queue::Receiver<'_, u8, 16>,
+    mut rec: isrqueue::Receiver<'_, u8, 16>,
     drive_state: channel::Sender<'_, DriveState>,
     drive_commands: channel::Sender<'_,DriveCommands>
 ) {
@@ -119,29 +126,8 @@ async fn make_commands(
             b'a' => drive_commands.send(DriveCommands::Left),
             b'd' => drive_commands.send(DriveCommands::Right),
             b' ' => drive_commands.send(DriveCommands::Stop),
-            _ => print!("{}",val.D),
+            _ => print!("{}",val.to_ascii_lowercase()),
         }
-    }
-}
-
-async fn spool_in(sender: queue::Sender<'_, u8, 16>, interval: TickDuration) {
-    print!("start spool task");
-    for i in 0..10 {
-        sender.send(i);
-    }
-    let mut counter: u8 = 0;
-    loop {
-        delay(interval).await;
-        sender.send(counter);
-        (counter, _) = counter.overflowing_add(1);
-        print!("spool counter: {}, len: {}", counter, sender.len());
-    }
-}
-
-async fn spool_out(mut rec: queue::Receiver<'_, u8, 16>, _interval: TickDuration) {
-    loop {
-        let val = rec.receive().await;
-        print!("out {}", val);
     }
 }
 

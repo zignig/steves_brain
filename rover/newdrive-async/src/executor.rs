@@ -69,9 +69,14 @@ const fn mask_for_index(index: usize) -> usize {
 
 // end Vector Table 
 
+
+// Bit mask for the tasks. (max 16 tasks for AVR)
 static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
+// Number of tasks in application
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
+
+//
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
     // everybody gets one run to start...

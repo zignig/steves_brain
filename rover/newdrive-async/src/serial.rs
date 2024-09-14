@@ -9,7 +9,7 @@ use core::{
 
 use crate::{
     executor::{wake_task, ExtWaker},
-    queue::{self, Queue}
+    isrqueue::{self, ISRQueue}
 };
 
 pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
@@ -37,7 +37,7 @@ macro_rules! print{
 // Serial incoming stuff
 // Don't know what i'm doing with this , making it up
 
-pub static INCOMING_QUEUE: Queue<u8, 32> = Queue::new();
+pub static INCOMING_QUEUE: ISRQueue<u8, 32> = ISRQueue::new();
 static SERIAL_TASK_ID: Mutex<Cell<usize>> = Mutex::new(Cell::new(0xFFFF));
 
 enum SerialState {
@@ -48,7 +48,7 @@ enum SerialState {
 pub struct SerialIncoming<'a> {
     state: SerialState,
     task_id: usize,
-    incoming: queue::Receiver<'a, u8, 32>,
+    incoming: isrqueue::Receiver<'a, u8, 32>,
 }
 
 impl<'a> SerialIncoming<'a> {
@@ -84,7 +84,7 @@ impl<'a> SerialIncoming<'a> {
         .await
     }
 
-    pub async fn task(&mut self,outgoing: queue::Sender<'_,u8,16>) {
+    pub async fn task(&mut self,outgoing: isrqueue::Sender<'_,u8,16>) {
         self.setup().await;
         loop {
             let val = self.incoming.receive().await;
