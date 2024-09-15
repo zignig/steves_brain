@@ -37,7 +37,7 @@ use time::{delay, TickDuration, Ticker};
 use overlord::OverLord;
 
 
-//use panic_halt as _;
+use panic_halt as _;
 
 use crate::isrqueue::ISRQueue;
 use crate::serial::SerialIncoming;
@@ -115,13 +115,13 @@ fn main() -> ! {
         run_tasks(&mut [
             overlord_task,
             t1,
-            // t3,
+            t3,
             blink,
             drive_task,
             //drive_starter,
             serial_task,
             command_out,
-            //show,
+            show,
         ]);
     }
 }
@@ -180,17 +180,17 @@ async fn show_time() {
 //     }
 // }
 
-#[cfg(not(doc))]
-#[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
-    avr_device::interrupt::disable();
-    let dp = unsafe { arduino_hal::Peripherals::steal() };
-    let pins = arduino_hal::pins!(dp);
-    let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
-    ufmt::uwriteln!(&mut serial, "Firmware panic!\r").unwrap_infallible();
-    if let Some(data) = info.message() {
-        let stuff = data.as_str().unwrap();
-        ufmt::uwriteln!(&mut serial, "{}", stuff).unwrap_infallible();
-    }
-    loop {}
-}
+// #[cfg(not(doc))]
+// #[panic_handler]
+// fn panic(info: &core::panic::PanicInfo) -> ! {
+//     avr_device::interrupt::disable();
+//     let dp = unsafe { arduino_hal::Peripherals::steal() };
+//     let pins = arduino_hal::pins!(dp);
+//     let mut serial = arduino_hal::default_serial!(dp, pins, 115200);
+//     ufmt::uwriteln!(&mut serial, "Firmware panic!\r").unwrap_infallible();
+//     if let Some(data) = info.message() {
+//         let stuff = data.as_str().unwrap();
+//         ufmt::uwriteln!(&mut serial, "{}", stuff).unwrap_infallible();
+//     }
+//     loop {}
+// }

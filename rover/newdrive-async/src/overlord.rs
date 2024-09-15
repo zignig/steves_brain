@@ -51,6 +51,7 @@ impl OverLord {
         loop {
             select_biased! {
                 _ = self.run_if().fuse() => {}
+                _ = time::delay(1.secs()).fuse() => {} 
                 complete => break
             }
             crate::print!("Appease the overlord");
