@@ -132,7 +132,7 @@ impl Ticker {
 
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_OVF() {
-    let ticks = TICKER.ovf_count.fetch_add(1, Ordering::Relaxed);
+    let ticks = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);
     avr_device::interrupt::free(|cs| {
         let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
         if let Some((next_deadline, task_id)) = deadlines.peek() {

@@ -20,6 +20,10 @@ use crate::executor::ExtWaker;
 
 use crate::time;
 
+pub struct DriveConfig { 
+
+}
+
 // Overstate of the drive
 #[derive(PartialEq)]
 pub enum DriveState {
@@ -60,7 +64,7 @@ impl Drive {
             throttle: 0,
             default_throttle: 200,
             current: 0,
-            rate: 1,
+            rate: 2,
             stop_rate: 10,
         }
     }
@@ -81,10 +85,9 @@ impl Drive {
             }
             DriveState::SoftStop => {
                 // If the drive times out, put the throttle to zero
-                // TODO
-                crate::print!("soft stop");
-                self.state = DriveState::Idle;
-                self.throttle = 0;
+                if self.adjust_throttle(self.stop_rate) { 
+                    self.state = DriveState::Idle
+                }
                 Poll::Ready(())
             }
             DriveState::Idle => Poll::Pending,
@@ -98,21 +101,26 @@ impl Drive {
     fn update(&mut self) {
         if Ticker::ticks() > self.next_timeout {
             crate::print!("drive timeout");
-            self.current = 0;
+            self.throttle = 0;
             self.state = DriveState::SoftStop;
             return;
         }
-        // get the current closer to the throttle setting
+        // adjust the throttle
+        let _ = self.adjust_throttle(self.rate);
+    }
+
+    // get the current closer to the throttle setting
+    fn adjust_throttle(&mut self,rate: i16) -> bool { 
         if self.current != self.throttle {
             if self.current < self.throttle {
-                self.current += self.rate;
+                self.current += rate;
                 // to far ?
                 if self.current > self.throttle {
                     self.current = self.throttle;
                 }
             }
             if self.current > self.throttle {
-                self.current -= self.rate;
+                self.current -= rate;
                 // to far ?
                 if self.current < self.throttle {
                     self.current = self.throttle
@@ -120,6 +128,8 @@ impl Drive {
             }
         }
         crate::print!("current {}", self.current);
+        // if we are on target return true
+        self.current == self.throttle
     }
 
     fn enable(&mut self) {
@@ -140,25 +150,25 @@ impl Drive {
                 DriveCommands::Forward => {
                     self.enable();
                     self.throttle = self.default_throttle;
-                    crate::print!("forward")
+                    // crate::print!("forward")
                 }
                 DriveCommands::Backwards => {
                     self.enable();
                     self.throttle = -self.default_throttle;
-                    crate::print!("backwards")
+                    // crate::print!("backwards")
                 }
                 DriveCommands::Left => {
                     self.enable();
-                    crate::print!("left")
+                    // crate::print!("left")
                 }
                 DriveCommands::Right => {
                     self.enable();
-                    crate::print!("right")
+                    // crate::print!("right")
                 }
                 DriveCommands::Stop => {
                     self.disable();
                     self.throttle = 0;
-                    crate::print!("stop");
+                    // crate::print!("stop");
                 }
             }
         }

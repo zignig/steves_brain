@@ -1,34 +1,18 @@
-newdrive-async
-==============
+# Async version 
 
-Rust project for the _SparkFun ProMini 5v_.
 
-## Build Instructions
-1. Install prerequisites as described in the [`avr-hal` README] (`avr-gcc`, `avr-libc`, `avrdude`, [`ravedude`]).
+Some commands to get info 
 
-2. Run `cargo build` to build the firmware.
+cargo size --release -- -A
 
-3. Run `cargo run` to flash the firmware to a connected board.  If `ravedude`
-   fails to detect your board, check its documentation at
-   <https://crates.io/crates/ravedude>.
+.data                         1362  0x800100
+.text                        11282       0x0
+.bss                           111  0x800652
+.note.gnu.avr.deviceinfo        64       0x0
+.debug_info                   1524       0x0
+.debug_abbrev                 1442       0x0
+.debug_line                     26       0x0
+.debug_str                     520       0x0
+Total                        16331
 
-4. `ravedude` will open a console session after flashing where you can interact
-   with the UART console of your board.
-
-[`avr-hal` README]: https://github.com/Rahix/avr-hal#readme
-[`ravedude`]: https://crates.io/crates/ravedude
-
-## License
-Licensed under either of
-
- - Apache License, Version 2.0
-   ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
- - MIT license
-   ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
-
-at your option.
-
-## Contribution
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
+Look like lots of static strings taking up ram. 

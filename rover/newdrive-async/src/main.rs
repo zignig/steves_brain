@@ -17,6 +17,7 @@ mod isrqueue;
 mod serial;
 mod time;
 mod overlord;
+mod config;
 
 use arduino_hal::prelude::*;
 use arduino_hal::{
@@ -25,13 +26,16 @@ use arduino_hal::{
 };
 use core::pin::pin;
 use fugit::ExtU32;
-// use futures::{select_biased, FutureExt};
+
+use config::Wrangler;
 
 use channel::Channel;
 use drive::{Drive, DriveCommands, DriveState};
 use executor::run_tasks;
 use queue::Queue;
 use time::{delay, TickDuration, Ticker};
+use overlord::OverLord;
+
 
 //use panic_halt as _;
 
@@ -68,6 +72,9 @@ fn main() -> ! {
     // Show the current timer queue for debug
     let show = pin!(show_time());
 
+    // Grab the eeprom out of the 
+    let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    let mut wrangler = Wrangler::new(ee);
     // Make a new Drive task
 
     // Make a comms channel to the motor
@@ -82,7 +89,7 @@ fn main() -> ! {
     // let drive_starter = pin!(drive_starter(drive_chan.get_sender(), 10.secs()));
 
     // Serial command system.
-    let serial_chars: ISRQueue<u8, 16> = ISRQueue::new();
+    let serial_chars: Queue<u8, 16> = Queue::new();
     let mut serial_incoming = SerialIncoming::new();
     let serial_task = pin!(serial_incoming.task(serial_chars.get_sender()));
 
@@ -93,26 +100,34 @@ fn main() -> ! {
         drive_commands.get_sender()
     ));
 
+    // Create the overlord task.
+    // This is the top level state machine
+
+    let mut overlord = OverLord::new();
+    let overlord_task = pin!(overlord.task());
+
+
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
 
     // Main Executor (asyncy goodness)
     loop {
         run_tasks(&mut [
+            overlord_task,
             t1,
-            t3,
+            // t3,
             blink,
             drive_task,
             //drive_starter,
             serial_task,
             command_out,
-            show,
+            //show,
         ]);
     }
 }
 
 async fn make_commands(
-    mut rec: isrqueue::Receiver<'_, u8, 16>,
+    mut rec: queue::Receiver<'_, u8, 16>,
     drive_state: channel::Sender<'_, DriveState>,
     drive_commands: channel::Sender<'_,DriveCommands>
 ) {

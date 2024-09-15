@@ -8,8 +8,9 @@ use core::{
 };
 
 use crate::{
-    executor::{wake_task, ExtWaker},
-    isrqueue::{self, ISRQueue}
+    executor::ExtWaker,
+    isrqueue::{self, ISRQueue},
+    queue
 };
 
 pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
@@ -84,7 +85,7 @@ impl<'a> SerialIncoming<'a> {
         .await
     }
 
-    pub async fn task(&mut self,outgoing: isrqueue::Sender<'_,u8,16>) {
+    pub async fn task(&mut self,mut outgoing: queue::Sender<'_,u8,16>) {
         self.setup().await;
         loop {
             let val = self.incoming.receive().await;
@@ -102,8 +103,9 @@ fn USART_RX() {
         let serial_port = unsafe { &*arduino_hal::pac::USART0::ptr() };
         let ch = serial_port.udr0.read().bits();
         INCOMING_QUEUE.send(ch);
-        // crate::print!("{}", INCOMING_QUEUE.len());
-        let task_id = SERIAL_TASK_ID.borrow(cs).get();
-        wake_task(task_id);
+        // crate::print!("{}",INCOMING_QUEUE.len());
+        // // crate::print!("{}", INCOMING_QUEUE.len());
+        // let task_id = SERIAL_TASK_ID.borrow(cs).get();
+        // wake_task(task_id);
     });
 }
