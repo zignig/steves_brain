@@ -1,8 +1,7 @@
-// This is an Async rewrite of the newdrive 
+// This is an Async rewrite of the newdrive
 // https://github.com/zignig/steves_brain/tree/main/rover/newdrive
-// the executor is based on chapter 6 of 
+// the executor is based on chapter 6 of
 // https://github.com/therustybits/zero-to-async
-
 
 #![no_std]
 #![no_main]
@@ -10,14 +9,14 @@
 #![feature(panic_info_message)]
 
 mod channel;
+mod config;
 mod drive;
 mod executor;
-mod queue;
 mod isrqueue;
+mod overlord;
+mod queue;
 mod serial;
 mod time;
-mod overlord;
-mod config;
 
 use arduino_hal::prelude::*;
 use arduino_hal::{
@@ -27,15 +26,15 @@ use arduino_hal::{
 use core::pin::pin;
 use fugit::ExtU32;
 
+
 use config::Wrangler;
 
 use channel::Channel;
 use drive::{Drive, DriveCommands, DriveState};
 use executor::run_tasks;
+use overlord::OverLord;
 use queue::Queue;
 use time::{delay, TickDuration, Ticker};
-use overlord::OverLord;
-
 
 use panic_halt as _;
 
@@ -72,7 +71,7 @@ fn main() -> ! {
     // Show the current timer queue for debug
     let show = pin!(show_time());
 
-    // Grab the eeprom out of the 
+    // Grab the eeprom out of the
     let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
     // Make a new Drive task
@@ -106,7 +105,6 @@ fn main() -> ! {
     let mut overlord = OverLord::new();
     let overlord_task = pin!(overlord.task());
 
-
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
 
@@ -129,7 +127,7 @@ fn main() -> ! {
 async fn make_commands(
     mut rec: queue::Receiver<'_, u8, 16>,
     drive_state: channel::Sender<'_, DriveState>,
-    drive_commands: channel::Sender<'_,DriveCommands>
+    drive_commands: channel::Sender<'_, DriveCommands>,
 ) {
     loop {
         let val = rec.receive().await;
@@ -141,7 +139,7 @@ async fn make_commands(
             b'a' => drive_commands.send(DriveCommands::Left),
             b'd' => drive_commands.send(DriveCommands::Right),
             b' ' => drive_commands.send(DriveCommands::Stop),
-            _ => print!("{}",val.to_ascii_lowercase()),
+            _ => print!("{}", val.to_ascii_lowercase()),
         }
     }
 }

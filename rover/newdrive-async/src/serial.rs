@@ -71,9 +71,9 @@ impl<'a> SerialIncoming<'a> {
                     self.state = SerialState::Wait;
                     // Put the serial task id into the static
                     // I Suspect this is a bad plan , but let's see if it works
-                    avr_device::interrupt::free(|cs| {
-                        SERIAL_TASK_ID.borrow(cs).replace(self.task_id);
-                    });
+                    // avr_device::interrupt::free(|cs| {
+                    //     SERIAL_TASK_ID.borrow(cs).replace(self.task_id);
+                    // });
                     print!("Finished Setup");
                     Poll::Ready(())
                 }
