@@ -9,6 +9,7 @@ use futures::{future::poll_fn, select_biased, FutureExt};
 
 use crate::time;
 
+#[allow(dead_code)]
 enum SystemState {
     Init,
     Running,
@@ -31,7 +32,7 @@ impl OverLord {
 
     // TODO
     pub async fn run_if(&mut self) {
-        poll_fn(|cx| match self.state {
+        poll_fn(|_cx| match self.state {
             SystemState::Init => {
                 // Init the devices as needed
                 crate::print!("Initialize the droid");

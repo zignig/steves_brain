@@ -18,7 +18,7 @@ mod queue;
 mod serial;
 mod time;
 
-use arduino_hal::prelude::*;
+//use arduino_hal::prelude::*;
 use arduino_hal::{
     hal::port::PB5,
     port::{mode::Output, Pin},
@@ -38,7 +38,6 @@ use time::{delay, TickDuration, Ticker};
 
 use panic_halt as _;
 
-use crate::isrqueue::ISRQueue;
 use crate::serial::SerialIncoming;
 
 #[arduino_hal::entry]
@@ -72,8 +71,14 @@ fn main() -> ! {
     let show = pin!(show_time());
 
     // Grab the eeprom out of the
-    let mut ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
+    //wrangler.save();
+    let b = wrangler.load();
+    print!("{:?}",b);
+    wrangler.insert(config::Test::new());
+    // wrangler.dump();
+
     // Make a new Drive task
 
     // Make a comms channel to the motor

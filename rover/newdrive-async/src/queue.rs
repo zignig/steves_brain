@@ -52,6 +52,7 @@ impl<T, const N: usize> Queue<T, N> {
         self.waker.replace(Some(waker));
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.queue.borrow_mut().len()
     }
@@ -68,6 +69,7 @@ impl<T, const N: usize> Sender<'_, T, N> {
         self.queue.send(item);
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.queue.len()
     }

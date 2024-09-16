@@ -2,7 +2,7 @@ use arduino_hal::hal::usart::Event;
 use avr_device::interrupt::Mutex;
 
 use core::{
-    cell::{Cell, RefCell},
+    cell::RefCell,
     future::poll_fn,
     task::Poll,
 };
@@ -39,8 +39,6 @@ macro_rules! print{
 // Don't know what i'm doing with this , making it up
 
 pub static INCOMING_QUEUE: ISRQueue<u8, 32> = ISRQueue::new();
-static SERIAL_TASK_ID: Mutex<Cell<usize>> = Mutex::new(Cell::new(0xFFFF));
-
 enum SerialState {
     Init,
     Wait,
@@ -96,16 +94,12 @@ impl<'a> SerialIncoming<'a> {
 
 #[avr_device::interrupt(atmega328p)]
 fn USART_RX() {
-    avr_device::interrupt::free(|cs| {
+    avr_device::interrupt::free(|_cs| {
         // This is a bit cheeky , but this is the only place that uses rx
         // it is in a critical section , could borrow but don't want to
         // waste cycles in a interrupt.
         let serial_port = unsafe { &*arduino_hal::pac::USART0::ptr() };
         let ch = serial_port.udr0.read().bits();
         INCOMING_QUEUE.send(ch);
-        // crate::print!("{}",INCOMING_QUEUE.len());
-        // // crate::print!("{}", INCOMING_QUEUE.len());
-        // let task_id = SERIAL_TASK_ID.borrow(cs).get();
-        // wake_task(task_id);
     });
 }

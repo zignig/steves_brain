@@ -7,7 +7,3 @@ runner = "ravedude nano -cb 115200 -P /dev/ttyUSB0"
 [unstable]
 build-std = ["core"]
 build-std-features=["compiler-builtins-mangled-names"]
-
-rustflags = [
- "-C", "embed-bitcode=y",
-]

@@ -2,27 +2,21 @@
 /// An example of a task that will run itself until it is finished
 /// and then just wait for events.
 use core::{
-    cell::RefCell,
     future::poll_fn,
-    task::{Poll, Waker},
+    task::Poll,
 };
 
 use crate::{
     channel,
-    executor::wake_task,
     time::{TickDuration, Ticker},
 };
 
 use fugit::ExtU32;
 use futures::{select_biased, FutureExt};
 
-use crate::executor::ExtWaker;
-
 use crate::time;
 
-pub struct DriveConfig { 
 
-}
 
 // Overstate of the drive
 #[derive(PartialEq)]
@@ -41,6 +35,11 @@ pub enum DriveCommands {
     Left,
     Right,
     Stop,
+}
+
+
+pub struct DriveConfig { 
+
 }
 
 pub struct Drive {
@@ -72,7 +71,7 @@ impl Drive {
     // On a state change or a command the select_biased! will
     // do the thing
     pub async fn run_if(&mut self) {
-        poll_fn(|cx| match self.state {
+        poll_fn(|_cx| match self.state {
             DriveState::Init => {
                 crate::print!("Initialize the drive");
                 // Move to idle

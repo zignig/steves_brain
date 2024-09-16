@@ -21,6 +21,8 @@ fugit = "0.3.7"
 portable-atomic = "1.7.0"
 hubpack = "0.1.2"
 serde = { version = "1.0.149", default-features = false }
+eeprom_store = {path="eeprom_store"}
+serde_derive = { version = "1.0.210", default-features = false }
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"
