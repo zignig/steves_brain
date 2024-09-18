@@ -9,7 +9,7 @@ pub fn eeprom_save(input: TokenStream) -> TokenStream {
     let name = input.ident;
 
     let output = quote! {
-        impl Saver for #name {
+        impl #name {
             const size: usize =  #name::MAX_SIZE ;
 
             fn load(ee: &mut Eeprom) -> Self {

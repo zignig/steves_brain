@@ -14,7 +14,9 @@ use crate::{
 };
 
 pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
+
 pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::new(None));
+
 // Serial for print
 pub fn serial_init(mut serial: Usart) {
     // Enable the interrupt to uart rcx
@@ -24,6 +26,8 @@ pub fn serial_init(mut serial: Usart) {
     });
 }
 
+
+// Print macro for outputting stuff.
 #[macro_export]
 macro_rules! print{
         ($($arg:tt)*) => {
@@ -35,14 +39,18 @@ macro_rules! print{
         }
     }
 
+
 // Serial incoming stuff
 // Don't know what i'm doing with this , making it up
 
 pub static INCOMING_QUEUE: ISRQueue<u8, 32> = ISRQueue::new();
+
+// Async needs internal state.
 enum SerialState {
     Init,
     Wait,
 }
+
 
 pub struct SerialIncoming<'a> {
     state: SerialState,
@@ -67,11 +75,6 @@ impl<'a> SerialIncoming<'a> {
                     // Set own task id
                     self.task_id = cx.waker().task_id();
                     self.state = SerialState::Wait;
-                    // Put the serial task id into the static
-                    // I Suspect this is a bad plan , but let's see if it works
-                    // avr_device::interrupt::free(|cs| {
-                    //     SERIAL_TASK_ID.borrow(cs).replace(self.task_id);
-                    // });
                     print!("Finished Setup");
                     Poll::Ready(())
                 }
@@ -83,6 +86,7 @@ impl<'a> SerialIncoming<'a> {
         .await
     }
 
+    
     pub async fn task(&mut self,mut outgoing: queue::Sender<'_,u8,16>) {
         self.setup().await;
         loop {
@@ -92,6 +96,8 @@ impl<'a> SerialIncoming<'a> {
     }
 }
 
+
+// Whenever there is a char on the serial port run this.
 #[avr_device::interrupt(atmega328p)]
 fn USART_RX() {
     avr_device::interrupt::free(|_cs| {

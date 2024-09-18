@@ -25,10 +25,14 @@ use crate::executor::{wake_task, ExtWaker};
 pub type TickInstant = Instant<u32, 1, 984>;
 pub type TickDuration = Duration<u32, 1, 984>;
 
+
+// Make a heap for incoming timers
+// If you run out of timers increase this number.
 const MAX_DEADLINES: usize = 8;
 static WAKE_DEADLINES: Mutex<RefCell<BinaryHeap<(u32, usize), Min, MAX_DEADLINES>>> =
     Mutex::new(RefCell::new(BinaryHeap::new()));
 
+// With async you need internal state ...
 enum TimerState {
     Init,
     Wait,
@@ -40,6 +44,9 @@ pub struct Timer {
 }
 
 impl Timer {
+    // Make a new timer
+    // Currently 32bit , overflow ~ 70 hours. 
+    // perhaps this needs to be 64 bit (forever ish)
     pub fn new(duration: TickDuration) -> Self {
         Self {
             end_time: Ticker::now() + duration,
@@ -60,6 +67,7 @@ impl Timer {
     }
 }
 
+// Asyncy works for the time
 impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -80,20 +88,25 @@ impl Future for Timer {
     }
 }
 
+// Please wait and the carry on
 pub async fn delay(duration: TickDuration) {
     Timer::new(duration).await;
 }
 
+// Static , so it stays for everyone.
 static TICKER: Ticker = Ticker {
     ovf_count: AtomicU32::new(0),
     timer: Mutex::new(RefCell::new(None)),
 };
 
+// Attached to 8 bit timer, increments on overflow
 pub struct Ticker {
     ovf_count: AtomicU32,
     timer: Mutex<RefCell<Option<TC0>>>,
 }
 
+
+// Functions for the static ticker.
 impl Ticker {
     pub fn init(timer: TC0) {
         // overflow interrupt enable
@@ -129,7 +142,7 @@ impl Ticker {
     }
 }
 
-
+// Do this every microsecond or so...
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_OVF() {
     let ticks = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);

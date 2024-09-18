@@ -43,6 +43,7 @@ fn get_waker(task_id: usize) -> Waker {
 }
 
 // Vector table
+
 static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake_by_ref, drop);
 
 unsafe fn clone(p: *const ()) -> RawWaker {
@@ -76,17 +77,25 @@ static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 
-//
+// Run the things, all 
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
+
     // everybody gets one run to start...
-    // Set all the bits to 1 ( run everything first time )
+    // Set all the bits to 1 (run everything first time)
+    // all the tasks initialize. (async needs to make wakers)
     crate::print!("Starting Executor");
     for task_id in 0..tasks.len() {
         crate::print!("task {} starting",task_id);
         let _ = TASK_MASK.bit_set(task_id as u32, Ordering::SeqCst);
     }
+    
     crate::print!("running");
+    
+    // run all the tasks
+    // using a bit field means that for each cycle all the flagged tasks get run
+    // in order... so the declared order of tasks matters.
+    // most of the time it will just get on with business.
     
     loop {
         let mask = TASK_MASK.load(Ordering::SeqCst);
@@ -94,6 +103,7 @@ pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
             for (task_id, task) in tasks.iter_mut().enumerate() {
                 if mask & mask_for_index(task_id) != 0 {
                     // Clear the wake bit for the task
+                    // Task may wake them selves up , do this before running.
                     let _ = TASK_MASK.bit_clear(task_id as u32, Ordering::SeqCst);
                     let _ = task
                         .as_mut()

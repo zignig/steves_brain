@@ -26,7 +26,6 @@ use arduino_hal::{
 use core::pin::pin;
 use fugit::ExtU32;
 
-
 use config::Wrangler;
 
 use channel::Channel;
@@ -62,21 +61,27 @@ fn main() -> ! {
     // Some Test tasks
     // Just blink the LED to show that it's running
     // SPI takes this ! WATCH OUT !
+
     let blink = pin!(blinker(led, 500.millis()));
+
     // See that it's running on the serial console
     let t1 = pin!(show_name(2000.millis(), "boop!"));
+
     // Longer task , perhaps shut everything down and go to low power
     let t3 = pin!(show_name(30.secs(), "check idle"));
+
     // Show the current timer queue for debug
     let show = pin!(show_time());
 
-    // Grab the eeprom out of the
+    // Grab the eeprom out of the hal0
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
+
+    
     //wrangler.save();
     let b = wrangler.load();
-    print!("{:?}",b);
-    wrangler.insert(config::Test::new());
+    print!("{:?}", b);
+    // wrangler.insert(config::Test::new());
     // wrangler.dump();
 
     // Make a new Drive task
@@ -163,15 +168,19 @@ async fn show_name(interval: TickDuration, blurb: &str) {
     }
 }
 
+fn dividor() {
+    print!("-----------");
+}
+
 async fn show_time() {
     loop {
+        dividor();
         delay(5.secs()).await;
-        print!("-----------");
-        // print!("time: {}", Ticker::now().duration_since_epoch().to_millis());o
-        print!("time ticks {}", Ticker::ticks());
-        print!("-----------");
+        dividor();
+        print!("time: {}", Ticker::now().duration_since_epoch().to_secs());
+        // print!("time ticks {}", Ticker::ticks());
         Ticker::show_timers();
-        print!("-----------");
+        dividor();
     }
 }
 
