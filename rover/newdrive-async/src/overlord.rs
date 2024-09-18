@@ -1,10 +1,10 @@
-use core::task::Poll;
-
-use fugit::ExtU32;
 /// This is the main scheduler and reflex generator
 /// becuase these are async tasks they need to be decoupled
 /// This means that there needs to be some channels an queues talk to stuff
 /// This thing need to watch all the things and do stuff.
+
+use core::task::Poll;
+use fugit::ExtU32;
 use futures::{future::poll_fn, select_biased, FutureExt};
 
 use crate::time;

@@ -4,6 +4,7 @@
 
 // TODO Should convert to timer1 (16bit)
 // and use the overflow and value interrupt.
+// TODO deal with 32 bit overflow (perhaps a 64bit counter , that should last forever.)
 
 use core::{
     cell::RefCell,
@@ -25,7 +26,6 @@ use crate::executor::{wake_task, ExtWaker};
 pub type TickInstant = Instant<u32, 1, 984>;
 pub type TickDuration = Duration<u32, 1, 984>;
 
-
 // Make a heap for incoming timers
 // If you run out of timers increase this number.
 const MAX_DEADLINES: usize = 8;
@@ -38,6 +38,7 @@ enum TimerState {
     Wait,
 }
 
+// A timer
 pub struct Timer {
     end_time: TickInstant,
     state: TimerState,
@@ -119,23 +120,25 @@ impl Ticker {
             TICKER.timer.borrow(cs).replace(Some(timer));
         });
     }
-    // Get the current time, which is a combination of:
+    // Get the current time, in milliseconds (thanks fugit)
     pub fn now() -> TickInstant {
-        let ticks = TICKER.ovf_count.load(Ordering::SeqCst);
-        TickInstant::from_ticks(ticks)
+        let TICKS = TICKER.ovf_count.load(Ordering::SeqCst);
+        TickInstant::from_ticks(TICKS)
     }
 
+    // Raw ticks
     pub fn ticks() -> u32 {
         TICKER.ovf_count.load(Ordering::SeqCst)
     }
 
+    // Print out a list of the current timers.
     pub fn show_timers() {
         avr_device::interrupt::free(|cs| {
-            let ticks = Ticker::ticks();
+            let TICKS = Ticker::ticks();
             let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
             for i in deadlines.iter() {
                 // this might just be negative ( panic causing)
-                let until: i32 = (i.0 as i32) - (ticks as i32);
+                let until: i32 = (i.0 as i32) - (TICKS as i32);
                 crate::print!("task {} in {} ticks ",i.1, until);
             }
         });
@@ -145,12 +148,12 @@ impl Ticker {
 // Do this every microsecond or so...
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_OVF() {
-    let ticks = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);
+    let TICKS = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);
     avr_device::interrupt::free(|cs| {
         let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
         if let Some((next_deadline, task_id)) = deadlines.peek() {
             // what about 32 bit wrap around ? 
-            if ticks > *next_deadline {
+            if TICKS > *next_deadline {
                 //crate::print!("Finished -- {} at {}", task_id,ticks);
                 // Wake up the task in the executor
                 wake_task(*task_id);

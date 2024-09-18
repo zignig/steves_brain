@@ -4,9 +4,10 @@
 /// excellent video https://www.youtube.com/watch?v=wni5h5vIPhU
 ///
 
-/// Converting to bitmask waker ( like lilos )
+/// Converting to bitmask waker (like lilos)
 /// Has the advantage that multiple wakes in the loop don't fill up
 /// a queue, the just set the bit that is already 1 to 1 ... ;)
+
 use core::{
     future::Future,
     pin::Pin,
@@ -68,7 +69,7 @@ const fn mask_for_index(index: usize) -> usize {
     1_usize.rotate_left(index as u32)
 }
 
-// end Vector Table 
+// End Vector Table 
 
 
 // Bit mask for the tasks. (max 16 tasks for AVR)
@@ -77,8 +78,9 @@ static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
 
-// Run the things, all 
+// Run the things, start all to register wakers.
 pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
+    // Max 16 task for AVR
     NUM_TASKS.store(tasks.len(), Ordering::Relaxed);
 
     // everybody gets one run to start...

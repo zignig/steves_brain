@@ -1,8 +1,12 @@
-use arduino_hal::Eeprom;
-use eeprom_store::EepromSave;
 /// The config wrangler
 /// Uses eeprom on the avr to load and save configs
 ///
+/// Put config structs into eeprom and load them.
+/// This means you can change settings without recompiling.
+
+
+use arduino_hal::Eeprom;
+use eeprom_store::EepromSave;
 use hubpack::SerializedSize;
 use serde_derive::{Deserialize, Serialize};
 use ufmt::derive::uDebug;
@@ -33,6 +37,9 @@ impl Test {
 pub struct Wrangler {
     eeprom: arduino_hal::Eeprom,
 }
+
+// TODO use the bottom of eeprom (~1024) to store configs
+// Rust does not have active reflection , so this is weird.
 
 impl Wrangler {
     pub fn new(eeprom: arduino_hal::Eeprom) -> Self {

@@ -1,7 +1,7 @@
 /// A mutexed Queue to spool up and provide structs
 /// across tasks
 /// majorly simplified version https://github.com/embassy-rs/embassy/blob/main/embassy-sync/src/channel.rs
-///
+/// This is safe to run from an interrupt.
 
 use core::{
     cell::RefCell, future::poll_fn, task::{Poll, Waker}

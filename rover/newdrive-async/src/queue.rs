@@ -1,5 +1,6 @@
-/// A mutexed queue to spool up and provide structs
-/// across tasks
+
+/// A generic data queue.
+/// If you have incoming stuff that can happen quickly , use this.
 /// majorly simplified version https://github.com/embassy-rs/embassy/blob/main/embassy-sync/src/channel.rs
 /// Refcell only , not for use with interrupts.
 

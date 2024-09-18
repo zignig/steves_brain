@@ -4,6 +4,8 @@
 /// This provides a single item channel to move data and events 
 /// between tasks.
 
+// Multiple senders works , but the reciver consumes the events.
+
 use core::{
     cell::{Cell, RefCell},
     future::poll_fn,

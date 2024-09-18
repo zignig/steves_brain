@@ -1,3 +1,5 @@
+/// Serial port function.
+
 use arduino_hal::hal::usart::Event;
 use avr_device::interrupt::Mutex;
 
@@ -13,8 +15,8 @@ use crate::{
     queue
 };
 
+// Global stuff
 pub type Usart = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
-
 pub static GLOBAL_SERIAL: Mutex<RefCell<Option<Usart>>> = Mutex::new(RefCell::new(None));
 
 // Serial for print
@@ -43,7 +45,7 @@ macro_rules! print{
 // Serial incoming stuff
 // Don't know what i'm doing with this , making it up
 
-pub static INCOMING_QUEUE: ISRQueue<u8, 32> = ISRQueue::new();
+pub static INCOMING_QUEUE: ISRQueue<u8, 16> = ISRQueue::new();
 
 // Async needs internal state.
 enum SerialState {
@@ -55,7 +57,7 @@ enum SerialState {
 pub struct SerialIncoming<'a> {
     state: SerialState,
     task_id: usize,
-    incoming: isrqueue::Receiver<'a, u8, 32>,
+    incoming: isrqueue::Receiver<'a, u8, 16>,
 }
 
 impl<'a> SerialIncoming<'a> {
@@ -86,7 +88,7 @@ impl<'a> SerialIncoming<'a> {
         .await
     }
 
-    
+
     pub async fn task(&mut self,mut outgoing: queue::Sender<'_,u8,16>) {
         self.setup().await;
         loop {
@@ -98,6 +100,7 @@ impl<'a> SerialIncoming<'a> {
 
 
 // Whenever there is a char on the serial port run this.
+// it will put a byte into the queue and notifty the sender.
 #[avr_device::interrupt(atmega328p)]
 fn USART_RX() {
     avr_device::interrupt::free(|_cs| {

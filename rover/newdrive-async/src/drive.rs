@@ -1,10 +1,9 @@
 /// Mockup for the drive system
 /// An example of a task that will run itself until it is finished
 /// and then just wait for events.
-use core::{
-    future::poll_fn,
-    task::Poll,
-};
+///
+///
+use core::{future::poll_fn, task::Poll};
 
 use crate::{
     channel,
@@ -15,8 +14,6 @@ use fugit::ExtU32;
 use futures::{select_biased, FutureExt};
 
 use crate::time;
-
-
 
 // Overstate of the drive
 #[derive(PartialEq)]
@@ -37,13 +34,26 @@ pub enum DriveCommands {
     Stop,
 }
 
-
-pub struct DriveConfig { 
-
+// All the saved configs for the drive
+// This should be saved/loaded from eeprom.
+pub struct DriveConfig {
+    rate: i16,
+    stop_rate: i16,
 }
 
+impl DriveConfig {
+    pub fn new() -> Self {
+        Self {
+            rate: 2,
+            stop_rate: 10,
+        }
+    }
+}
+
+// Represention of the dual drive
 pub struct Drive {
     state: DriveState,
+    config: DriveConfig,
     timeout: TickDuration,
     next_timeout: u32,
     throttle: i16,
@@ -55,10 +65,11 @@ pub struct Drive {
 
 impl Drive {
     // TODO this need to be handed to an eeprom config
-    pub fn new(timeout: TickDuration) -> Self {
+    pub fn new(config: DriveConfig) -> Self {
         Self {
             state: DriveState::Init,
-            timeout: timeout,
+            config: config, // load from eeprom for awesomeness.
+            timeout: 500.millis(),
             next_timeout: 0,
             throttle: 0,
             default_throttle: 200,
@@ -84,7 +95,7 @@ impl Drive {
             }
             DriveState::SoftStop => {
                 // If the drive times out, put the throttle to zero
-                if self.adjust_throttle(self.stop_rate) { 
+                if self.adjust_throttle(self.stop_rate) {
                     self.state = DriveState::Idle
                 }
                 Poll::Ready(())
@@ -109,7 +120,7 @@ impl Drive {
     }
 
     // get the current closer to the throttle setting
-    fn adjust_throttle(&mut self,rate: i16) -> bool { 
+    fn adjust_throttle(&mut self, rate: i16) -> bool {
         if self.current != self.throttle {
             if self.current < self.throttle {
                 self.current += rate;
@@ -173,6 +184,8 @@ impl Drive {
         }
     }
 
+    // this will wait for commands or run the drive if
+    // it needs to.
     pub async fn task(
         &mut self,
         mut set_state: channel::Receiver<'_, DriveState>,
