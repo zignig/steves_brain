@@ -10,7 +10,7 @@ use crate::{
     time::{TickDuration, Ticker},
 };
 
-use fugit::ExtU32;
+use fugit::ExtU64;
 use futures::{select_biased, FutureExt};
 
 use crate::time;
@@ -55,7 +55,7 @@ pub struct Drive {
     state: DriveState,
     config: DriveConfig,
     timeout: TickDuration,
-    next_timeout: u32,
+    next_timeout: u64,
     throttle: i16,
     default_throttle: i16,
     current: i16,

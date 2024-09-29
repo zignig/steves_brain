@@ -14,7 +14,7 @@ use arduino_hal::{
     port::{mode::Output, Pin},
 };
 use core::pin::pin;
-use fugit::ExtU32;
+use fugit::ExtU64;
 use panic_halt as _;
 
 mod channel;

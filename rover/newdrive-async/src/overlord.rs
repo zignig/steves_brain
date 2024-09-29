@@ -4,7 +4,7 @@
 /// This thing need to watch all the things and do stuff.
 
 use core::task::Poll;
-use fugit::ExtU32;
+use fugit::ExtU64;
 use futures::{future::poll_fn, select_biased, FutureExt};
 
 use crate::time;
