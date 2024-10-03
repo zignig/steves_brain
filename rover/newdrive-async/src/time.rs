@@ -145,7 +145,7 @@ impl Ticker {
     }
 }
 
-// Do this every microsecond or so...
+// Do this every millisecond or so...
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_OVF() {
     let ticks = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);

@@ -68,7 +68,7 @@ fn main() -> ! {
     let t1 = pin!(show_name(2000.millis(), "boop!"));
 
     // Longer task , perhaps shut everything down and go to low power mode
-    let t3 = pin!(show_name(30.secs(), "check idle"));
+    let t3 = pin!(show_name(5.secs(), "check idle"));
 
     // Show the current timer queue for debug (for now)
     let show = pin!(show_time());
@@ -91,14 +91,13 @@ fn main() -> ! {
     // Make a new Drive task
 
     // Make a comms channel to the motor
-    let drive_state: Channel<DriveState> = Channel::new();
     let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
     // TODO get the config from eeprom
     let mut drive = Drive::new(drive::DriveConfig::new());
     // extract the task
-    let drive_task = pin!(drive.task(drive_state.get_receiver(), drive_commands.get_receiver()));
+    let drive_task = pin!(drive.task(drive_commands.get_receiver()));
 
      // Serial command system.
     let serial_chars: Queue<u8, 16> = Queue::new();
@@ -108,7 +107,6 @@ fn main() -> ! {
     // Push The commands into another task
     let command_out = pin!(make_commands(
         serial_chars.get_receiver(),
-        drive_state.get_sender(),
         drive_commands.get_sender()
     ));
 
@@ -138,14 +136,11 @@ fn main() -> ! {
 
 async fn make_commands(
     mut rec: queue::Receiver<'_, u8, 16>,
-    drive_state: channel::Sender<'_, DriveState>,
     drive_commands: channel::Sender<'_, DriveCommands>,
 ) {
     loop {
         let val = rec.receive().await;
         match val {
-            b'1' => drive_state.send(DriveState::Running),
-            b'2' => drive_state.send(DriveState::Idle),
             b'w' => drive_commands.send(DriveCommands::Forward),
             b's' => drive_commands.send(DriveCommands::Backwards),
             b'a' => drive_commands.send(DriveCommands::Left),
@@ -176,11 +171,9 @@ fn divider() {
 
 async fn show_time() {
     loop {
-        divider();
         delay(5.secs()).await;
         divider();
         print!("time: {}", Ticker::now().duration_since_epoch().to_secs());
-        // print!("time ticks {}", Ticker::ticks());
         Ticker::show_timers();
         divider();
     }

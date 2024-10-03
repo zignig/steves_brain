@@ -188,15 +188,10 @@ impl Drive {
     // it needs to.
     pub async fn task(
         &mut self,
-        mut set_state: channel::Receiver<'_, DriveState>,
         mut commands: channel::Receiver<'_, DriveCommands>,
     ) {
         loop {
             select_biased! {
-                state = set_state.receive().fuse()=>{
-                    crate::print!("state change");
-                    self.state = state;
-                }
                 command = commands.receive().fuse()=>{
                     self.set_command(command);
                 }
