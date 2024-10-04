@@ -23,6 +23,7 @@ hubpack = "0.1.2"
 serde = { version = "1.0.149", default-features = false }
 eeprom_store = {path="eeprom_store"}
 serde_derive = { version = "1.0.210", default-features = false }
+shared-bus = "0.3.1"
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"
@@ -36,8 +37,8 @@ features = ["atmega328p"]
 # The latest releases of `proc-macro2` do not support the rust toolchain that
 # we use.  Thus, we must fix this dependency to an older version where our
 # toolchain is still supported.  See https://github.com/Rahix/avr-hal/issues/537
-# [build-dependencies.proc-macro2]
-# version = "=1.0.79"
+[build-dependencies.proc-macro2]
+version = "=1.0.79"
 
 # Configure the build for minimal size - AVRs have very little program memory
 [profile.dev]

@@ -26,7 +26,11 @@ mod overlord;
 mod queue;
 mod serial;
 mod time;
+mod spi;
+mod commands; 
 
+
+use spi::SlaveSPI;
 use config::Wrangler;
 use channel::Channel;
 use drive::{Drive, DriveCommands};
@@ -53,23 +57,17 @@ fn main() -> ! {
     // Set up timer 0 for system clock
     Ticker::init(&dp.TC0);
 
-    // Led (blinky!)
-    let led = pins.d13.into_output();
+    // // Led (blinky!)
+    // let led = pins.d13.into_output();
 
     // Some Test tasks
 
     // Just blink the LED to show that it's running
     // SPI pins takes this ! WATCH OUT !
-    let blink = pin!(blinker(led, 50.millis()));
+    // let blink = pin!(blinker(led, 50.millis()));
 
     // See that it's running on the serial console
     let t1 = pin!(show_name(2.secs(), "boop!"));
-
-    // Longer task , perhaps shut everything down and go to low power mode
-    let t3 = pin!(show_name(5.secs(), "check idle"));
-
-    // Really long taks 
-    let t4 = pin!(show_name(24.hours(),"hello"));
 
     // Show the current timer queue for debug (for now)
     let show = pin!(show_time());
@@ -80,6 +78,16 @@ fn main() -> ! {
     // proc macto eeprom_store is in progress
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
+
+    // Setup the SPI interface 
+    // spi slave setup
+    pins.d13.into_pull_up_input(); // sclk
+    pins.d11.into_floating_input(); // mosi
+    pins.d12.into_output(); // miso
+    pins.d10.into_pull_up_input(); // cs
+    let mut slave_spi = SlaveSPI::new(dp.SPI);
+    // extract the task
+    let spi_task = pin!(slave_spi.task());
 
     // Config testing.
     //wrangler.save();
@@ -124,14 +132,12 @@ fn main() -> ! {
     loop {
         run_tasks(&mut [
             overlord_task,
+            spi_task,
             t1,
-            t3,
-            t4,
-            blink,
             drive_task,
             serial_task,
             command_out,
-            show,
+            //show,
         ]);
     }
 }
