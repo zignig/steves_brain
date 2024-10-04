@@ -19,14 +19,22 @@ enum SystemState {
     Fatal,
 }
 
+enum Mode { 
+    Directed,
+    Auto,
+    Calibrate,
+    Wating
+}
 pub struct OverLord {
     state: SystemState,
+    mode: Mode
 }
 
 impl OverLord {
     pub fn new() -> Self {
         Self {
             state: SystemState::Init,
+            mode: Mode::Wating
         }
     }
 
@@ -49,6 +57,7 @@ impl OverLord {
     }
 
     pub async fn task(&mut self) {
+        //  
         loop {
             select_biased! {
                 _ = self.run_if().fuse() => {}

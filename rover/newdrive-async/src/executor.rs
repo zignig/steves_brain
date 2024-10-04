@@ -74,6 +74,7 @@ const fn mask_for_index(index: usize) -> usize {
 
 // Bit mask for the tasks. (max 16 tasks for AVR)
 static TASK_MASK: AtomicUsize = AtomicUsize::new(0);
+
 // Number of tasks in application
 static NUM_TASKS: AtomicUsize = AtomicUsize::new(0);
 
@@ -86,6 +87,7 @@ pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     // everybody gets one run to start...
     // Set all the bits to 1 (run everything first time)
     // all the tasks initialize. (async needs to make wakers)
+    // this will build wakers for all the tasks.
     crate::print!("Starting Executor");
     for task_id in 0..tasks.len() {
         crate::print!("task {} starting",task_id);
@@ -98,9 +100,11 @@ pub fn run_tasks(tasks: &mut [Pin<&mut dyn Future<Output = ()>>]) -> ! {
     // using a bit field means that for each cycle all the flagged tasks get run
     // in order... so the declared order of tasks matters.
     // most of the time it will just get on with business.
-    
+    // TODO get some cycle stats.
+
     loop {
         let mask = TASK_MASK.load(Ordering::SeqCst);
+        // Is there anything to do ? 
         if mask != 0 {
             for (task_id, task) in tasks.iter_mut().enumerate() {
                 if mask & mask_for_index(task_id) != 0 {

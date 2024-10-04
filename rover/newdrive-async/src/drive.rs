@@ -72,7 +72,7 @@ impl Drive {
             timeout: 500.millis(),
             next_timeout: 0,
             throttle: 0,
-            default_throttle: 200,
+            default_throttle: 255,
             current: 0,
             rate: 2,
             stop_rate: 10,
@@ -192,12 +192,16 @@ impl Drive {
     ) {
         loop {
             select_biased! {
+                // Wait for a command
                 command = commands.receive().fuse()=>{
                     self.set_command(command);
                 }
+                // If it is in process run again
                 _ = self.run_if().fuse() => {}
+                // Clippy was complaining 
                 complete => break
             }
+            // Insert a timer to do it again.
             time::delay(10.millis()).await;
         }
     }

@@ -12,12 +12,16 @@ use core::{
     task::{Poll, Waker},
 };
 
+
+// This is for notifiny another task that there
+// are things todo
 pub struct Channel<T> {
     item: Cell<Option<T>>,
     waker: RefCell<Option<Waker>>,
 }
 
 impl<T> Channel<T> {
+
     pub fn new() -> Self {
         Self {
             item: Cell::new(None),
@@ -64,11 +68,14 @@ impl<T> Sender<'_, T> {
     }
 }
 
+// Important to remember is that this will consume
+// multiple senders one reciver
 enum ReceiverState {
     Init,
     Wait,
 }
 
+// Extract a reciver, this will wake a task.
 pub struct Receiver<'a, T> {
     channel: &'a Channel<T>,
     state: ReceiverState,

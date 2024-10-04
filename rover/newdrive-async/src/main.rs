@@ -27,20 +27,18 @@ mod queue;
 mod serial;
 mod time;
 
-
 use config::Wrangler;
 use channel::Channel;
-use drive::{Drive, DriveCommands, DriveState};
+use drive::{Drive, DriveCommands};
 use executor::run_tasks;
 use overlord::OverLord;
 use queue::Queue;
 use time::{delay, TickDuration, Ticker};
-
-
 use crate::serial::SerialIncoming;
 
 #[arduino_hal::entry]
 fn main() -> ! {
+    // grab the stuff from the micro
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
@@ -53,7 +51,7 @@ fn main() -> ! {
     print!("Activate the awsome!");
 
     // Set up timer 0 for system clock
-    Ticker::init(dp.TC0);
+    Ticker::init(&dp.TC0);
 
     // Led (blinky!)
     let led = pins.d13.into_output();
@@ -62,13 +60,16 @@ fn main() -> ! {
 
     // Just blink the LED to show that it's running
     // SPI pins takes this ! WATCH OUT !
-    let blink = pin!(blinker(led, 500.millis()));
+    let blink = pin!(blinker(led, 50.millis()));
 
     // See that it's running on the serial console
-    let t1 = pin!(show_name(2000.millis(), "boop!"));
+    let t1 = pin!(show_name(2.secs(), "boop!"));
 
     // Longer task , perhaps shut everything down and go to low power mode
     let t3 = pin!(show_name(5.secs(), "check idle"));
+
+    // Really long taks 
+    let t4 = pin!(show_name(24.hours(),"hello"));
 
     // Show the current timer queue for debug (for now)
     let show = pin!(show_time());
@@ -86,10 +87,9 @@ fn main() -> ! {
     print!("{:?}", b);
     // wrangler.insert(config::Test::new());
     // wrangler.dump();
-
+    // End config testing 
 
     // Make a new Drive task
-
     // Make a comms channel to the motor
     let drive_commands: Channel<DriveCommands> = Channel::new();
 
@@ -120,11 +120,13 @@ fn main() -> ! {
     unsafe { avr_device::interrupt::enable() };
 
     // Main Executor (asyncy goodness)
+    // Run all the defined tasks
     loop {
         run_tasks(&mut [
             overlord_task,
             t1,
             t3,
+            t4,
             blink,
             drive_task,
             serial_task,
@@ -134,6 +136,9 @@ fn main() -> ! {
     }
 }
 
+// Serial input to control the micro
+// react to incoming serial events
+// mainly used for testing , interactivty.
 async fn make_commands(
     mut rec: queue::Receiver<'_, u8, 16>,
     drive_commands: channel::Sender<'_, DriveCommands>,
@@ -151,6 +156,7 @@ async fn make_commands(
     }
 }
 
+// Just blink the led
 async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
     loop {
         delay(interval).await;
@@ -158,6 +164,7 @@ async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
     }
 }
 
+// Largely for testing boop a name onto the serial console.
 async fn show_name(interval: TickDuration, blurb: &str) {
     loop {
         delay(interval).await;
@@ -165,10 +172,12 @@ async fn show_name(interval: TickDuration, blurb: &str) {
     }
 }
 
+
 fn divider() {
     print!("-----------");
 }
 
+// Show the current timers in stack
 async fn show_time() {
     loop {
         delay(5.secs()).await;

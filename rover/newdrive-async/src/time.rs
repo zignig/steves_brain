@@ -1,10 +1,9 @@
 /// Async executor for avr , timer queue
 /// Stolen from https://github.com/therustybits/zero-to-async
-/// chapter 6 and converted. 
-
+/// chapter 6 and converted.
 // TODO Should convert to timer1 (16bit)
 // and use the overflow and value interrupt.
-// TODO deal with 32 bit overflow (perhaps a 64bit counter , that should last forever.)
+// This is a 64 bit counter , should overflow in 5162 , should be enough.
 
 use core::{
     cell::RefCell,
@@ -14,23 +13,27 @@ use core::{
 };
 
 use arduino_hal::pac::TC0;
+use avr_device::interrupt::Mutex;
 use fugit::{Duration, Instant};
 use heapless::{binary_heap::Min, BinaryHeap};
 use portable_atomic::{AtomicU64, Ordering};
-use avr_device::interrupt::Mutex;
-
 use crate::executor::{wake_task, ExtWaker};
 
 // fugit does ticks -> millis in compile time
 // for prescale_64
+
 pub type TickInstant = Instant<u64, 1, 984>;
 pub type TickDuration = Duration<u64, 1, 984>;
 
 // Make a heap for incoming timers
 // If you run out of timers increase this number.
 const MAX_DEADLINES: usize = 8;
+
 static WAKE_DEADLINES: Mutex<RefCell<BinaryHeap<(u64, usize), Min, MAX_DEADLINES>>> =
     Mutex::new(RefCell::new(BinaryHeap::new()));
+
+
+// Timers are used to do stuff in the future.
 
 // With async you need internal state ...
 enum TimerState {
@@ -46,8 +49,7 @@ pub struct Timer {
 
 impl Timer {
     // Make a new timer
-    // Currently 32bit , overflow ~ 70 hours. 
-    // perhaps this needs to be 64 bit (forever ish)
+    // these are 64 bit , excessive but it will _never_ run out.
     pub fn new(duration: TickDuration) -> Self {
         Self {
             end_time: Ticker::now() + duration,
@@ -62,6 +64,7 @@ impl Timer {
         avr_device::interrupt::free(|cs| {
             let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
             if deadlines.push((new_deadline, task_id)).is_err() {
+                // if you get here add more timers.
                 panic!("Deadline dropped for task {}!", task_id);
             }
         });
@@ -69,6 +72,7 @@ impl Timer {
 }
 
 // Asyncy works for the time
+// build a timer that will wakeup later.
 impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -89,37 +93,34 @@ impl Future for Timer {
     }
 }
 
-// Please wait and the carry on
+// Wait for later
 pub async fn delay(duration: TickDuration) {
     Timer::new(duration).await;
 }
 
+// The timer exists as a static
 // Static , so it stays for everyone.
 static TICKER: Ticker = Ticker {
     ovf_count: AtomicU64::new(0),
-    timer: Mutex::new(RefCell::new(None)),
 };
 
 // Attached to 8 bit timer, increments on overflow
 pub struct Ticker {
     ovf_count: AtomicU64,
-    timer: Mutex<RefCell<Option<TC0>>>,
 }
 
-
 // Functions for the static ticker.
+// Borrow the timer and hand it back
 impl Ticker {
-    pub fn init(timer: TC0) {
+    pub fn init(timer: &TC0) {
         // overflow interrupt enable
         timer.timsk0.write(|w| w.toie0().set_bit());
-        // prescaler
+        // prescaler ,  prescale_64 gives to 1 millisecond resolution
+        // if you need more ... do it.0
         //timer.tccr0b.write(|w| w.cs0().direct());
         timer.tccr0b.write(|w| w.cs0().prescale_64());
-        // Put the  timer into place
-        avr_device::interrupt::free(|cs| {
-            TICKER.timer.borrow(cs).replace(Some(timer));
-        });
     }
+
     // Get the current time, in milliseconds (thanks fugit)
     pub fn now() -> TickInstant {
         let ticks = TICKER.ovf_count.load(Ordering::SeqCst);
@@ -139,23 +140,28 @@ impl Ticker {
             for i in deadlines.iter() {
                 // this might just be negative ( panic causing)
                 let until: i32 = (i.0 as i32) - (ticks as i32);
-                crate::print!("task {} in {} ticks ",i.1, until);
+                crate::print!("task {} in {} ticks ", i.1, until);
             }
         });
     }
 }
 
 // Do this every millisecond or so...
+// for this application 1 millsecond resolution is ok
+// if you want more change the prescaler.
+
+// timer 2  is 16 bit , putting events in is a little more complicated
+// with a horizon on next overflow; the logic is complicated.
+
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_OVF() {
     let ticks = TICKER.ovf_count.fetch_add(1, Ordering::SeqCst);
     avr_device::interrupt::free(|cs| {
         let deadlines = &mut *WAKE_DEADLINES.borrow(cs).borrow_mut();
         if let Some((next_deadline, task_id)) = deadlines.peek() {
-            // what about 32 bit wrap around ? 
             if ticks > *next_deadline {
-                //crate::print!("Finished -- {} at {}", task_id,ticks);
-                // Wake up the task in the executor
+                // There is a timer expired, run it
+                // this does not account for lag.
                 wake_task(*task_id);
                 deadlines.pop();
             }
