@@ -16,6 +16,7 @@ use arduino_hal::{
 use core::pin::pin;
 use fugit::ExtU64;
 use panic_halt as _;
+use shared_bus;
 
 mod channel;
 mod config;
@@ -28,7 +29,7 @@ mod serial;
 mod time;
 mod spi;
 mod commands; 
-
+mod sensors;
 
 use spi::SlaveSPI;
 use config::Wrangler;
@@ -39,6 +40,7 @@ use overlord::OverLord;
 use queue::Queue;
 use time::{delay, TickDuration, Ticker};
 use crate::serial::SerialIncoming;
+use sensors::Compass;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -57,22 +59,27 @@ fn main() -> ! {
     // Set up timer 0 for system clock
     Ticker::init(&dp.TC0);
 
-    // // Led (blinky!)
-    // let led = pins.d13.into_output();
-
+    // Get the i2c 
+    let i2c = arduino_hal::I2c::new(
+        dp.TWI,
+        pins.a4.into_pull_up_input(),
+        pins.a5.into_pull_up_input(),
+        50000,
+    );
+    
+    // Create an i2c bus because there is going to more than 1 i2c device.
+    let bus = shared_bus::BusManagerSimple::new(i2c);
+    
+    let mut compass = Compass::new(bus.acquire_i2c()).unwrap();
+    compass.update();
+    print!("bearing {}",compass.get_bearing().unwrap());
+      
     // Some Test tasks
-
-    // Just blink the LED to show that it's running
-    // SPI pins takes this ! WATCH OUT !
-    // let blink = pin!(blinker(led, 50.millis()));
 
     // See that it's running on the serial console
     let t1 = pin!(show_name(2.secs(), "boop!"));
 
-    // Show the current timer queue for debug (for now)
-    let show = pin!(show_time());
-
-    // Grab the eeprom out of the hal
+        // Grab the eeprom out of the hal
     // the Wrangler should be a config manager , but ...
     // It may be better to just hard address them.
     // proc macto eeprom_store is in progress
@@ -88,6 +95,7 @@ fn main() -> ! {
     let mut slave_spi = SlaveSPI::new(dp.SPI);
     // extract the task
     let spi_task = pin!(slave_spi.task());
+
 
     // Config testing.
     //wrangler.save();

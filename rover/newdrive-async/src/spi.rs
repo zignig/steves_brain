@@ -3,6 +3,7 @@ use avr_device::interrupt::Mutex;
 use core::{cell::RefCell, future::poll_fn, task::Poll};
 use ufmt::derive::uDebug;
 use hubpack;
+use hubpack::SerializedSize;
 
 use crate::{
     commands::Command,

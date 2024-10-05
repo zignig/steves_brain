@@ -12,7 +12,7 @@ use core::{
     task::{Context, Poll},
 };
 
-use arduino_hal::pac::TC0;
+use arduino_hal::{clock::Clock, pac::TC0};
 use avr_device::interrupt::Mutex;
 use fugit::{Duration, Instant};
 use heapless::{binary_heap::Min, BinaryHeap};
@@ -21,9 +21,9 @@ use crate::executor::{wake_task, ExtWaker};
 
 // fugit does ticks -> millis in compile time
 // for prescale_64
-
-pub type TickInstant = Instant<u64, 1, 984>;
-pub type TickDuration = Duration<u64, 1, 984>;
+const TIMESCALE: u32 = arduino_hal::DefaultClock::FREQ / ( 64 * 256);
+pub type TickInstant = Instant<u64, 1, TIMESCALE>;
+pub type TickDuration = Duration<u64, 1, TIMESCALE>;
 
 // Make a heap for incoming timers
 // If you run out of timers increase this number.
