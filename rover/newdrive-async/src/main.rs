@@ -19,28 +19,29 @@ use panic_halt as _;
 use shared_bus;
 
 mod channel;
+mod commands;
 mod config;
 mod drive;
 mod executor;
 mod isrqueue;
 mod overlord;
 mod queue;
-mod serial;
-mod time;
-mod spi;
-mod commands; 
 mod sensors;
+mod serial;
+mod spi;
+mod time;
 
-use spi::SlaveSPI;
-use config::Wrangler;
+use crate::serial::SerialIncoming;
 use channel::Channel;
+use commands::Command;
+use config::Wrangler;
 use drive::{Drive, DriveCommands};
 use executor::run_tasks;
 use overlord::OverLord;
 use queue::Queue;
-use time::{delay, TickDuration, Ticker};
-use crate::serial::SerialIncoming;
 use sensors::Compass;
+use spi::SlaveSPI;
+use time::{delay, TickDuration, Ticker};
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -59,43 +60,46 @@ fn main() -> ! {
     // Set up timer 0 for system clock
     Ticker::init(&dp.TC0);
 
-    // Get the i2c 
+    // Get the i2c
     let i2c = arduino_hal::I2c::new(
         dp.TWI,
         pins.a4.into_pull_up_input(),
         pins.a5.into_pull_up_input(),
         50000,
     );
-    
+
     // Create an i2c bus because there is going to more than 1 i2c device.
     let bus = shared_bus::BusManagerSimple::new(i2c);
-    
+
     let mut compass = Compass::new(bus.acquire_i2c()).unwrap();
     compass.update();
-    print!("bearing {}",compass.get_bearing().unwrap());
-      
+    print!("bearing {}", compass.get_bearing().unwrap());
+
     // Some Test tasks
 
     // See that it's running on the serial console
     let t1 = pin!(show_name(2.secs(), "boop!"));
 
-        // Grab the eeprom out of the hal
+    // Grab the eeprom out of the hal
     // the Wrangler should be a config manager , but ...
     // It may be better to just hard address them.
     // proc macto eeprom_store is in progress
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
 
-    // Setup the SPI interface 
+    // Setup the SPI interface
     // spi slave setup
     pins.d13.into_pull_up_input(); // sclk
     pins.d11.into_floating_input(); // mosi
     pins.d12.into_output(); // miso
     pins.d10.into_pull_up_input(); // cs
     let mut slave_spi = SlaveSPI::new(dp.SPI);
-    // extract the task
-    let spi_task = pin!(slave_spi.task());
 
+    // Channels to and from the SPI interface
+    let spi_incoming: Channel<Command> = Channel::new();
+    let spi_outgoing: Channel<Command> = Channel::new();
+    // extract the task
+    let spi_task = pin!(slave_spi.task(spi_incoming.get_receiver(), spi_outgoing.get_sender()));
 
     // Config testing.
     //wrangler.save();
@@ -103,7 +107,7 @@ fn main() -> ! {
     print!("{:?}", b);
     // wrangler.insert(config::Test::new());
     // wrangler.dump();
-    // End config testing 
+    // End config testing
 
     // Make a new Drive task
     // Make a comms channel to the motor
@@ -115,7 +119,7 @@ fn main() -> ! {
     // extract the task
     let drive_task = pin!(drive.task(drive_commands.get_receiver()));
 
-     // Serial command system.
+    // Serial command system.
     let serial_chars: Queue<u8, 16> = Queue::new();
     let mut serial_incoming = SerialIncoming::new();
     let serial_task = pin!(serial_incoming.task(serial_chars.get_sender()));
@@ -185,7 +189,6 @@ async fn show_name(interval: TickDuration, blurb: &str) {
         print!("{}", blurb);
     }
 }
-
 
 fn divider() {
     print!("-----------");
