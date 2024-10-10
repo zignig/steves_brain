@@ -1,3 +1,10 @@
+use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
+use futures::future::poll_fn;
+use core::task::Poll;
+
+use fugit::ExtU64;
+use crate::time;
+
 // Driver for the compass
 // HMC6352
 // https://www.sparkfun.com/datasheets/Components/HMC6352.pdf
@@ -5,9 +12,7 @@
 pub const SLAVE_ADDRESS: u8 = 0x21;
 //pub const READ_ADDRESS: u8 = 0x41;
 
-// get bearing 2 bytes , reformatted
-//use arduino_hal::prelude::*;
-use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
+
 //use core::marker::PhantomData;
 
 // this is a transliteration of the spec
@@ -26,10 +31,20 @@ pub enum Commands {
                     // SaveOpToEeprom = 0x4C,        // 'L' save op mode to eeprom
 }
 
+pub enum CompassState { 
+    Init,
+    Idle,
+    Set(u16),
+    Tracking,
+    Fast,
+    Slow,
+}
+
 pub struct Compass<I2C> {
     i2c: I2C,
     bearing: u16,
     address: u8,
+    state: CompassState
 }
 
 impl<I2C, E> Compass<I2C>
@@ -42,6 +57,7 @@ where
             i2c: i2c,
             bearing: 0,
             address: SLAVE_ADDRESS,
+            state: CompassState::Init
         };
         Ok(com)
     }
@@ -59,7 +75,38 @@ where
         self.bearing = val.clone();
     }
 
-    pub fn get_bearing(&self) -> Result<u16, E> {
-        Ok(self.bearing)
+    pub fn get_bearing(&self) -> u16 {
+        self.bearing
+    }
+
+    pub async fn setup(&mut self){
+        poll_fn(|_cx| {
+            match self.state {
+                CompassState::Init => {
+                    crate::print!("Setup compass");
+                    self.state = CompassState::Idle;
+                    Poll::Ready(())
+                }
+                CompassState::Idle => {
+                    Poll::Ready(())
+                }
+                _ => { 
+                    Poll::Ready(())
+                }
+            }
+        })
+        .await
+    }
+
+    
+    // Bridge the interrupt into an interal queue.
+    pub async fn task(&mut self) {
+        self.setup().await;
+        loop {
+            self.update();
+            let  val = self.get_bearing();
+            crate::print!("compass {}",val);
+            time::delay(30.secs()).await;
+        }
     }
 }

@@ -24,6 +24,7 @@ serde = { version = "1.0.149", default-features = false }
 eeprom_store = {path="eeprom_store"}
 serde_derive = { version = "1.0.210", default-features = false }
 shared-bus = "0.3.1"
+libm = "0.2.8"
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"

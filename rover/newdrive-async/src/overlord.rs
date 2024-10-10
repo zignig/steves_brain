@@ -2,12 +2,11 @@
 /// becuase these are async tasks they need to be decoupled
 /// This means that there needs to be some channels an queues talk to stuff
 /// This thing need to watch all the things and do stuff.
-
 use core::task::Poll;
-use fugit::ExtU64;
+// use fugit::ExtU64;
 use futures::{future::poll_fn, select_biased, FutureExt};
 
-use crate::time;
+use crate::{channel, commands::Command};
 
 #[allow(dead_code)]
 enum SystemState {
@@ -19,26 +18,48 @@ enum SystemState {
     Fatal,
 }
 
-enum Mode { 
+enum Mode {
     Directed,
     Auto,
     Calibrate,
-    Wating
+    Wating,
 }
 pub struct OverLord {
     state: SystemState,
-    mode: Mode
+    mode: Mode,
 }
 
 impl OverLord {
     pub fn new() -> Self {
         Self {
             state: SystemState::Init,
-            mode: Mode::Wating
+            mode: Mode::Wating,
         }
     }
 
-    // TODO
+    fn event(&mut self, com: Command){
+        match com{
+            Command::Hello => todo!(),
+            Command::Stop => todo!(),
+            Command::Cont => todo!(),
+            Command::Run(_, _) => todo!(),
+            Command::SetAcc(_) => todo!(),
+            Command::SetJoy(_, _) => todo!(),
+            Command::SetTimeout(_) => todo!(),
+            Command::SetTrigger(_) => todo!(),
+            Command::SetMinspeed(_) => todo!(),
+            Command::SetMaxCurrent(_) => todo!(),
+            Command::Config => todo!(),
+            Command::Count => todo!(),
+            Command::Data(_, _, _, _) => todo!(),
+            Command::Compass(_) => todo!(),
+            Command::GetMillis(_) => todo!(),
+            Command::Current(_) => todo!(),
+            Command::Verbose => todo!(),
+            Command::Fail => todo!(),
+        }
+    }
+
     pub async fn run_if(&mut self) {
         poll_fn(|_cx| match self.state {
             SystemState::Init => {
@@ -56,15 +77,18 @@ impl OverLord {
         .await
     }
 
-    pub async fn task(&mut self) {
-        //  
+    pub async fn task(&mut self, mut spi_outgoing: channel::Receiver<'_, Command>) {
+        //
         loop {
             select_biased! {
+                comm = spi_outgoing.receive().fuse() => {
+                    crate::print!("{:?}",&comm);
+                    // self.event(comm);
+                }
                 _ = self.run_if().fuse() => {}
-                _ = time::delay(10.secs()).fuse() => {} 
                 complete => break
             }
-            crate::print!("Appease the overlord");
+            crate::print!("Run overlord event");
         }
     }
 }

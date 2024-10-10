@@ -12,16 +12,18 @@
 use arduino_hal::{
     hal::port::PB5,
     port::{mode::Output, Pin},
+    simple_pwm::{IntoPwmPin, Prescaler, Timer0Pwm, Timer2Pwm},
 };
 use core::pin::pin;
 use fugit::ExtU64;
 use panic_halt as _;
-use shared_bus;
 
+// Modules
 mod channel;
 mod commands;
 mod config;
-mod drive;
+// mod drive;
+mod effectors;
 mod executor;
 mod isrqueue;
 mod overlord;
@@ -31,11 +33,13 @@ mod serial;
 mod spi;
 mod time;
 
+// Imports
 use crate::serial::SerialIncoming;
 use channel::Channel;
 use commands::Command;
 use config::Wrangler;
-use drive::{Drive, DriveCommands};
+// use drive::{Drive, DriveCommands};
+use effectors::{DriveCommands, TankDrive};
 use executor::run_tasks;
 use overlord::OverLord;
 use queue::Queue;
@@ -70,15 +74,18 @@ fn main() -> ! {
 
     // Create an i2c bus because there is going to more than 1 i2c device.
     let bus = shared_bus::BusManagerSimple::new(i2c);
-
     let mut compass = Compass::new(bus.acquire_i2c()).unwrap();
-    compass.update();
-    print!("bearing {}", compass.get_bearing().unwrap());
+    let compass_task = pin!(compass.task());
+
+    // create the current sensor
+    let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
+    let current_channel = pins.a0.into_analog_input(&mut adc).into_channel();
+    let _current_sensor = sensors::CurrentSensor::new(current_channel);
 
     // Some Test tasks
 
     // See that it's running on the serial console
-    let t1 = pin!(show_name(2.secs(), "boop!"));
+    let t1 = pin!(show_name(20.secs(), "boop!"));
 
     // Grab the eeprom out of the hal
     // the Wrangler should be a config manager , but ...
@@ -86,7 +93,14 @@ fn main() -> ! {
     // proc macto eeprom_store is in progress
     let ee = arduino_hal::Eeprom::new(dp.EEPROM);
     let mut wrangler = Wrangler::new(ee);
+    // Config testing.
+    //wrangler.save();
+    let b = wrangler.load();
+    print!("{:?}", b);
 
+    // wrangler.insert(config::Test::new());
+    // wrangler.dump();
+    // End config testing
     // Setup the SPI interface
     // spi slave setup
     pins.d13.into_pull_up_input(); // sclk
@@ -101,23 +115,33 @@ fn main() -> ! {
     // extract the task
     let spi_task = pin!(slave_spi.task(spi_incoming.get_receiver(), spi_outgoing.get_sender()));
 
-    // Config testing.
-    //wrangler.save();
-    let b = wrangler.load();
-    print!("{:?}", b);
-    // wrangler.insert(config::Test::new());
-    // wrangler.dump();
-    // End config testing
-
     // Make a new Drive task
+
+    // left drive
+    let timer2 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);
+    let l_pwm_pin = pins.d3.into_output().into_pwm(&timer2);
+    let l_en_pin1 = pins.d9.into_output();
+    let l_en_pin2 = pins.d8.into_output();
+
+    // create the right drive
+    let timer0 = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);
+    let r_pwm_pin = pins.d5.into_output().into_pwm(&timer0);
+    let r_en_pin1 = pins.d6.into_output();
+    let r_en_pin2 = pins.d7.into_output();
+
+    //Create the drive
+    let mut diff_drive = effectors::DiffDrive::new(
+        l_pwm_pin, l_en_pin1, l_en_pin2, r_pwm_pin, r_en_pin1, r_en_pin2,
+    );
+
     // Make a comms channel to the motor
     let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
     // TODO get the config from eeprom
-    let mut drive = Drive::new(drive::DriveConfig::new());
+    // let mut drive = Drive::new(drive::DriveConfig::new());
     // extract the task
-    let drive_task = pin!(drive.task(drive_commands.get_receiver()));
+    let drive_task = pin!(diff_drive.task(drive_commands.get_receiver()));
 
     // Serial command system.
     let serial_chars: Queue<u8, 16> = Queue::new();
@@ -134,7 +158,7 @@ fn main() -> ! {
     // This is the top level state machine
 
     let mut overlord = OverLord::new();
-    let overlord_task = pin!(overlord.task());
+    let overlord_task = pin!(overlord.task(spi_outgoing.get_receiver()));
 
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
@@ -145,11 +169,11 @@ fn main() -> ! {
         run_tasks(&mut [
             overlord_task,
             spi_task,
+            compass_task,
             t1,
             drive_task,
             serial_task,
             command_out,
-            //show,
         ]);
     }
 }
@@ -161,14 +185,14 @@ async fn make_commands(
     mut rec: queue::Receiver<'_, u8, 16>,
     drive_commands: channel::Sender<'_, DriveCommands>,
 ) {
+    let mut throt: i16 = 150;
     loop {
         let val = rec.receive().await;
         match val {
-            b'w' => drive_commands.send(DriveCommands::Forward),
-            b's' => drive_commands.send(DriveCommands::Backwards),
-            b'a' => drive_commands.send(DriveCommands::Left),
-            b'd' => drive_commands.send(DriveCommands::Right),
-            b' ' => drive_commands.send(DriveCommands::Stop),
+            b'w' => drive_commands.send(DriveCommands::Run(throt, throt)),
+            b's' => drive_commands.send(DriveCommands::Run(-throt,-throt)),
+            b'+' => {throt += 5},
+            b'-' => {throt-= 5},
             _ => print!("{}", val.to_ascii_lowercase()),
         }
     }
@@ -186,7 +210,11 @@ async fn blinker(mut led: Pin<Output, PB5>, interval: TickDuration) {
 async fn show_name(interval: TickDuration, blurb: &str) {
     loop {
         delay(interval).await;
-        print!("{}", blurb);
+        print!(
+            "{} @ {} seconds",
+            blurb,
+            Ticker::now().duration_since_epoch().to_secs()
+        );
     }
 }
 

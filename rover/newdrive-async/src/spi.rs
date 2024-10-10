@@ -1,9 +1,6 @@
 use arduino_hal::pac::SPI;
 use avr_device::interrupt::Mutex;
 use core::{cell::RefCell, future::poll_fn, task::Poll};
-use hubpack;
-use hubpack::SerializedSize;
-use ufmt::derive::uDebug;
 
 use crate::{
     channel,
@@ -76,7 +73,7 @@ impl<'a> SlaveSPI<'a> {
     }
 
     pub async fn setup(&mut self) {
-        poll_fn(|cx| {
+        poll_fn(|_cx| {
             match self.state {
                 SpiState::Init => {
                     print!("Setup spi incoming");
@@ -94,7 +91,7 @@ impl<'a> SlaveSPI<'a> {
     pub async fn task(
         &mut self,
         mut _com_incoming: channel::Receiver<'a, Command>,
-        mut com_outgoing: channel::Sender<'a, Command>,
+        com_outgoing: channel::Sender<'a, Command>,
     ) {
         self.setup().await;
         loop {
@@ -102,7 +99,7 @@ impl<'a> SlaveSPI<'a> {
             if let Some(frame) = process_packet(val, &mut self.frame) {
                 let (comm, _) =
                     hubpack::deserialize::<Command>(&frame.data[3..FRAME_SIZE]).unwrap();
-                crate::print!("{:?}", comm);
+                // crate::print!("{:?}", comm);
                 com_outgoing.send(comm);
             }
         }
