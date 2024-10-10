@@ -61,7 +61,7 @@ impl Config {
         Self {
             enabled: false,
             rate: 1,
-            stop_rate: 10,
+            stop_rate: 2,
             timeout: 500.millis(),
             min_speed: 0,
         }
@@ -408,6 +408,9 @@ impl<
 // Driver commands
 pub enum DriveCommands {
     Run(i16, i16),
+    Joy(i16, i16),
+    SetTimeout(i16),
+    SetRate(i16),
     Stop,
 }
 
@@ -440,6 +443,18 @@ impl<
                     self.stop();
                     crate::print!("stop");
                 }
+                DriveCommands::Joy(x, y) => {
+                    self.enable();
+                    self.set_joy(*x, *y);
+                    crate::print!("joy");
+                },
+                DriveCommands::SetTimeout(timeout) => { 
+                    self.set_timeout(*timeout);
+                },
+                DriveCommands::SetRate(rate) =>{
+                    self.set_rate(*rate);
+                },        
+                
             }
         }
     }

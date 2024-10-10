@@ -129,13 +129,13 @@ fn main() -> ! {
     let r_en_pin1 = pins.d6.into_output();
     let r_en_pin2 = pins.d7.into_output();
 
+    // Make a comms channel to the motor
+    let drive_commands: Channel<DriveCommands> = Channel::new();
+
     //Create the drive
     let mut diff_drive = effectors::DiffDrive::new(
         l_pwm_pin, l_en_pin1, l_en_pin2, r_pwm_pin, r_en_pin1, r_en_pin2,
     );
-
-    // Make a comms channel to the motor
-    let drive_commands: Channel<DriveCommands> = Channel::new();
 
     // Create  the drive
     // TODO get the config from eeprom
@@ -156,9 +156,10 @@ fn main() -> ! {
 
     // Create the overlord task.
     // This is the top level state machine
+    let mut overlord = OverLord::new(drive_commands.get_sender());
 
-    let mut overlord = OverLord::new();
-    let overlord_task = pin!(overlord.task(spi_outgoing.get_receiver()));
+    let overlord_task =
+        pin!(overlord.task(drive_commands.get_sender(), spi_outgoing.get_receiver()));
 
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };
@@ -190,9 +191,9 @@ async fn make_commands(
         let val = rec.receive().await;
         match val {
             b'w' => drive_commands.send(DriveCommands::Run(throt, throt)),
-            b's' => drive_commands.send(DriveCommands::Run(-throt,-throt)),
-            b'+' => {throt += 5},
-            b'-' => {throt-= 5},
+            b's' => drive_commands.send(DriveCommands::Run(-throt, -throt)),
+            b'+' => throt += 5,
+            b'-' => throt -= 5,
             _ => print!("{}", val.to_ascii_lowercase()),
         }
     }

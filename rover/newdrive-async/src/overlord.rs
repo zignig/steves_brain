@@ -6,7 +6,7 @@ use core::task::Poll;
 // use fugit::ExtU64;
 use futures::{future::poll_fn, select_biased, FutureExt};
 
-use crate::{channel, commands::Command};
+use crate::{channel, commands::Command, effectors::DriveCommands};
 
 #[allow(dead_code)]
 enum SystemState {
@@ -24,39 +24,41 @@ enum Mode {
     Calibrate,
     Wating,
 }
-pub struct OverLord {
+pub struct OverLord<'a> {
     state: SystemState,
+    drive: channel::Sender<'a, DriveCommands>,
     mode: Mode,
 }
 
-impl OverLord {
-    pub fn new() -> Self {
+impl<'a> OverLord<'a> {
+    pub fn new(drive: channel::Sender<'a, DriveCommands>) -> Self {
         Self {
             state: SystemState::Init,
+            drive: drive,
             mode: Mode::Wating,
         }
     }
 
-    fn event(&mut self, com: Command){
-        match com{
-            Command::Hello => todo!(),
-            Command::Stop => todo!(),
-            Command::Cont => todo!(),
-            Command::Run(_, _) => todo!(),
-            Command::SetAcc(_) => todo!(),
-            Command::SetJoy(_, _) => todo!(),
-            Command::SetTimeout(_) => todo!(),
-            Command::SetTrigger(_) => todo!(),
-            Command::SetMinspeed(_) => todo!(),
-            Command::SetMaxCurrent(_) => todo!(),
-            Command::Config => todo!(),
-            Command::Count => todo!(),
-            Command::Data(_, _, _, _) => todo!(),
-            Command::Compass(_) => todo!(),
-            Command::GetMillis(_) => todo!(),
-            Command::Current(_) => todo!(),
-            Command::Verbose => todo!(),
-            Command::Fail => todo!(),
+    fn event(&mut self, com: Command) {
+        match com {
+            Command::Hello => {}
+            Command::Stop => self.drive.send(DriveCommands::Stop),
+            Command::Cont => {}
+            Command::Run(l, r) => self.drive.send(DriveCommands::Run(l, r)),
+            Command::SetAcc(rate) => self.drive.send(DriveCommands::SetRate(rate as i16)),
+            Command::SetJoy(x, y) => self.drive.send(DriveCommands::Joy(x, y)),
+            Command::SetTimeout(timeout) => self.drive.send(DriveCommands::SetTimeout(timeout)),
+            Command::SetTrigger(_) => {}
+            Command::SetMinspeed(_) => {}
+            Command::SetMaxCurrent(_) => {}
+            Command::Config => {}
+            Command::Count => {}
+            Command::Data(_, _, _, _) => {}
+            Command::Compass(_) => {}
+            Command::GetMillis(_) => {}
+            Command::Current(_) => {}
+            Command::Verbose => {}
+            Command::Fail => {}
         }
     }
 
@@ -77,14 +79,19 @@ impl OverLord {
         .await
     }
 
-    pub async fn task(&mut self, mut spi_outgoing: channel::Receiver<'_, Command>) {
+    pub async fn task(
+        &mut self,
+        mut drive_outgoing: channel::Sender<'_, DriveCommands>,
+        mut spi_outgoing: channel::Receiver<'_, Command>,
+    ) {
         //
         loop {
             select_biased! {
                 comm = spi_outgoing.receive().fuse() => {
                     crate::print!("{:?}",&comm);
-                    // self.event(comm);
+                    self.event(comm);
                 }
+
                 _ = self.run_if().fuse() => {}
                 complete => break
             }
