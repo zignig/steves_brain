@@ -91,12 +91,12 @@ fn main() -> ! {
     // the Wrangler should be a config manager , but ...
     // It may be better to just hard address them.
     // proc macto eeprom_store is in progress
-    let ee = arduino_hal::Eeprom::new(dp.EEPROM);
-    let mut wrangler = Wrangler::new(ee);
-    // Config testing.
-    //wrangler.save();
-    let b = wrangler.load();
-    print!("{:?}", b);
+    // let ee = arduino_hal::Eeprom::new(dp.EEPROM);
+    // let mut wrangler = Wrangler::new(ee);
+    // // Config testing.
+    // //wrangler.save();
+    // let b = wrangler.load();
+    // print!("{:?}", b);
 
     // wrangler.insert(config::Test::new());
     // wrangler.dump();
@@ -156,7 +156,7 @@ fn main() -> ! {
 
     // Create the overlord task.
     // This is the top level state machine
-    let mut overlord = OverLord::new(drive_commands.get_sender());
+    let mut overlord = OverLord::new(drive_commands.get_sender(),spi_incoming.get_sender());
 
     let overlord_task =
         pin!(overlord.task(drive_commands.get_sender(), spi_outgoing.get_receiver()));

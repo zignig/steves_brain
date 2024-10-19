@@ -8,15 +8,17 @@ import time
 
 the_port = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A700eCzo-if00-port0"
 
+
 class Console:
-    def __init__(self, port=the_port,baud=115200):
+    def __init__(self, port=the_port, baud=115200):
         self.port = port
         self.baud = baud
-        self.ser = serial.serial_for_url(
-            port, baud
-        )
-        # self.ser.dtr = 0
-
+        self.ser = serial.serial_for_url(port, baud, do_not_open=True,dsrdtr=True)
+        self.ser.dtr = False
+        time.sleep(0.5)
+        self.ser.open()
+        print(self.ser.dtr)
+        
     def attach(self):
         import argparse
 
@@ -32,6 +34,7 @@ class Console:
         print("Attach console")
         term.start()
         term.join(True)
+
 
 if __name__ == "__main__":
     c = Console()

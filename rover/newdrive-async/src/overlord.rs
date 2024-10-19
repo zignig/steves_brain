@@ -27,14 +27,16 @@ enum Mode {
 pub struct OverLord<'a> {
     state: SystemState,
     drive: channel::Sender<'a, DriveCommands>,
+    to_spi: channel::Sender<'a,Command>,
     mode: Mode,
 }
 
 impl<'a> OverLord<'a> {
-    pub fn new(drive: channel::Sender<'a, DriveCommands>) -> Self {
+    pub fn new(drive: channel::Sender<'a, DriveCommands>,to_spi: channel::Sender<'a,Command>) -> Self {
         Self {
             state: SystemState::Init,
             drive: drive,
+            to_spi: to_spi,
             mode: Mode::Wating,
         }
     }
@@ -53,10 +55,10 @@ impl<'a> OverLord<'a> {
             Command::SetMaxCurrent(_) => {}
             Command::Config => {}
             Command::Count => {}
-            Command::Data(_, _, _, _) => {}
+            Command::Data(a, b, c, d) => {self.to_spi.send(Command::Data(a,b,c,d))}
             Command::Compass(_) => {}
             Command::GetMillis(_) => {}
-            Command::Current(_) => {}
+            Command::Current(_) => {self.to_spi.send(Command::Hello)}
             Command::Verbose => {}
             Command::Fail => {}
         }

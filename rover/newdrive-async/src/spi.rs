@@ -1,5 +1,6 @@
 use arduino_hal::pac::SPI;
 use avr_device::interrupt::Mutex;
+use futures::{select_biased, FutureExt};
 use core::{cell::RefCell, future::poll_fn, task::Poll};
 
 use crate::{
@@ -40,6 +41,7 @@ impl FrameBuffer {
 }
 
 static INCOMING_QUEUE: ISRQueue<u8, 8> = ISRQueue::new();
+static OUTGOING_QUEUE: ISRQueue<u8, 8> = ISRQueue::new();
 static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 
 enum SpiState {
@@ -90,17 +92,27 @@ impl<'a> SlaveSPI<'a> {
 
     pub async fn task(
         &mut self,
-        mut _com_incoming: channel::Receiver<'a, Command>,
+        mut com_incoming: channel::Receiver<'a, Command>,
         com_outgoing: channel::Sender<'a, Command>,
     ) {
         self.setup().await;
         loop {
-            let val = self.incoming.receive().await;
-            if let Some(frame) = process_packet(val, &mut self.frame) {
-                let (comm, _) =
-                    hubpack::deserialize::<Command>(&frame.data[3..FRAME_SIZE]).unwrap();
-                // crate::print!("{:?}", comm);
-                com_outgoing.send(comm);
+            select_biased! {
+                val = self.incoming.receive().fuse() => { 
+                    if let Some(frame) = process_packet(val, &mut self.frame) {
+                        match hubpack::deserialize::<Command>(&frame.data[3..FRAME_SIZE]) {
+                            Ok((comm, _)) => {
+                                com_outgoing.send(comm);
+                            }
+                            Err(_) => com_outgoing.send(Command::Fail),
+                        }
+                    }
+                }
+                val = com_incoming.receive().fuse() => {
+                    print!("incoming {:?}",val);
+                    
+                }
+                complete => break
             }
         }
     }
