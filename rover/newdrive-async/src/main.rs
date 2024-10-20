@@ -117,7 +117,7 @@ fn main() -> ! {
 
     // Make a new Drive task
 
-    // left drive
+    // create left drive
     let timer2 = Timer2Pwm::new(dp.TC2, Prescaler::Prescale64);
     let l_pwm_pin = pins.d3.into_output().into_pwm(&timer2);
     let l_en_pin1 = pins.d9.into_output();
@@ -159,7 +159,7 @@ fn main() -> ! {
     let mut overlord = OverLord::new(drive_commands.get_sender(),spi_incoming.get_sender());
 
     let overlord_task =
-        pin!(overlord.task(drive_commands.get_sender(), spi_outgoing.get_receiver()));
+        pin!(overlord.task(spi_outgoing.get_receiver()));
 
     // DRAGONS! beware , unsafe code.
     unsafe { avr_device::interrupt::enable() };

@@ -1,7 +1,10 @@
+//! Serialize Commands to and from the SPI interface.
+//!
+
 use arduino_hal::pac::SPI;
 use avr_device::interrupt::Mutex;
-use futures::{select_biased, FutureExt};
 use core::{cell::RefCell, future::poll_fn, task::Poll};
+use futures::{select_biased, FutureExt};
 
 use crate::{
     channel,
@@ -38,10 +41,24 @@ impl FrameBuffer {
             status: FrameStatus::Idle,
         }
     }
+
+    pub fn get_byte(&mut self) -> Option<u8>{
+        if self.status == FrameStatus::Running { 
+            let val = self.data[self.pos];
+            self.pos += 1;
+            if self.pos == FRAME_SIZE { 
+                self.pos = 0;
+                self.status = FrameStatus::Idle;
+            }
+            return Some(val);
+        } else {
+            return None
+        }
+    }
 }
 
-static INCOMING_QUEUE: ISRQueue<u8, 8> = ISRQueue::new();
-static OUTGOING_QUEUE: ISRQueue<u8, 8> = ISRQueue::new();
+static INCOMING_QUEUE: ISRQueue<u8, FRAME_SIZE> = ISRQueue::new();
+static OUTGOING_QUEUE: ISRQueue<u8, FRAME_SIZE> = ISRQueue::new();
 static SPI_INT: Mutex<RefCell<Option<SPI>>> = Mutex::new(RefCell::new(None));
 
 enum SpiState {
@@ -51,9 +68,9 @@ enum SpiState {
 
 pub struct SlaveSPI<'a> {
     state: SpiState,
-    incoming: isrqueue::Receiver<'a, u8, 8>,
-    outgoing: Queue<Command, 8>,
-    frame: FrameBuffer,
+    incoming: isrqueue::Receiver<'a, u8, FRAME_SIZE>,
+    in_frame: FrameBuffer,
+    out_frame: FrameBuffer,
 }
 
 impl<'a> SlaveSPI<'a> {
@@ -63,14 +80,15 @@ impl<'a> SlaveSPI<'a> {
         // set slave (mstr = 0)
         s.spcr
             .write(|w| w.spie().set_bit().spe().set_bit().mstr().clear_bit());
+        // Stash the SPI interface in a static
         avr_device::interrupt::free(|cs| {
             SPI_INT.borrow(cs).replace(Some(s));
         });
         Self {
             state: SpiState::Init,
             incoming: INCOMING_QUEUE.get_receiver(),
-            outgoing: Queue::new(),
-            frame: FrameBuffer::new(),
+            in_frame: FrameBuffer::new(),
+            out_frame: FrameBuffer::new(),
         }
     }
 
@@ -98,8 +116,9 @@ impl<'a> SlaveSPI<'a> {
         self.setup().await;
         loop {
             select_biased! {
-                val = self.incoming.receive().fuse() => { 
-                    if let Some(frame) = process_packet(val, &mut self.frame) {
+                char_in = self.incoming.receive().fuse() => {
+                    // Handle incoming char
+                    if let Some(frame) = process_frame(char_in, &mut self.in_frame) {
                         match hubpack::deserialize::<Command>(&frame.data[3..FRAME_SIZE]) {
                             Ok((comm, _)) => {
                                 com_outgoing.send(comm);
@@ -108,17 +127,27 @@ impl<'a> SlaveSPI<'a> {
                         }
                     }
                 }
-                val = com_incoming.receive().fuse() => {
-                    print!("incoming {:?}",val);
-                    
+                comm = com_incoming.receive().fuse() => {
+                    print!("incoming {:?}",comm);
+                    self.outgoing_frame(comm)
                 }
                 complete => break
             }
         }
     }
+
+    pub fn outgoing_frame(&mut self, value: Command) {
+
+        // Prepare the outgoing frame
+        let _ = hubpack::serialize(&mut self.out_frame.data[3..FRAME_SIZE], &value);
+        self.out_frame.data[0] = SYNC1;
+        self.out_frame.data[1] = SYNC2;
+        self.out_frame.status = FrameStatus::Running;
+        print!("{:?}",self.out_frame.data)
+    }
 }
 
-pub fn process_packet(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
+pub fn process_frame(data: u8, pb: &mut FrameBuffer) -> Option<FrameBuffer> {
     // match up the packet data
     let val = match pb.pos {
         0 => {

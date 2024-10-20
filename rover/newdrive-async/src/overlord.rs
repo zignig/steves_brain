@@ -3,10 +3,10 @@
 /// This means that there needs to be some channels an queues talk to stuff
 /// This thing need to watch all the things and do stuff.
 use core::task::Poll;
-// use fugit::ExtU64;
+use fugit::ExtU64;
 use futures::{future::poll_fn, select_biased, FutureExt};
 
-use crate::{channel, commands::Command, effectors::DriveCommands};
+use crate::{channel, commands::Command, effectors::DriveCommands, time::Ticker};
 
 #[allow(dead_code)]
 enum SystemState {
@@ -27,12 +27,15 @@ enum Mode {
 pub struct OverLord<'a> {
     state: SystemState,
     drive: channel::Sender<'a, DriveCommands>,
-    to_spi: channel::Sender<'a,Command>,
+    to_spi: channel::Sender<'a, Command>,
     mode: Mode,
 }
 
 impl<'a> OverLord<'a> {
-    pub fn new(drive: channel::Sender<'a, DriveCommands>,to_spi: channel::Sender<'a,Command>) -> Self {
+    pub fn new(
+        drive: channel::Sender<'a, DriveCommands>,
+        to_spi: channel::Sender<'a, Command>,
+    ) -> Self {
         Self {
             state: SystemState::Init,
             drive: drive,
@@ -45,7 +48,11 @@ impl<'a> OverLord<'a> {
         match com {
             Command::Hello => {}
             Command::Stop => self.drive.send(DriveCommands::Stop),
-            Command::Cont => {}
+            Command::Cont => {
+                //
+                let now = Ticker::now().duration_since_epoch().to_millis() as u32;
+                self.to_spi.send(Command::GetMillis(now))
+            }
             Command::Run(l, r) => self.drive.send(DriveCommands::Run(l, r)),
             Command::SetAcc(rate) => self.drive.send(DriveCommands::SetRate(rate as i16)),
             Command::SetJoy(x, y) => self.drive.send(DriveCommands::Joy(x, y)),
@@ -55,10 +62,10 @@ impl<'a> OverLord<'a> {
             Command::SetMaxCurrent(_) => {}
             Command::Config => {}
             Command::Count => {}
-            Command::Data(a, b, c, d) => {self.to_spi.send(Command::Data(a,b,c,d))}
+            Command::Data(a, b, c, d) => self.to_spi.send(Command::Data(a, b, c, d)),
             Command::Compass(_) => {}
             Command::GetMillis(_) => {}
-            Command::Current(_) => {self.to_spi.send(Command::Hello)}
+            Command::Current(_) => self.to_spi.send(Command::Hello),
             Command::Verbose => {}
             Command::Fail => {}
         }
@@ -81,11 +88,7 @@ impl<'a> OverLord<'a> {
         .await
     }
 
-    pub async fn task(
-        &mut self,
-        mut drive_outgoing: channel::Sender<'_, DriveCommands>,
-        mut spi_outgoing: channel::Receiver<'_, Command>,
-    ) {
+    pub async fn task(&mut self, mut spi_outgoing: channel::Receiver<'_, Command>) {
         //
         loop {
             select_biased! {
@@ -97,7 +100,7 @@ impl<'a> OverLord<'a> {
                 _ = self.run_if().fuse() => {}
                 complete => break
             }
-            crate::print!("Run overlord event");
+            crate::print!(".");
         }
     }
 }
