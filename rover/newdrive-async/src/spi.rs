@@ -137,13 +137,14 @@ impl<'a> SlaveSPI<'a> {
     }
 
     pub fn outgoing_frame(&mut self, value: Command) {
-
         // Prepare the outgoing frame
-        let _ = hubpack::serialize(&mut self.out_frame.data[3..FRAME_SIZE], &value);
-        self.out_frame.data[0] = SYNC1;
-        self.out_frame.data[1] = SYNC2;
-        self.out_frame.status = FrameStatus::Running;
-        print!("{:?}",self.out_frame.data)
+        let mut frame = FrameBuffer::new();
+        let _ = hubpack::serialize(&mut frame.data[3..FRAME_SIZE], &value);
+        frame.data[0] = SYNC1;
+        frame.data[1] = SYNC2;
+        frame.status = FrameStatus::Running;
+        print!("{:?}",frame.data);
+        self.out_frame = frame;
     }
 }
 
