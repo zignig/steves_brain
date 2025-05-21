@@ -59,7 +59,8 @@ class Registry:
     def __repr__(self):
         val = ""
         for i in self._db.items():
-            val += i[0].decode() + ":" + i[1].decode() + "\n"
+            if not i[0].startswith(scanner.FILE_PREFIX):
+                val += i[0].decode() + ":" + i[1].decode() + "\n"
         return val
 
     def __getattr__(self, item):
@@ -130,7 +131,8 @@ class scanner:
     def __repr__(self):
         st = ""
         for i in self._file_list:
-            st = str(i) + "\n"
+            if not i.startswith(scanner.FILE_PREFIX):
+                st = str(i) + "\n"
         return st
 
 

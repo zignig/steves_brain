@@ -465,7 +465,9 @@ impl<
         crate::print!("{},{}",self.left.current,self.right.current);
         let _ = join!(self.left.run_if(), self.right.run_if(),);
         // })
-        // .await
+        // .a
+        
+        //iwait
     }
 
     // this will wait for commands or run the drive if
